@@ -1,0 +1,1017 @@
+openapi: 3.1.0
+info:
+  title: Jingle API
+  version: 1.0.0
+paths:
+  /api/v1/auth/google:
+    post:
+      operationId: auth_google_create
+      description: |-
+        JNG-01-01: Google sign-in. First sign-in creates an account that still needs onboarding
+        (editable auto-derived username; birth year required before feed access).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoogleSignInRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleAuthResponse'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleAuthResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: GOOGLE_TOKEN_INVALID
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: ACCOUNT_EXISTS
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: GOOGLE_SIGNIN_DISABLED
+  /api/v1/auth/login:
+    post:
+      operationId: auth_login_create
+      description: 'JNG-01-01: email + password sign-in.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: INVALID_CREDENTIALS
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: RATE_LIMITED
+  /api/v1/auth/logout:
+    post:
+      operationId: auth_logout_create
+      description: Blacklist the refresh token and clear the cookie. Always 204.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '204':
+          description: Signed out
+  /api/v1/auth/refresh:
+    post:
+      operationId: auth_refresh_create
+      description: 'ADR-0011: rotate the refresh cookie; the presented token is blacklisted.'
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: REFRESH_INVALID
+  /api/v1/auth/register:
+    post:
+      operationId: auth_register_create
+      description: 'JNG-01-01: sign up with email. Rejects under-18 birth years (NFR-PRIV-02).'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: AGE_RESTRICTED
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: RATE_LIMITED
+  /api/v1/connections:
+    get:
+      operationId: connections_list
+      description: 'BR-13/BR-15: one row per platform with honest capabilities. No
+        route words (BR-14).'
+      tags:
+      - sources
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Connection'
+          description: ''
+  /api/v1/flags:
+    get:
+      operationId: flags_list
+      description: 'Public feature flags for the web app (BR-11: hidden integrations
+        stay hidden).'
+      tags:
+      - flags
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicFlags'
+          description: ''
+  /api/v1/me:
+    get:
+      operationId: me_retrieve
+      description: JNG-01-01 profile, JNG-01-12 onboarding fields, JNG-01-10 account
+        deletion.
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: UNAUTHENTICATED
+    patch:
+      operationId: me_partial_update
+      description: JNG-01-01 profile, JNG-01-12 onboarding fields, JNG-01-10 account
+        deletion.
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR | BIRTH_YEAR_LOCKED
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: AGE_RESTRICTED (account is removed)
+    delete:
+      operationId: me_destroy
+      description: 'JNG-01-10: delete my account. Hidden and anonymised now; purged
+        within 30 days.'
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '202':
+          description: Account scheduled for deletion
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONFIRMATION_REQUIRED
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONFIRMATION_FAILED
+  /api/v1/me/card:
+    get:
+      operationId: me_card_retrieve
+      description: 'JNG-05-01: my own card (Live / Recent / Top) with platform and
+        freshness.'
+      tags:
+      - feed
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedCard'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: UNAUTHENTICATED
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: ONBOARDING_REQUIRED
+  /api/v1/me/consents:
+    get:
+      operationId: me_consents_list
+      description: 'NFR-PRIV-01: itemised consents with plain-language descriptions.'
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsentItem'
+          description: ''
+  /api/v1/me/consents/{purpose}:
+    post:
+      operationId: me_consents_create
+      description: 'NFR-PRIV-01: give or withdraw one purpose, as easily as it was
+        given.'
+      parameters:
+      - in: path
+        name: purpose
+        schema:
+          type: string
+          enum:
+          - activity_sharing
+          - contact_matching
+          - core_service
+          - email_digest
+          - push_notifications
+          - suggestions_discoverability
+        required: true
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConsentUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConsentUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentItem'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: UNKNOWN_PURPOSE
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONSENT_REQUIRED
+  /api/v1/me/export:
+    get:
+      operationId: me_export_retrieve
+      description: 'JNG-13-04 / NFR-PRIV-06: download my data as JSON.'
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: RATE_LIMITED
+  /api/v1/me/privacy:
+    get:
+      operationId: me_privacy_retrieve
+      description: JNG-02-05 hide precise last-active time; JNG-02-06 Private mode
+        (1 h, 8 h, until off).
+      tags:
+      - me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Privacy'
+          description: ''
+    patch:
+      operationId: me_privacy_partial_update
+      description: JNG-02-05 hide precise last-active time; JNG-02-06 Private mode
+        (1 h, 8 h, until off).
+      tags:
+      - me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPrivacyUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPrivacyUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPrivacyUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Privacy'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+  /api/v1/sources/companion/token:
+    post:
+      operationId: sources_companion_token_create
+      description: 'JNG-01-13: issue a Jingle Companion push token. Shown once; only
+        its hash is stored.'
+      tags:
+      - sources
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanionToken'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: RATE_LIMITED
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: UPSTREAM_UNAVAILABLE
+components:
+  schemas:
+    ActivityVisibilityEnum:
+      enum:
+      - friends
+      - circles
+      - nobody
+      type: string
+      description: |-
+        * `friends` - Friends
+        * `circles` - Circles
+        * `nobody` - Nobody
+    AttributionEnum:
+      enum:
+      - SPOTIFY
+      type: string
+      description: '* `SPOTIFY` - SPOTIFY'
+    AuthResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        user:
+          $ref: '#/components/schemas/Me'
+      required:
+      - access
+      - user
+    Capabilities:
+      type: object
+      properties:
+        live_on_web:
+          type: boolean
+        live_on_phone:
+          type: boolean
+        history:
+          type: boolean
+      required:
+      - history
+      - live_on_phone
+      - live_on_web
+    CardRecording:
+      type: object
+      properties:
+        id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+        artist:
+          type: string
+        album:
+          type:
+          - string
+          - 'null'
+        artwork_url:
+          type:
+          - string
+          - 'null'
+          format: uri
+        links:
+          $ref: '#/components/schemas/Links'
+      required:
+      - album
+      - artist
+      - artwork_url
+      - id
+      - links
+      - title
+    CompanionToken:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+      - token
+    Connection:
+      type: object
+      properties:
+        platform:
+          type: string
+        status:
+          type: string
+        first_play_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        last_signal_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        capabilities:
+          $ref: '#/components/schemas/Capabilities'
+        note:
+          type: string
+      required:
+      - capabilities
+      - first_play_at
+      - last_signal_at
+      - note
+      - platform
+      - status
+    ConsentItem:
+      type: object
+      properties:
+        purpose:
+          $ref: '#/components/schemas/PurposeEnum'
+        description:
+          type: string
+        required:
+          type: boolean
+        given:
+          type: boolean
+        version:
+          type:
+          - string
+          - 'null'
+        given_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        withdrawn_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - description
+      - given
+      - given_at
+      - purpose
+      - required
+      - version
+      - withdrawn_at
+    ConsentUpdateRequest:
+      type: object
+      properties:
+        given:
+          type: boolean
+      required:
+      - given
+    ErrorBody:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: {}
+        request_id:
+          type:
+          - string
+          - 'null'
+      required:
+      - code
+      - details
+      - message
+      - request_id
+    ErrorEnvelope:
+      type: object
+      description: CONTRACTS.md §8 error envelope.
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+      required:
+      - error
+    FeedCard:
+      type: object
+      description: CONTRACTS.md §7. Never carries the ingestion route (BR-14).
+      properties:
+        friend:
+          $ref: '#/components/schemas/FriendRef'
+        state:
+          $ref: '#/components/schemas/StateEnum'
+        platform:
+          description: |-
+            Null when HIDDEN.
+
+            * `SPOTIFY` - SPOTIFY
+            * `APPLE_MUSIC` - APPLE_MUSIC
+            * `AMAZON_MUSIC` - AMAZON_MUSIC
+            * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
+            * `UNKNOWN` - UNKNOWN
+          oneOf:
+          - $ref: '#/components/schemas/PlatformEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recording:
+          oneOf:
+          - $ref: '#/components/schemas/CardRecording'
+          - type: 'null'
+        observed_at:
+          type: string
+          format: date-time
+          description: Omitted when the owner hides precise time, and for TOP/HIDDEN.
+        freshness_label:
+          type: string
+        degraded:
+          type: boolean
+        attribution:
+          oneOf:
+          - $ref: '#/components/schemas/AttributionEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - attribution
+      - degraded
+      - freshness_label
+      - friend
+      - platform
+      - recording
+      - state
+    FriendRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        display_name:
+          type: string
+        avatar_url:
+          type:
+          - string
+          - 'null'
+          format: uri
+      required:
+      - avatar_url
+      - display_name
+      - id
+      - username
+    GoogleAuthResponse:
+      type: object
+      properties:
+        access:
+          type: string
+        user:
+          $ref: '#/components/schemas/Me'
+        created:
+          type: boolean
+      required:
+      - access
+      - created
+      - user
+    GoogleSignInRequest:
+      type: object
+      properties:
+        id_token:
+          type: string
+          minLength: 1
+          maxLength: 4096
+      required:
+      - id_token
+    Links:
+      type: object
+      properties:
+        SPOTIFY:
+          type:
+          - string
+          - 'null'
+          format: uri
+        APPLE_MUSIC:
+          type:
+          - string
+          - 'null'
+          format: uri
+        AMAZON_MUSIC:
+          type:
+          - string
+          - 'null'
+          format: uri
+        YOUTUBE_MUSIC:
+          type:
+          - string
+          - 'null'
+          format: uri
+      required:
+      - AMAZON_MUSIC
+      - APPLE_MUSIC
+      - SPOTIFY
+      - YOUTUBE_MUSIC
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+          maxLength: 128
+      required:
+      - email
+      - password
+    Me:
+      type: object
+      description: The signed-in user's own profile (JNG-01-01, JNG-01-12).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+        display_name:
+          type: string
+          readOnly: true
+        college:
+          type: string
+          readOnly: true
+        city:
+          type: string
+          readOnly: true
+        discoverable:
+          type: boolean
+          readOnly: true
+        needs_onboarding:
+          type: boolean
+          readOnly: true
+        private_mode:
+          allOf:
+          - $ref: '#/components/schemas/PrivateModeState'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - city
+      - college
+      - created_at
+      - discoverable
+      - display_name
+      - email
+      - id
+      - needs_onboarding
+      - private_mode
+      - username
+    NullEnum:
+      type: 'null'
+    PatchedMeUpdateRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+        college:
+          type: string
+          maxLength: 120
+        city:
+          type: string
+          maxLength: 80
+        birth_year:
+          type: integer
+          maximum: 2100
+          minimum: 1900
+          description: Accepted only while not yet set (Google sign-up onboarding).
+    PatchedPrivacyUpdateRequest:
+      type: object
+      properties:
+        activity_visibility:
+          $ref: '#/components/schemas/ActivityVisibilityEnum'
+        show_last_active:
+          type: boolean
+        concerts_visible:
+          type: boolean
+        private_mode:
+          allOf:
+          - $ref: '#/components/schemas/PrivateModeEnum'
+          description: |-
+            Turn Private mode on for a duration, or off.
+
+            * `1h` - 1 hour
+            * `8h` - 8 hours
+            * `until_off` - Until I turn it off
+            * `off` - Off
+    PlatformEnum:
+      enum:
+      - SPOTIFY
+      - APPLE_MUSIC
+      - AMAZON_MUSIC
+      - YOUTUBE_MUSIC
+      - UNKNOWN
+      type: string
+      description: |-
+        * `SPOTIFY` - SPOTIFY
+        * `APPLE_MUSIC` - APPLE_MUSIC
+        * `AMAZON_MUSIC` - AMAZON_MUSIC
+        * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
+        * `UNKNOWN` - UNKNOWN
+    Privacy:
+      type: object
+      description: JNG-02-05 (precise last-active time), JNG-02-06 (Private mode).
+      properties:
+        activity_visibility:
+          allOf:
+          - $ref: '#/components/schemas/ActivityVisibilityEnum'
+          readOnly: true
+        show_last_active:
+          type: boolean
+          readOnly: true
+        concerts_visible:
+          type: boolean
+          readOnly: true
+        private_mode:
+          allOf:
+          - $ref: '#/components/schemas/PrivateModeState'
+          readOnly: true
+      required:
+      - activity_visibility
+      - concerts_visible
+      - private_mode
+      - show_last_active
+    PrivateModeEnum:
+      enum:
+      - 1h
+      - 8h
+      - until_off
+      - 'off'
+      type: string
+      description: |-
+        * `1h` - 1 hour
+        * `8h` - 8 hours
+        * `until_off` - Until I turn it off
+        * `off` - Off
+    PrivateModeState:
+      type: object
+      properties:
+        active:
+          type: boolean
+        until:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: End of Private mode; null when off or 'until I turn it off'.
+      required:
+      - active
+      - until
+    PublicFlags:
+      type: object
+      properties:
+        flags:
+          type: object
+          additionalProperties:
+            type: boolean
+        google_signin_enabled:
+          type: boolean
+      required:
+      - flags
+      - google_signin_enabled
+    PurposeEnum:
+      enum:
+      - core_service
+      - activity_sharing
+      - suggestions_discoverability
+      - contact_matching
+      - push_notifications
+      - email_digest
+      type: string
+      description: |-
+        * `core_service` - Core Service
+        * `activity_sharing` - Activity Sharing
+        * `suggestions_discoverability` - Suggestions Discoverability
+        * `contact_matching` - Contact Matching
+        * `push_notifications` - Push Notifications
+        * `email_digest` - Email Digest
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+          maxLength: 128
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+        display_name:
+          type: string
+          maxLength: 60
+        birth_year:
+          type: integer
+          maximum: 2100
+          minimum: 1900
+      required:
+      - birth_year
+      - email
+      - password
+      - username
+    StateEnum:
+      enum:
+      - LIVE
+      - RECENT
+      - TOP
+      - HIDDEN
+      type: string
+      description: |-
+        * `LIVE` - LIVE
+        * `RECENT` - RECENT
+        * `TOP` - TOP
+        * `HIDDEN` - HIDDEN
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

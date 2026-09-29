@@ -5,7 +5,9 @@ from rest_framework.views import exception_handler as drf_handler
 
 
 class ApiError(exceptions.APIException):
-    def __init__(self, code: str, message: str, status_code: int = 400, details: dict | None = None):
+    def __init__(
+        self, code: str, message: str, status_code: int = 400, details: dict | None = None
+    ):
         self.status_code = status_code
         self.code = code
         self.message = message
@@ -38,5 +40,9 @@ def exception_handler(exc, context):
             message, details = str(data["detail"]), {}
         else:
             message, details = "Please check the highlighted fields.", data
-    response.data = {"error": {"code": code, "message": message, "details": details, "request_id": rid}}
+    response.data = {
+        "error": {"code": code, "message": message, "details": details, "request_id": rid}
+    }
+    for header, value in (getattr(exc, "extra_headers", None) or {}).items():
+        response[header] = value
     return response
