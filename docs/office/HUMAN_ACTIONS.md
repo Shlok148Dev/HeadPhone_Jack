@@ -64,7 +64,8 @@ Unlocks: Google sign-in (email sign-in works without it). Uses only `openid emai
 2. Replace `DJANGO_SECRET_KEY`, `JWT_SIGNING_KEY`, `SERVICE_TOKEN` with fresh values: `python -c "import secrets;print(secrets.token_urlsafe(48))"` (run three times).
 3. Replace `TOKEN_KEK_B64`: `python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"`, and set `TOKEN_KEK_ID=pilot-1`. **Back this key up offline**: losing it makes stored platform tokens unreadable (users would reconnect).
 4. For real users set `JINGLE_DEMO=0`.
-5. Optional web push: `npx web-push generate-vapid-keys` → `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`.
+5. Set `MUSICBRAINZ_CONTACT=` to your email or the repo URL (MusicBrainz requires a real contact; without it Jingle matches tracks locally only).
+6. Optional web push: `npx web-push generate-vapid-keys` → `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`.
 
 ## HA-5 (later, not needed for the pilot) Approval-gated integrations
 
@@ -84,3 +85,11 @@ These are built and flagged off. Do them only when you move beyond the pilot.
 1. `pnpm --filter @jingle/companion-extension build` (or download the built zip the admin shares).
 2. Chrome/Edge → `chrome://extensions` → toggle **Developer mode** → **Load unpacked** → select `apps/companion-extension/dist`.
 3. Click the Jingle icon → **Sign in to Jingle** (it opens Jingle and pairs automatically).
+
+## HA-7 (optional) Spotify attribution logo
+
+Spotify's design guidelines require its official logo next to Spotify-sourced content. Jingle shows the text "Spotify" until the official asset is added.
+
+1. Go to <https://developer.spotify.com/documentation/design> and download the official logo pack.
+2. Put the full-colour logo (icon + wordmark) SVGs in `apps/web/public/brand/spotify/` as `logo-white.svg` and `logo-black.svg`, unmodified.
+3. Rebuild the web image. Only direct-Spotify cards (5 testers) use it.

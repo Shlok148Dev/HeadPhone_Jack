@@ -27,6 +27,8 @@ class ListenEvent(BaseModel):
     played_at: datetime
     observed_at: datetime
     trainable: bool = True
+    analytics_allowed: bool = True
+    played_at_estimated: bool = False
 
 
 def permitted_for_training(event: ListenEvent) -> bool:
@@ -43,3 +45,17 @@ def default_trainable(via: Via, platform: Platform) -> bool:
     if via is Via.LASTFM:
         return False
     return not (via is Via.DIRECT and platform is Platform.SPOTIFY)
+
+
+def _is_direct_spotify(via: Via, platform: Platform) -> bool:
+    return via is Via.DIRECT and platform is Platform.SPOTIFY
+
+
+def default_analytics_allowed(via: Via, platform: Platform) -> bool:
+    """Spotify Policy III.13 (ADR-0013): direct-Spotify data never feeds stats, scores or profiles."""
+    return not _is_direct_spotify(via, platform)
+
+
+def permitted_for_analytics(event: ListenEvent) -> bool:
+    """Gate for stats, compatibility, timeline, recaps, battles, Blends and suggestions."""
+    return event.analytics_allowed and not _is_direct_spotify(event.via, event.platform)

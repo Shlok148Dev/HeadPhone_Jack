@@ -91,7 +91,7 @@ services:
   web:
     build: { context: ., dockerfile: apps/web/Dockerfile }
     environment:
-      NEXT_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      NEXT_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://127.0.0.1:8080}
 
   edge:
     image: caddy:2-alpine
