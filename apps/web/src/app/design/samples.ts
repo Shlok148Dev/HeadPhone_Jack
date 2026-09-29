@@ -1,0 +1,226 @@
+import type { FeedCardData, FeedRecording } from "@/components/ds";
+
+/** Realistic sample data for the /design reference page. Artwork is generative (no remote images). */
+
+const kesariya: FeedRecording = {
+  id: "rec-kesariya",
+  title: "Kesariya",
+  artist: "Arijit Singh",
+  album: "Brahmastra",
+  artwork_url: null,
+  links: { SPOTIFY: "https://open.spotify.com/search/Kesariya", APPLE_MUSIC: null },
+};
+
+export const sampleCards: Array<{ title: string; card: FeedCardData; top?: FeedRecording[] }> = [
+  {
+    title: "LIVE · Spotify",
+    card: {
+      friend: { id: "u-aanya", username: "aanya", display_name: "Aanya", avatar_url: null },
+      state: "LIVE",
+      platform: "SPOTIFY",
+      recording: kesariya,
+      observed_at: "2026-09-29T10:15:20Z",
+      freshness_label: "Live on Spotify",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "LIVE · YouTube Music",
+    card: {
+      friend: { id: "u-kabir", username: "kabir", display_name: "Kabir Mehta", avatar_url: null },
+      state: "LIVE",
+      platform: "YOUTUBE_MUSIC",
+      recording: {
+        id: "rec-not-like-us",
+        title: "Not Like Us",
+        artist: "Kendrick Lamar",
+        artwork_url: null,
+        links: { YOUTUBE_MUSIC: "https://music.youtube.com/search?q=Not+Like+Us" },
+      },
+      observed_at: "2026-09-29T10:15:02Z",
+      freshness_label: "Live on YouTube Music",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "RECENT · Apple Music",
+    card: {
+      friend: { id: "u-meera", username: "meera", display_name: "Meera Iyer", avatar_url: null },
+      state: "RECENT",
+      platform: "APPLE_MUSIC",
+      recording: {
+        id: "rec-cold-mess",
+        title: "cold/mess",
+        artist: "Prateek Kuhad",
+        artwork_url: null,
+        links: { APPLE_MUSIC: "https://music.apple.com/search?term=cold%2Fmess" },
+      },
+      observed_at: "2026-09-29T09:55:00Z",
+      freshness_label: "20 min ago on Apple Music",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "RECENT · precise time hidden",
+    card: {
+      friend: { id: "u-rohan", username: "rohan", display_name: "Rohan", avatar_url: null },
+      state: "RECENT",
+      platform: "AMAZON_MUSIC",
+      recording: {
+        id: "rec-excuses",
+        title: "Excuses",
+        artist: "AP Dhillon",
+        artwork_url: null,
+        links: { AMAZON_MUSIC: "https://music.amazon.com/search/Excuses" },
+      },
+      freshness_label: "Recently on Amazon Music",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "RECENT · YouTube Music",
+    card: {
+      friend: { id: "u-priya", username: "priya", display_name: "Priya", avatar_url: null },
+      state: "RECENT",
+      platform: "YOUTUBE_MUSIC",
+      recording: {
+        id: "rec-husn",
+        title: "Husn",
+        artist: "Anuv Jain",
+        artwork_url: null,
+        links: { YOUTUBE_MUSIC: "https://music.youtube.com/search?q=Husn" },
+      },
+      observed_at: "2026-09-29T07:15:00Z",
+      freshness_label: "3 h ago on YouTube Music",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "RECENT · Spotify, just now",
+    card: {
+      friend: { id: "u-arjun", username: "arjun", display_name: "Arjun", avatar_url: null },
+      state: "RECENT",
+      platform: "SPOTIFY",
+      recording: {
+        id: "rec-apt",
+        title: "APT.",
+        artist: "ROSÉ, Bruno Mars",
+        artwork_url: null,
+        links: { SPOTIFY: "https://open.spotify.com/search/APT." },
+      },
+      observed_at: "2026-09-29T10:14:00Z",
+      freshness_label: "Just now on Spotify",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "Unresolved recording",
+    card: {
+      friend: { id: "u-zoya", username: "zoya", display_name: "Zoya", avatar_url: null },
+      state: "RECENT",
+      platform: "AMAZON_MUSIC",
+      recording: {
+        id: null,
+        title: "Maan Meri Jaan",
+        artist: "King",
+        artwork_url: null,
+        links: { AMAZON_MUSIC: "https://music.amazon.com/search/Maan%20Meri%20Jaan" },
+      },
+      observed_at: "2026-09-27T10:00:00Z",
+      freshness_label: "2 d ago on Amazon Music",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "TOP",
+    card: {
+      friend: { id: "u-sara", username: "sara", display_name: "Sara Khan", avatar_url: null },
+      state: "TOP",
+      platform: "SPOTIFY",
+      recording: {
+        id: "rec-cruel-summer",
+        title: "Cruel Summer",
+        artist: "Taylor Swift",
+        artwork_url: null,
+        links: { SPOTIFY: "https://open.spotify.com/search/Cruel%20Summer" },
+      },
+      observed_at: null,
+      freshness_label: "Top this month",
+      degraded: false,
+      attribution: null,
+    },
+    top: [
+      { id: "rec-anti-hero", title: "Anti-Hero", artist: "Taylor Swift", artwork_url: null, links: {} },
+      { id: "rec-espresso", title: "Espresso", artist: "Sabrina Carpenter", artwork_url: null, links: {} },
+      { id: "rec-lover", title: "Lover", artist: "Taylor Swift", artwork_url: null, links: {} },
+    ],
+  },
+  {
+    title: "HIDDEN",
+    card: {
+      friend: { id: "u-dev", username: "dev", display_name: "Dev Malhotra", avatar_url: null },
+      state: "HIDDEN",
+      platform: "UNKNOWN",
+      recording: null,
+      freshness_label: "Hidden",
+      degraded: false,
+      attribution: null,
+    },
+  },
+  {
+    title: "Degraded · delayed",
+    card: {
+      friend: { id: "u-isha", username: "isha", display_name: "Isha", avatar_url: null },
+      state: "RECENT",
+      platform: "YOUTUBE_MUSIC",
+      recording: {
+        id: "rec-tum-hi-ho",
+        title: "Tum Hi Ho",
+        artist: "Arijit Singh",
+        artwork_url: null,
+        links: { YOUTUBE_MUSIC: "https://music.youtube.com/search?q=Tum+Hi+Ho" },
+      },
+      observed_at: "2026-09-29T08:15:00Z",
+      freshness_label: "2 h ago on YouTube Music",
+      degraded: true,
+      attribution: null,
+    },
+  },
+  {
+    title: "Attribution · Spotify data",
+    card: {
+      friend: { id: "u-nikhil", username: "nikhil", display_name: "Nikhil", avatar_url: null },
+      state: "RECENT",
+      platform: "SPOTIFY",
+      recording: {
+        id: "rec-bad-guy",
+        title: "Blinding Lights",
+        artist: "The Weeknd",
+        artwork_url: null,
+        links: { SPOTIFY: "https://open.spotify.com/search/Blinding%20Lights" },
+      },
+      observed_at: "2026-09-29T10:10:00Z",
+      freshness_label: "5 min ago on Spotify",
+      degraded: false,
+      attribution: "SPOTIFY",
+    },
+  },
+];
+
+export const coverSeeds = [
+  "rec-kesariya",
+  "rec-not-like-us",
+  "rec-cold-mess",
+  "rec-excuses",
+  "rec-cruel-summer",
+  "rec-tum-hi-ho",
+  "rec-blinding-lights",
+  "rec-brown-munde",
+];
