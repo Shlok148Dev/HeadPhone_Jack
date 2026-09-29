@@ -2,26 +2,22 @@
 
 Owner = who builds it. Founder directive: the Orchestrator builds; agents only when necessary. Story IDs from SRS v4.0.
 
-## Sprint 2 — Jingle Connect routes
-Goal: every platform connects with one button and the best available route, with honest capabilities and no keys needed in demo mode.
+## Sprint 3 — Social graph and privacy
+Goal: friends can find each other, connect, and control exactly who sees what; blocks override everything.
 
 ### To do
-- S2-01 Connection Orchestrator (route priority per ADR-0003; route health; capability resolver) — JNG-01-14
-- S2-02 ListenBrainz adapter (token link, poll playing-now/listens, fixtures, contract tests) — JNG-01-02
-- S2-03 Last.fm adapter (web auth, `lastfm_link` consent, recent tracks now-playing, rate budget) — JNG-01-02, JNG-01-05
-- S2-04 Direct Spotify adapter (PKCE, allowlist of 5, 403 fallback, `analytics_allowed=false`, 24 h deletion) — JNG-01-04
-- S2-05 Celery poll tasks via ingest `/internal/poll/*`; adaptive polling (Tech Bible 2.3); drain schedule
-- S2-06 YouTube Takeout import (JSON + HTML, ≤ 50 MB, isolated parse, 24 h delete) — JNG-01-06
-- S2-07 Flagged adapters: Apple Music (MusicKit), Amazon Music, Google Data Portability — JNG-01-03, 01-07, 01-08
-- S2-08 Unlink one source; re-consent notices — JNG-01-09, JNG-01-11
-- S2-09 Connect sheet "Other ways to connect" wired to S2-02…06
+- S3-01 Friendship model (ordered pair), requests send/accept/decline/cancel, duplicate-request merge, 30/day limit — JNG-02-02
+- S3-02 Search by username / display name; invite link + QR that auto-sends a request — JNG-02-01, JNG-02-07
+- S3-03 Remove friend (activity hidden at once) — JNG-02-03
+- S3-04 Block (both ways, within 5 s, no notification) and report user — JNG-02-04, JNG-12-01
+- S3-05 Policy helpers real (`are_friends`, `is_blocked_either_way`, `can_view_activity`); internal friends list for realtime
+- S3-06 Privacy UI: visibility, exact time, Private mode (1 h / 8 h / until off), blocked list — JNG-02-05, JNG-02-06
+- S3-07 Friends page (requests, search, invite) + onboarding friends step — JNG-01-12
+- S3-08 Seed demo friendships and a few pending requests (ADR-0010)
 
 ### In progress
 
 ### Review
 
 ### Done
-- (Sprint 1) S1-CORE, S1-INGEST, S1-DEMO, S1-WEB, S2-EXT Companion extension — see STATE.md
-
-## Carry-over requirements (from reviews)
-- WEB-PAIR ✅ done in S1: `/connect/companion` has first-party-only CSP, `frame-ancestors 'none'`, token minted only on click (authenticated POST, never from URL), consent-gated and revocable.
+- Sprint 0–2: see STATE.md (setup, accounts, ingest core, demo, web shell, Companion, Jingle Connect routes)
