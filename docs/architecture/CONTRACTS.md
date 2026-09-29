@@ -5,7 +5,7 @@ Source: Technical Bible §1–4, §7, adjusted by `docs/adr/0001` (web-only zero
 
 ## 1. Services, ports, origins
 
-| Service | Dir | Port (container) | Public path via edge (Caddy, `http://localhost:8080`) |
+| Service | Dir | Port (container) | Public path via edge (Caddy, `http://127.0.0.1:8080`; `localhost:8080` also works but OAuth callbacks use 127.0.0.1) |
 | --- | --- | --- | --- |
 | edge (Caddy) | `infra/caddy/` | 8080 | — |
 | web (Next.js) | `apps/web` | 3000 | `/` |

@@ -21,3 +21,6 @@ Goal: office, agents, skills, plan and a runnable monorepo (all stores and servi
 ### Review
 
 ### Done
+
+## Carry-over requirements (from reviews)
+- WEB-PAIR (Sprint 2, frontend + backend): `/connect/companion` page must have strict CSP with no third-party scripts, `frame-ancestors 'none'`, token minted only on explicit user click via CSRF-protected POST (never from URL or on load), token scope = ingest only and revocable; consider `externally_connectable`. Source: reviews/S2-EXT-security.md M3.
