@@ -473,6 +473,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/CompanionToken'
           description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONSENT_REQUIRED
         '429':
           content:
             application/json:

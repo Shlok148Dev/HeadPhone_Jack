@@ -19,7 +19,23 @@ def ingest(settings):
         yield mock
 
 
-def test_issues_token_once(auth_api, user, ingest):
+@pytest.fixture
+def sharing(user):
+    from accounts.models import ConsentPurpose
+    from accounts.services import give_consent
+
+    give_consent(user, ConsentPurpose.ACTIVITY_SHARING)
+
+
+def test_requires_activity_sharing_consent(auth_api, ingest):
+    route = ingest.post("/internal/scrobble-tokens")
+    r = auth_api.post(URL)
+    assert r.status_code == 409
+    assert r.json()["error"]["code"] == "CONSENT_REQUIRED"
+    assert not route.called
+
+
+def test_issues_token_once(auth_api, user, ingest, sharing):
     route = ingest.post("/internal/scrobble-tokens").mock(
         return_value=httpx.Response(201, json={"token": "jng_secret"})
     )
@@ -36,14 +52,14 @@ def test_issues_token_once(auth_api, user, ingest):
     "response",
     [httpx.Response(500), httpx.Response(200, json={}), httpx.Response(200, text="not json")],
 )
-def test_upstream_errors_map_to_502(auth_api, ingest, response):
+def test_upstream_errors_map_to_502(auth_api, ingest, sharing, response):
     ingest.post("/internal/scrobble-tokens").mock(return_value=response)
     r = auth_api.post(URL)
     assert r.status_code == 502
     assert r.json()["error"]["code"] == "UPSTREAM_UNAVAILABLE"
 
 
-def test_upstream_unreachable(auth_api, ingest):
+def test_upstream_unreachable(auth_api, ingest, sharing):
     ingest.post("/internal/scrobble-tokens").mock(side_effect=httpx.ConnectError("down"))
     assert auth_api.post(URL).status_code == 502
 
@@ -52,7 +68,7 @@ def test_unauthenticated(api, ingest):
     assert api.post(URL).status_code == 401
 
 
-def test_rate_limited(auth_api, ingest):
+def test_rate_limited(auth_api, ingest, sharing):
     ingest.post("/internal/scrobble-tokens").mock(
         return_value=httpx.Response(201, json={"token": "t"})
     )

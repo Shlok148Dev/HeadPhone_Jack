@@ -48,3 +48,17 @@ def auth_api(user) -> APIClient:
     client = APIClient()
     client.force_authenticate(user=user)
     return client
+
+
+
+@pytest.fixture(autouse=True)
+def ingest_deletions(monkeypatch):
+    """Record calls to ingest-ml's data-deletion endpoint instead of making HTTP requests."""
+    calls: list = []
+
+    def fake(user_id) -> bool:
+        calls.append(str(user_id))
+        return True
+
+    monkeypatch.setattr("sources.views.delete_ingest_data", fake)
+    return calls

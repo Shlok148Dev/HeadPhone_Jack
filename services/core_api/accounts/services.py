@@ -146,6 +146,12 @@ def withdraw_consent(user: User, purpose: str) -> None:
 
 
 def _apply_consent_side_effects(user: User, purpose: str, *, given: bool) -> None:
+    if purpose == ConsentPurpose.ACTIVITY_SHARING and not given:
+        # Withdrawal = stop collecting and erase collected listening data (DPDP s.6(6)).
+        from sources.views import delete_ingest_data
+
+        uid = user.pk
+        transaction.on_commit(lambda: delete_ingest_data(uid))
     if purpose == ConsentPurpose.SUGGESTIONS_DISCOVERABILITY and user.discoverable != given:
         user.discoverable = given
         user.save(update_fields=["discoverable", "updated_at"])
@@ -258,6 +264,9 @@ def soft_delete_account(user: User) -> None:
         get_redis().delete(*live_state_keys(uid))
     except Exception:  # noqa: BLE001
         log.warning("redis live-state delete failed")
+    from sources.views import delete_ingest_data
+
+    transaction.on_commit(lambda: delete_ingest_data(uid))  # purge_account retries if this fails
     events.publish_domain("feed.invalidate", {"user_id": str(uid), "reason": "account_deleted"})
 
     def _enqueue():
@@ -281,6 +290,10 @@ def purge_account(user_id) -> bool:
     user = User.objects.filter(pk=user_id, deleted_at__isnull=False).first()
     if user is None:
         return False
+    from sources.views import delete_ingest_data
+
+    if not delete_ingest_data(user_id):
+        raise RuntimeError("ingest-ml data deletion failed; purge will retry")
     LinkedSource.objects.filter(user_id=user_id).delete()
     ScrobbleToken.objects.filter(user_id=user_id).delete()
     PlatformConnection.objects.filter(user_id=user_id).delete()

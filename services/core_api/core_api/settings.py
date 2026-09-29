@@ -177,3 +177,27 @@ LOGGING = {
     "handlers": {"stdout": {"class": "logging.StreamHandler", "formatter": "json"}},
     "root": {"handlers": ["stdout"], "level": env("LOG_LEVEL", default="INFO")},
 }
+
+
+# ---- Refuse known or weak secrets outside local/test (S1-INGEST-security M6) ------------------
+def _check_secrets() -> None:
+    from django.core.exceptions import ImproperlyConfigured
+
+    if JINGLE_ENV in {"local", "test"}:
+        return
+    weak = []
+    for name, value in (
+        ("DJANGO_SECRET_KEY", SECRET_KEY),
+        ("JWT_SIGNING_KEY", SIMPLE_JWT["SIGNING_KEY"]),
+        ("SERVICE_TOKEN", SERVICE_TOKEN),
+    ):
+        v = str(value or "")
+        if len(v) < 32 or v.startswith(("test-", "dev-only-")) or v == "test-service-token":
+            weak.append(name)
+    if weak:
+        raise ImproperlyConfigured(
+            f"Set strong random values for {', '.join(weak)} when JINGLE_ENV={JINGLE_ENV!r}"
+        )
+
+
+_check_secrets()
