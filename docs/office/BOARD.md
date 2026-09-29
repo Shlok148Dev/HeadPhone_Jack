@@ -8,6 +8,10 @@ Goal: office, agents, skills, plan and a runnable monorepo (all stores and servi
 ### To do
 
 ### In progress
+- S1-WEB sign-in/sign-up, onboarding shell, own Live card, /connect/companion pairing page — orchestrator
+- S1-DEMO demo seed + play simulator (ADR-0010) — orchestrator
+
+### Done (moved)
 - S0-01 Office files, PLAN.md, ADRs 0001–0012 — orchestrator
 - S0-02 Agents in `.claude/agents/` (14) — orchestrator
 - S0-03 Project skills in `.claude/skills/` (6) — orchestrator
