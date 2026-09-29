@@ -13,7 +13,7 @@ JINGLE_DEMO = env.bool("JINGLE_DEMO", default=False)
 DEBUG = env.bool("DJANGO_DEBUG", default=JINGLE_ENV == "local")
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="test-only-secret-key")
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["*"])
-PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://localhost:8080")
+PUBLIC_BASE_URL = env("PUBLIC_BASE_URL", default="http://127.0.0.1:8080")
 CSRF_TRUSTED_ORIGINS = env.list(
     "CSRF_TRUSTED_ORIGINS", default=[PUBLIC_BASE_URL, "http://127.0.0.1:8080"]
 )

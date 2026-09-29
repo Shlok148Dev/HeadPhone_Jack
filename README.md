@@ -11,7 +11,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Open <http://localhost:8080>.
+Open <http://127.0.0.1:8080>.
 
 ## Repository
 
