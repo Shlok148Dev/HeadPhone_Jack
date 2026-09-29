@@ -68,7 +68,7 @@ class RegisterView(_PublicAuthView):
             429: err("RATE_LIMITED"),
         },
     )
-    @ratelimit(key="ip", rate="5/m", scope="auth.register")
+    @ratelimit(key="ip", rate=settings.AUTH_REGISTER_RATE, scope="auth.register")
     def post(self, request):
         ser = RegisterSerializer(data=request.data)
         ser.is_valid(raise_exception=True)

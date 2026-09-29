@@ -168,6 +168,8 @@ CELERY_BEAT_SCHEDULE = {
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 # Jingle account emails of the ≤ 5 direct-Spotify testers (ADR-0013).
 SPOTIFY_ALLOWLIST = env("SPOTIFY_ALLOWLIST", default="")
+# Sign-ups per IP (NFR-SEC-04). Keep 5/m in production; .env.example loosens it for local E2E.
+AUTH_REGISTER_RATE = env("AUTH_REGISTER_RATE", default="5/m")
 
 # Privacy (NFR-PRIV-01/02/03)
 CONSENT_VERSION = env("CONSENT_VERSION", default="2026-09")

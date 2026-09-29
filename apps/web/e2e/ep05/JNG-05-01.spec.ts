@@ -16,7 +16,8 @@ test.describe("JNG-05-01 my own card", () => {
     await signIn(page);
     await page.goto("/settings/connections");
     for (const name of ["Spotify", "Apple Music", "YouTube Music", "Amazon Music"]) {
-      await expect(page.getByRole("button", { name: new RegExp(`(Connect|Manage) ${name}`) })).toBeVisible();
+      const row = page.getByRole("listitem").filter({ hasText: name });
+      await expect(row.getByRole("button", { name: /^(Connect|Manage|Reconnect)/ }).first()).toBeVisible();
     }
     await expectNoA11yViolations(page);
   });
