@@ -103,6 +103,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
+        role="region"
         aria-label="Notifications"
         className="pointer-events-none fixed inset-x-0 bottom-0 flex justify-center p-4 pb-24"
         style={{ zIndex: "var(--z-toast)" }}
