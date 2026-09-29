@@ -38,6 +38,7 @@ class FlagsView(APIView):
             {
                 "flags": serializers.DictField(child=serializers.BooleanField()),
                 "google_signin_enabled": serializers.BooleanField(),
+                "google_client_id": serializers.CharField(allow_blank=True),
             },
         ),
     )
@@ -46,6 +47,8 @@ class FlagsView(APIView):
             {
                 "flags": flags.public_flags(),
                 "google_signin_enabled": bool(settings.GOOGLE_OAUTH_CLIENT_ID),
+                # OAuth client ids are public (they appear in every sign-in page).
+                "google_client_id": settings.GOOGLE_OAUTH_CLIENT_ID,
             }
         )
         resp["Cache-Control"] = "public, max-age=30"

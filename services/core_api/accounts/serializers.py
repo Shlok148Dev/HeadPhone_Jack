@@ -89,7 +89,7 @@ class MeUpdateSerializer(serializers.Serializer):
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField(max_length=254)
-    password = serializers.CharField(write_only=True, min_length=8, max_length=128)
+    password = serializers.CharField(write_only=True, min_length=10, max_length=128)
     username = UsernameField()
     display_name = CleanTextField(max_length=60, required=False, allow_blank=True)
     birth_year = serializers.IntegerField(min_value=1900, max_value=2100)
