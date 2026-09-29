@@ -13,7 +13,7 @@ dependencies = [
   "tenacity>=9.0",
   "motor>=3.5",
   "redis>=5.0",
-  "sqlalchemy>=2.0",
+  "sqlalchemy[asyncio]>=2.0",
   "psycopg[binary]>=3.2",
   "rapidfuzz>=3.9",
   "ijson>=3.3",
@@ -27,11 +27,13 @@ dev = [
   "pytest-asyncio>=0.24",
   "pytest-cov>=5",
   "respx>=0.21",
-  "fakeredis>=2.24",
+  "fakeredis[lua]>=2.24",
   "mongomock-motor>=0.0.34",
   "time-machine>=2.15",
   "ruff>=0.6",
   "mypy>=1.11",
+  "pytest-bdd>=8.1.0",
+  "aiosqlite>=0.22.1",
 ]
 
 [tool.uv.sources]
@@ -42,6 +44,9 @@ asyncio_mode = "auto"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["JNG-01-13: push endpoint acceptance (SRS JNG-01-13)"]
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
 
 [tool.mypy]
 strict = true
@@ -54,3 +59,6 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "ASYNC"]
 ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
