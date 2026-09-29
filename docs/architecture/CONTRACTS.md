@@ -25,7 +25,7 @@ The browser talks to **one origin** (the edge). Refresh cookies are therefore fi
 
 - Django owns **all migrations** (one migration history).
 - core-api writes every business table.
-- ingest-ml writes only the ingestion-domain tables: `linked_sources`, `scrobble_tokens`, `recordings`, `recording_links`, `artists`, `artist_tags`. It uses SQLAlchemy Core against the Django-created tables. core-api reads them.
+- ingest-ml writes only the ingestion-domain tables: `platform_connections`, `linked_sources`, `scrobble_tokens`, `recordings`, `recording_links`, `artists`, `artist_tags`. It uses SQLAlchemy Core against the Django-created tables. core-api reads them.
 - MongoDB `listens`, `provider_payloads`: written by ingest-ml. `notifications`: written by core-api.
 - realtime never writes PostgreSQL.
 
