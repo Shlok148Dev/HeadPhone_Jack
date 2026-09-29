@@ -1,0 +1,91 @@
+{
+  "manifest_version": 3,
+  "name": "Jingle Companion",
+  "short_name": "Jingle",
+  "version": "0.1.0",
+  "description": "Shares what you play in the YouTube Music, Spotify, Apple Music and Amazon Music web players with your own Jingle server.",
+  "minimum_chrome_version": "120",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Jingle Companion",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'"
+  },
+  "permissions": ["storage", "alarms"],
+  "optional_permissions": ["scripting"],
+  "host_permissions": [
+    "https://music.youtube.com/*",
+    "https://open.spotify.com/*",
+    "https://music.apple.com/*",
+    "https://music.amazon.com/*",
+    "https://music.amazon.in/*",
+    "https://music.amazon.co.uk/*",
+    "https://music.amazon.de/*",
+    "https://music.amazon.fr/*",
+    "https://music.amazon.it/*",
+    "https://music.amazon.es/*",
+    "https://music.amazon.ca/*",
+    "https://music.amazon.com.au/*",
+    "https://music.amazon.co.jp/*",
+    "https://music.amazon.com.br/*",
+    "https://music.amazon.com.mx/*",
+    "http://localhost:8080/*",
+    "http://127.0.0.1:8080/*"
+  ],
+  "optional_host_permissions": ["https://*/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://music.youtube.com/*"],
+      "js": ["content/youtube-music.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://open.spotify.com/*"],
+      "js": ["content/spotify.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://music.apple.com/*"],
+      "js": ["content/apple-music.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://music.amazon.com/*",
+        "https://music.amazon.in/*",
+        "https://music.amazon.co.uk/*",
+        "https://music.amazon.de/*",
+        "https://music.amazon.fr/*",
+        "https://music.amazon.it/*",
+        "https://music.amazon.es/*",
+        "https://music.amazon.ca/*",
+        "https://music.amazon.com.au/*",
+        "https://music.amazon.co.jp/*",
+        "https://music.amazon.com.br/*",
+        "https://music.amazon.com.mx/*"
+      ],
+      "js": ["content/amazon-music.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://localhost:8080/connect/companion*", "http://127.0.0.1:8080/connect/companion*"],
+      "js": ["content/pairing.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
