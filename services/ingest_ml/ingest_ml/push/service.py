@@ -4,15 +4,21 @@ Every push to Jingle's endpoint is the COMPANION route (ADR-0003), whichever cli
 ``observed_at`` is always the server receive time; the client's clock only sets ``played_at``.
 """
 
+import hashlib
 import json
 import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 
 from jingle_common.enums import LIVE_MAX_AGE_SECONDS, EventKind, Platform, SourceKind, SourceStatus
-from jingle_common.events import ListenEvent, RawTrack, default_trainable
+from jingle_common.events import (
+    ListenEvent,
+    RawTrack,
+    default_analytics_allowed,
+    default_trainable,
+)
 from redis.typing import EncodableT, FieldT
 from sqlalchemy import case, func
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -28,7 +34,9 @@ from .schemas import Listen, Submission
 log = logging.getLogger(__name__)
 
 STREAM = "events:listen"
-STREAM_MAXLEN = 100_000
+STREAM_RETENTION = timedelta(days=7)  # entries carry user ids; trimmed by age (DPDP)
+DEDUPE_TTL_SECONDS = 86_400  # resends within 24 h are ignored (older re-imports are not)
+_EVENT_NS = UUID("6f1c2b8e-7d4a-4c1e-9b0a-4a7d1e2f3c5d")
 MAX_FUTURE = timedelta(minutes=5)
 NP_TTL_SECONDS = LIVE_MAX_AGE_SECONDS  # 90 s; refreshed by every playing_now (BR-01)
 
@@ -57,7 +65,10 @@ def _prepare(sub: Submission, received_at: datetime) -> list[_Prepared]:
     for listen in sub.payload:
         ai = listen.track_metadata.additional_info
         if listen.listened_at is not None:
-            played_at = datetime.fromtimestamp(listen.listened_at, UTC)
+            try:
+                played_at = datetime.fromtimestamp(listen.listened_at, UTC)
+            except (OverflowError, OSError, ValueError):
+                raise PushRejected("listened_at is out of range") from None
             if played_at > received_at + MAX_FUTURE:
                 raise PushRejected("listened_at is more than 5 minutes in the future")
         else:
@@ -96,12 +107,10 @@ async def _store_links(
                 url=url,
                 is_search=False,
             )
-            stmt = stmt.on_conflict_do_update(
-                index_elements=["recording_id", "platform"],
-                set_={"url": stmt.excluded.url, "external_id": stmt.excluded.external_id,
-                      "is_search": False},
+            # Never overwrite an existing shared link (SEC H1): the first verified link wins.
+            await conn.execute(
+                stmt.on_conflict_do_nothing(index_elements=["recording_id", "platform"])
             )
-            await conn.execute(stmt)
 
 
 async def _upsert_sources(
@@ -161,6 +170,40 @@ async def _update_last_if_newer(res: Resources, user_id: UUID, event: ListenEven
     return True
 
 
+def _dedupe_key(user_id: UUID, played_at: datetime, track: RawTrack) -> str:
+    norm = f"{track.artist.casefold().strip()}|{track.title.casefold().strip()}"
+    digest = hashlib.sha1(norm.encode(), usedforsecurity=False).hexdigest()
+    return f"dedupe:{user_id}:{int(played_at.timestamp())}:{digest}"
+
+
+def _event_id(user_id: UUID, kind: EventKind, played_at: datetime, track: RawTrack) -> UUID:
+    name = f"{user_id}|{kind.value}|{played_at.isoformat()}|{track.artist}|{track.title}"
+    return uuid5(_EVENT_NS, name)
+
+
+def _mongo_doc(ev: ListenEvent) -> dict[str, Any]:
+    doc = ev.model_dump(mode="python", exclude={"user_id", "platform", "via"})
+    doc["meta"] = {"user_id": str(ev.user_id), "platform": ev.platform.value, "via": ev.via.value}
+    doc["event_id"] = str(ev.event_id)
+    doc["recording_id"] = str(ev.recording_id) if ev.recording_id else None
+    doc["kind"] = ev.kind.value
+    return doc
+
+
+async def _claim_new(res: Resources, user_id: UUID, events: list[ListenEvent]) -> list[ListenEvent]:
+    """Drop listens already stored in the last 24 h (resends, retries after a 5xx)."""
+    pipe = res.redis.pipeline(transaction=False)
+    for ev in events:
+        pipe.set(_dedupe_key(user_id, ev.played_at, ev.raw), "1", nx=True, ex=DEDUPE_TTL_SECONDS)
+    claimed = await pipe.execute()
+    return [ev for ev, ok in zip(events, claimed, strict=True) if ok]
+
+
+async def _release(res: Resources, user_id: UUID, events: list[ListenEvent]) -> None:
+    if events:
+        await res.redis.delete(*[_dedupe_key(user_id, ev.played_at, ev.raw) for ev in events])
+
+
 async def ingest_submission(
     res: Resources, user_id: UUID, sub: Submission, received_at: datetime | None = None
 ) -> list[ListenEvent]:
@@ -171,6 +214,11 @@ async def ingest_submission(
     via = COMPANION_ROUTE.via
     events: list[ListenEvent] = []
     first_play: dict[Platform, datetime] = {}
+
+    # Per-user share of the global 1 req/s MusicBrainz budget (SEC M3).
+    allow_remote = sub.listen_type != "import"
+    if allow_remote:
+        allow_remote = (await res.mb_user_bucket.take(f"rl:mb:user:{user_id}")).allowed
 
     for p in prepared:
         tm = p.listen.track_metadata
@@ -185,7 +233,7 @@ async def ingest_submission(
                 duration_ms=track.duration_ms, isrc=ai.isrc,
                 recording_mbid=ai.recording_uuid, release_mbid=ai.release_uuid,
             ),
-            allow_remote=sub.listen_type != "import",
+            allow_remote=allow_remote,
         )
         await _store_links(res.engine, resolved.recording_id, p.listen, p.platform)
         if kind is EventKind.NOW_PLAYING:
@@ -195,10 +243,12 @@ async def ingest_submission(
             )
         events.append(
             ListenEvent(
+                event_id=_event_id(user_id, kind, p.played_at, track),
                 user_id=user_id, recording_id=resolved.recording_id, raw=track,
                 artwork_url=resolved.artwork_url, platform=p.platform, via=via, kind=kind,
                 played_at=p.played_at, observed_at=received_at,
                 trainable=default_trainable(via, p.platform),
+                analytics_allowed=default_analytics_allowed(via, p.platform),
             )
         )
         prev = first_play.get(p.platform)
@@ -213,29 +263,25 @@ async def ingest_submission(
         await pipe.execute()
         await _update_last_if_newer(res, user_id, ev, obs_epoch)
     else:
-        docs: list[dict[str, Any]] = [
-            {
-                "played_at": ev.played_at,
-                "meta": {"user_id": str(user_id), "platform": ev.platform.value,
-                         "via": ev.via.value},
-                "recording_id": str(ev.recording_id) if ev.recording_id else None,
-                "raw": ev.raw.model_dump(),
-                "trainable": ev.trainable,
-                "event_id": str(ev.event_id),
-                "observed_at": ev.observed_at,
-            }
-            for ev in events
-        ]
-        await res.mongo[LISTENS].insert_many(docs, ordered=False)
+        events = await _claim_new(res, user_id, events)
+        if not events:
+            log.info("ignored duplicate listen(s)")
+            return []
+        try:
+            await res.mongo[LISTENS].insert_many([_mongo_doc(ev) for ev in events], ordered=False)
+        except Exception:
+            await _release(res, user_id, events)  # let the client's retry through
+            raise
         newest = max(events, key=lambda e: e.played_at)
         # Recent label time for a finished listen is when it was played, never in the future.
         await _update_last_if_newer(
             res, user_id, newest, min(newest.played_at.timestamp(), obs_epoch)
         )
 
+    min_id = f"{int((received_at - STREAM_RETENTION).timestamp() * 1000)}-0"
     pipe = res.redis.pipeline(transaction=False)
     for ev in events:
-        pipe.xadd(STREAM, {"data": ev.model_dump_json()}, maxlen=STREAM_MAXLEN, approximate=True)
+        pipe.xadd(STREAM, {"data": ev.model_dump_json()}, minid=min_id, approximate=True)
     await pipe.execute()
 
     await _upsert_sources(res.engine, user_id, first_play, received_at)

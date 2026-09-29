@@ -189,7 +189,9 @@ def test_settings_musicbrainz_switch() -> None:
     tok = "s" * 40
     assert not Settings(jingle_env="test").musicbrainz_active
     assert not Settings(jingle_env="prod", service_token=tok).musicbrainz_active  # no contact → off
-    assert Settings(jingle_env="prod", service_token=tok, musicbrainz_contact="a@b.c").musicbrainz_active
+    assert Settings(
+        jingle_env="prod", service_token=tok, musicbrainz_contact="a@b.c"
+    ).musicbrainz_active
     assert not Settings(
         jingle_env="prod", service_token=tok, jingle_demo=True, musicbrainz_contact="a@b.c"
     ).musicbrainz_active
@@ -225,8 +227,71 @@ def test_empty_env_values_use_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_settings_refuse_weak_service_token_outside_dev() -> None:
-    for bad in ("", "test-service-token", "dev-only-change-me-service-token-0000000000000", "short"):
+    for bad in (
+        "",
+        "test-service-token",
+        "dev-only-change-me-service-token-0000000000000",
+        "short",
+    ):
         with pytest.raises(ValueError):
             Settings(jingle_env="prod", service_token=bad or "test-service-token")
     assert Settings(jingle_env="prod", service_token="s" * 40).service_token == "s" * 40
     assert Settings(jingle_env="local").service_token == "test-service-token"
+
+
+async def test_mint_caps_active_tokens_at_five(
+    client: httpx.AsyncClient, user: User, res: Resources
+) -> None:
+    """SEC M3: a user never holds more than 5 active scrobble tokens."""
+    for _ in range(7):
+        r = await client.post(
+            "/internal/scrobble-tokens", json={"user_id": str(user.id)}, headers=SVC
+        )
+        assert r.status_code == 201
+    async with res.engine.connect() as conn:
+        active = (
+            await conn.execute(
+                select(scrobble_tokens.c.id)
+                .where(scrobble_tokens.c.user_id == user.id)
+                .where(scrobble_tokens.c.revoked_at.is_(None))
+            )
+        ).all()
+    assert len(active) == 5
+
+
+async def test_delete_user_data_is_complete_and_idempotent(
+    client: httpx.AsyncClient, user: User, res: Resources
+) -> None:
+    """SEC M5 / DPDP: deletion revokes tokens and removes listens, live state and stream entries."""
+    import time
+
+    from ingest_ml.push.service import STREAM
+
+    from .conftest import track
+
+    body = {
+        "listen_type": "single",
+        "payload": [{"listened_at": int(time.time()) - 60, "track_metadata": track()}],
+    }
+    assert (
+        await client.post("/ingest/1/submit-listens", json=body, headers=user.auth)
+    ).status_code == 200
+    now_body = {"listen_type": "playing_now", "payload": [{"track_metadata": track()}]}
+    assert (
+        await client.post("/ingest/1/submit-listens", json=now_body, headers=user.auth)
+    ).status_code == 200
+    for _ in range(2):  # idempotent
+        r = await client.delete(f"/internal/users/{user.id}/data", headers=SVC)
+        assert r.status_code == 204
+    assert await res.mongo["listens"].count_documents({}) == 0
+    assert not await res.redis.exists(f"np:{user.id}", f"last:{user.id}")
+    assert await res.redis.keys(f"dedupe:{user.id}:*") == []
+    assert await res.redis.xrange(STREAM) == []
+    r = await client.get("/ingest/1/validate-token", headers=user.auth)
+    assert r.json()["valid"] is False
+
+
+async def test_drain_requires_service_token(client: httpx.AsyncClient) -> None:
+    assert (await client.post("/internal/identity/drain")).status_code == 401
+    r = await client.post("/internal/identity/drain", headers=SVC)
+    assert r.status_code == 200 and "processed" in r.json()

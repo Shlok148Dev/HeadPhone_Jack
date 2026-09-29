@@ -54,7 +54,9 @@ def test_infer_platform(
 
 def test_safe_platform_url() -> None:
     assert (
-        safe_platform_url("https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=tracker", P.YOUTUBE_MUSIC)
+        safe_platform_url(
+            "https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=tracker", P.YOUTUBE_MUSIC
+        )
         == "https://music.youtube.com/watch?v=dQw4w9WgXcQ"
     )
     assert safe_platform_url("https://music.youtube.com/watch?v=x", P.YOUTUBE_MUSIC) is None

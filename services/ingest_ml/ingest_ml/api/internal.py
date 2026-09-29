@@ -8,12 +8,14 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, Response
 from jingle_common.logging import request_id_var
 from pydantic import BaseModel, Field
-from sqlalchemy import select, text, update
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.exc import IntegrityError
 
 from ..auth import hash_token, mint_token, require_service_token
-from ..db import now, scrobble_tokens
+from ..db import linked_sources, now, platform_connections, scrobble_tokens
+from ..push.service import STREAM, last_key, np_key
 from ..resources import Resources, get_resources
+from ..stores import LISTENS
 
 log = logging.getLogger(__name__)
 
@@ -22,10 +24,19 @@ router = APIRouter(prefix="/internal", dependencies=[Depends(require_service_tok
 
 def api_error(status: int, code: str, message: str) -> JSONResponse:
     return JSONResponse(
-        {"error": {"code": code, "message": message, "details": {},
-                   "request_id": request_id_var.get()}},
+        {
+            "error": {
+                "code": code,
+                "message": message,
+                "details": {},
+                "request_id": request_id_var.get(),
+            }
+        },
         status_code=status,
     )
+
+
+MAX_ACTIVE_TOKENS = 5
 
 
 class MintRequest(BaseModel):
@@ -35,18 +46,42 @@ class MintRequest(BaseModel):
 
 @router.post("/scrobble-tokens", status_code=201)
 async def create_scrobble_token(
-    body: MintRequest, res: Resources = Depends(get_resources)  # noqa: B008
+    body: MintRequest,
+    res: Resources = Depends(get_resources),  # noqa: B008
 ) -> JSONResponse:
     token = mint_token()
     tid = uuid4()
     ts = now()
     try:
         async with res.engine.begin() as conn:
+            # At most MAX_ACTIVE_TOKENS per user (SEC M3): minting revokes the oldest extras.
+            active: list[UUID] = list(
+                (
+                    await conn.execute(
+                        select(scrobble_tokens.c.id)
+                        .where(scrobble_tokens.c.user_id == body.user_id)
+                        .where(scrobble_tokens.c.revoked_at.is_(None))
+                        .order_by(scrobble_tokens.c.created_at.desc())
+                    )
+                )
+                .scalars()
+                .all()
+            )
+            stale = active[MAX_ACTIVE_TOKENS - 1 :]
+            if stale:
+                await conn.execute(
+                    update(scrobble_tokens)
+                    .where(scrobble_tokens.c.id.in_(stale))
+                    .values(revoked_at=ts, updated_at=ts)
+                )
             await conn.execute(
                 scrobble_tokens.insert().values(
-                    id=tid, user_id=body.user_id, token_sha256=hash_token(token),
+                    id=tid,
+                    user_id=body.user_id,
+                    token_sha256=hash_token(token),
                     label=(body.label or "Jingle Companion").strip() or "Jingle Companion",
-                    created_at=ts, updated_at=ts,
+                    created_at=ts,
+                    updated_at=ts,
                 )
             )
     except IntegrityError:
@@ -58,7 +93,8 @@ async def create_scrobble_token(
 
 @router.delete("/scrobble-tokens/{token_id}", status_code=204)
 async def revoke_scrobble_token(
-    token_id: UUID, res: Resources = Depends(get_resources)  # noqa: B008
+    token_id: UUID,
+    res: Resources = Depends(get_resources),  # noqa: B008
 ) -> Response:
     ts = now()
     async with res.engine.begin() as conn:
@@ -78,7 +114,8 @@ async def revoke_scrobble_token(
 
 @router.get("/healthz")
 async def internal_healthz(
-    request: Request, res: Resources = Depends(get_resources)  # noqa: B008
+    request: Request,
+    res: Resources = Depends(get_resources),  # noqa: B008
 ) -> JSONResponse:
     deps: dict[str, str] = {}
     try:
@@ -104,3 +141,64 @@ async def internal_healthz(
         "musicbrainz": "enabled" if res.settings.musicbrainz_active else "disabled",
     }
     return JSONResponse(body, status_code=200 if ok else 503)
+
+
+@router.delete("/users/{user_id}/data", status_code=204)
+async def delete_user_data(
+    user_id: UUID,
+    res: Resources = Depends(get_resources),  # noqa: B008
+) -> Response:
+    """Account deletion / consent withdrawal (DPDP; SEC M5). Idempotent.
+
+    Revokes every scrobble token and deletes the user's listens, live/recent state, dedupe keys,
+    stream entries, platform connections and routes. Recordings (shared catalog) are kept.
+    """
+    ts = now()
+    async with res.engine.begin() as conn:
+        await conn.execute(
+            update(scrobble_tokens)
+            .where(scrobble_tokens.c.user_id == user_id)
+            .where(scrobble_tokens.c.revoked_at.is_(None))
+            .values(revoked_at=ts, updated_at=ts)
+        )
+        await conn.execute(
+            delete(platform_connections).where(platform_connections.c.user_id == user_id)
+        )
+        await conn.execute(delete(linked_sources).where(linked_sources.c.user_id == user_id))
+    await res.mongo[LISTENS].delete_many({"meta.user_id": str(user_id)})
+    keys = [np_key(user_id), last_key(user_id)]
+    async for k in res.redis.scan_iter(match=f"dedupe:{user_id}:*", count=500):
+        keys.append(k)
+    await res.redis.delete(*keys)
+    marker = f'"user_id":"{user_id}"'
+    to_drop: list[Any] = []
+    last_id = "-"
+    while True:
+        batch = await res.redis.xrange(STREAM, min=last_id, count=500)
+        if not batch:
+            break
+        for entry_id, fields in batch:
+            fields = fields or {}
+            data = fields.get("data") or fields.get(b"data") or ""
+            if isinstance(data, bytes):
+                data = data.decode()
+            if marker in data.replace(" ", ""):
+                to_drop.append(entry_id)
+        if len(batch) < 500:
+            break
+        eid = batch[-1][0]
+        last_id = "(" + (eid.decode() if isinstance(eid, bytes) else str(eid))
+    if to_drop:
+        await res.redis.xdel(STREAM, *to_drop)
+    log.info("deleted ingest data for a user (%d stream entries)", len(to_drop))
+    return Response(status_code=204)
+
+
+@router.post("/identity/drain")
+async def drain_identity_queue(
+    limit: int = 20,
+    res: Resources = Depends(get_resources),  # noqa: B008
+) -> JSONResponse:
+    """Periodic job hook (Celery beat in core-api): resolve queued unresolved recordings."""
+    counts = await res.resolver.drain_pending(max(1, min(limit, 60)))
+    return JSONResponse(counts)

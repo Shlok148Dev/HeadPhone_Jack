@@ -113,5 +113,6 @@ def is_401(world: World) -> None:
 @then("nothing is written for the user")
 def nothing_written(world: World) -> None:
     assert world.user
-    assert world.run(world.res.redis.keys("*")) == []
+    keys = world.run(world.res.redis.keys("*"))
+    assert [k for k in keys if not k.startswith(("rl:", b"rl:"))] == []
     assert world.run(world.res.mongo["listens"].count_documents({})) == 0

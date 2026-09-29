@@ -32,7 +32,7 @@ async def test_validate_token_valid(client: httpx.AsyncClient, user: User) -> No
         "code": 200,
         "message": "Token valid.",
         "valid": True,
-        "user_name": str(user.id),
+        "user_name": f"user_{user.id.hex[:8]}",
     }
 
 
@@ -78,7 +78,7 @@ async def test_invalid_token_401_writes_nothing(client: httpx.AsyncClient, res: 
         r = await client.post("/ingest/1/submit-listens", json=body, headers=header)
         assert r.status_code == 401
         assert r.json()["code"] == 401 and r.json()["error"]
-    assert await res.redis.keys("*") == []
+    assert [k for k in await res.redis.keys("*") if not k.startswith(("rl:", b"rl:"))] == []
     assert await res.mongo["listens"].count_documents({}) == 0
     async with res.engine.connect() as conn:
         assert (await conn.execute(select(platform_connections))).first() is None
@@ -337,3 +337,69 @@ async def test_timestamps_older_than_now_accepted_for_import(
     old = int((datetime.now(UTC) - timedelta(days=300)).timestamp())
     body = {"listen_type": "import", "payload": [{"listened_at": old, "track_metadata": track()}]}
     assert (await _submit(client, user, body)).status_code == 200
+
+
+async def test_failed_auth_is_limited_per_ip(client: httpx.AsyncClient, res: Resources) -> None:
+    """SEC M1: after the per-IP budget of failed attempts, the endpoint answers 429."""
+    bad = {"Authorization": "Token jng_" + "x" * 43}
+    for _ in range(res.settings.push_auth_fail_limit_per_minute):
+        assert (await client.get("/ingest/1/validate-token", headers=bad)).json()["valid"] is False
+    r = await client.post("/ingest/1/submit-listens", headers=bad, json={})
+    assert r.status_code == 429
+
+
+async def test_body_over_cap_is_413(client: httpx.AsyncClient, user: User) -> None:
+    big = b"{" + b" " * (2 * 1024 * 1024 + 10) + b"}"
+    r = await client.post(
+        "/ingest/1/submit-listens",
+        headers=user.auth | {"Content-Type": "application/json"},
+        content=big,
+    )
+    assert r.status_code == 413
+
+
+async def test_listened_at_out_of_range_is_400(client: httpx.AsyncClient, user: User) -> None:
+    body = {
+        "listen_type": "single",
+        "payload": [
+            {"listened_at": 10**15, "track_metadata": {"artist_name": "a", "track_name": "t"}}
+        ],
+    }
+    r = await client.post("/ingest/1/submit-listens", headers=user.auth, json=body)
+    assert r.status_code == 400
+
+
+async def test_resent_listen_is_stored_once(
+    client: httpx.AsyncClient, user: User, res: Resources
+) -> None:
+    """S1-INGEST code B1: a client retry must not double-count a play."""
+    body = {
+        "listen_type": "single",
+        "payload": [{"listened_at": int(time.time()) - 30, "track_metadata": track()}],
+    }
+    assert (await _submit(client, user, body)).status_code == 200
+    assert (await _submit(client, user, body)).status_code == 200
+    assert await res.mongo["listens"].count_documents({}) == 1
+    assert len(await res.redis.xrange(STREAM)) == 1
+
+
+async def test_listen_doc_carries_lineage_flags(
+    client: httpx.AsyncClient, user: User, res: Resources
+) -> None:
+    """S1-INGEST code B3 / ADR-0013: every stored listen has trainable and analytics_allowed."""
+    body = {
+        "listen_type": "single",
+        "payload": [
+            {
+                "listened_at": int(time.time()) - 30,
+                "track_metadata": track(origin_url="https://open.spotify.com/track/abc123def4"),
+            }
+        ],
+    }
+    assert (await _submit(client, user, body)).status_code == 200
+    doc = await res.mongo["listens"].find_one({})
+    assert doc is not None
+    assert doc["trainable"] is True and doc["analytics_allowed"] is True
+    assert doc["kind"] == "LISTEN" and doc["played_at_estimated"] is False
+    assert doc["meta"]["platform"] == "SPOTIFY" and doc["meta"]["via"] == "COMPANION"
+    assert "user_id" not in doc and "via" not in doc

@@ -50,7 +50,7 @@ async def create_user(engine: AsyncEngine) -> User:
     uid, tid, token = uuid4(), uuid4(), mint_token()
     ts = now()
     async with engine.begin() as conn:
-        await conn.execute(users.insert().values(id=uid))
+        await conn.execute(users.insert().values(id=uid, username=f"user_{uid.hex[:8]}"))
         await conn.execute(
             scrobble_tokens.insert().values(
                 id=tid,
