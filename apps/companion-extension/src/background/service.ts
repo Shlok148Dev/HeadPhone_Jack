@@ -1,10 +1,12 @@
 import { connectorForHost } from "../connectors";
 import { mergeSettings, normaliseOrigin, STORAGE_KEYS, type Auth, type KV, type Settings } from "../shared/settings";
-import type { PairResult, TrackState } from "../shared/types";
+import { PLATFORMS, sanitizeTrack, type PairResult, type TrackState } from "../shared/types";
 import { submitListens, validateToken, type FetchLike } from "./client";
 import { buildSubmission, type LbSubmission } from "./payload";
 import { ListenQueue } from "./queue";
 import { Scrobbler, type Emission, type ScrobblerState } from "./scrobbler";
+
+export const TOKEN_REJECTED = "token_rejected";
 
 export interface Status {
   settings: Settings;
@@ -63,10 +65,11 @@ export class Companion {
   }
 
   /** A player content script reported its state. `senderUrl` is the tab URL Chrome attests. */
-  onTrack(tabId: number, senderUrl: string | undefined, state: TrackState | null): Promise<void> {
+  onTrack(tabId: number, senderUrl: string | undefined, raw: unknown): Promise<void> {
     return this.run(async () => {
       const eng = await this.engine();
       const id = String(tabId);
+      const state = raw === null ? null : sanitizeTrack(raw);
       let accepted = state;
       if (state) {
         const host = senderUrl ? safeHost(senderUrl) : undefined;
@@ -102,9 +105,20 @@ export class Companion {
     });
   }
 
+  /**
+   * The token is usable unless the server rejected it (401/403). After a rejection nothing is
+   * sent (no playing_now, no queue retries) until the user pairs again.
+   */
+  private async usableAuth(): Promise<Auth | undefined> {
+    const auth = await this.auth();
+    if (!auth) return undefined;
+    const err = await this.deps.local.get<string>(STORAGE_KEYS.lastError);
+    return err === TOKEN_REJECTED ? undefined : auth;
+  }
+
   private async emit(emissions: Emission[]): Promise<void> {
     if (emissions.length === 0) return;
-    const auth = await this.auth();
+    const auth = await this.usableAuth();
     if (!auth) return;
     const { origin } = await this.settings();
     for (const e of emissions) {
@@ -115,19 +129,28 @@ export class Companion {
         if (e.kind === "single") await this.flushQueue(false);
         continue;
       }
-      await this.setError(r.unauthorized ? "token_rejected" : r.status === 0 ? "offline" : `http_${r.status}`);
+      await this.setError(r.unauthorized ? TOKEN_REJECTED : r.status === 0 ? "offline" : `http_${r.status}`);
       if (e.kind === "single" && r.retryable) await this.queue.enqueue(body);
+      if (r.unauthorized) return; // stop sending with a rejected token
     }
   }
 
   private async flushQueue(force: boolean): Promise<void> {
-    const auth = await this.auth();
+    const auth = await this.usableAuth();
     if (!auth) return;
     const { origin } = await this.settings();
     const send = (body: LbSubmission) => submitListens(this.deps.fetch, origin, auth.token, body);
     const r = await this.queue.flush(send, force);
-    if (r.unauthorized) await this.setError("token_rejected");
+    if (r.unauthorized) await this.setError(TOKEN_REJECTED);
     else if (r.sent > 0) await this.setError(null);
+  }
+
+  /** Forget everything tied to the current account: queued listens and in-progress plays. */
+  private async resetAccountState(): Promise<void> {
+    await this.queue.clear();
+    (await this.engine()).endAll();
+    this.nowPlaying = null;
+    await this.persist();
   }
 
   private async setError(code: string | null): Promise<void> {
@@ -145,10 +168,12 @@ export class Companion {
       if (senderOrigin !== null && senderOrigin !== origin) return { ok: false, error: "wrong_origin" };
       const v = await validateToken(this.deps.fetch, origin, token.trim());
       if (!v.valid) return { ok: false, error: v.networkError ? "unreachable" : "invalid_token" };
+      // A (re-)pairing may be a different person on a shared browser: never carry the previous
+      // account's queued listens or in-progress play over to the new token.
+      await this.resetAccountState();
       const auth: Auth = { token: token.trim(), userName: v.userName ?? "" };
       await this.deps.local.set(STORAGE_KEYS.auth, auth);
       await this.setError(null);
-      await this.flushQueue(true);
       return { ok: true, ...(v.userName ? { userName: v.userName } : {}) };
     });
   }
@@ -156,11 +181,8 @@ export class Companion {
   signOut(): Promise<void> {
     return this.run(async () => {
       await this.deps.local.remove(STORAGE_KEYS.auth);
-      await this.queue.clear();
       await this.setError(null);
-      (await this.engine()).endAll();
-      this.nowPlaying = null;
-      await this.persist();
+      await this.resetAccountState();
     });
   }
 
@@ -177,13 +199,22 @@ export class Companion {
       await this.deps.local.set(STORAGE_KEYS.settings, next);
       if (next.origin !== cur.origin) {
         await this.deps.local.remove(STORAGE_KEYS.auth);
-        await this.queue.clear();
+        await this.setError(null);
+        await this.resetAccountState();
       }
+      const eng = await this.engine();
       if (next.paused) {
-        (await this.engine()).endAll();
+        eng.endAll();
         this.nowPlaying = null;
-        await this.persist();
+      } else {
+        for (const p of PLATFORMS) {
+          if (!next.platforms[p]) {
+            eng.endPlatform(p);
+            if (this.nowPlaying?.platform === p) this.nowPlaying = null;
+          }
+        }
       }
+      await this.persist();
       return next;
     });
   }

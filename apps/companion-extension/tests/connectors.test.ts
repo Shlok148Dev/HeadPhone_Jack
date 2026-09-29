@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { amazonMusic, appleMusic, connectorForHost, spotify, youtubeMusic } from "../src/connectors";
-import { parseClock, pickArtwork } from "../src/connectors/common";
+import { MAX_TEXT, parseClock, pickArtwork } from "../src/connectors/common";
 import { env, loadFixture, mediaSession, setMedia } from "./helpers";
 
 beforeEach(() => {
   document.body.innerHTML = "";
+  document.title = "";
 });
 
 describe("youtube-music connector", () => {
@@ -85,11 +86,13 @@ describe("spotify connector", () => {
 });
 
 describe("apple-music connector", () => {
-  it("reads MediaSession + <audio>", () => {
+  const songUrl = "https://music.apple.com/in/song/fixture-song/1234567890";
+
+  it("reads MediaSession + <audio>; origin_url when on the playing song's page (query stripped)", () => {
     loadFixture("apple-music.html");
+    document.title = "‎Song – Song by Artist – Apple Music";
     setMedia("audio", { currentTime: 10, duration: 180.4, paused: false });
-    const url = "https://music.apple.com/in/song/fixture-song/1234567890";
-    expect(appleMusic.read(env(mediaSession({ title: "Song", artist: "Artist", album: "Album" }), url))).toEqual({
+    expect(appleMusic.read(env(mediaSession({ title: "Song", artist: "Artist", album: "Album" }), `${songUrl}?l=en-GB&i=99#x`))).toEqual({
       platform: "APPLE_MUSIC",
       artist: "Artist",
       title: "Song",
@@ -97,8 +100,17 @@ describe("apple-music connector", () => {
       durationMs: 180400,
       positionMs: 10000,
       isPlaying: true,
-      originUrl: url,
+      originUrl: songUrl,
     });
+  });
+
+  it("M2: browsing a different song page while music plays sends no origin_url", () => {
+    loadFixture("apple-music.html");
+    document.title = "‎Other Tune – Song by Someone Else – Apple Music";
+    setMedia("audio", { currentTime: 10, duration: 180, paused: false });
+    const s = appleMusic.read(env(mediaSession({ title: "Song", artist: "Artist" }), songUrl));
+    expect(s?.originUrl).toBeUndefined();
+    expect(s?.title).toBe("Song");
   });
 
   it("media element pause wins over MediaSession playbackState", () => {
@@ -142,6 +154,15 @@ describe("connector helpers", () => {
     expect(parseClock("1:02:03")).toBe(3723000);
     expect(parseClock("-0:42")).toBe(-42000);
     expect(parseClock("live")).toBeUndefined();
+  });
+
+  it("caps page-supplied metadata lengths", () => {
+    loadFixture("amazon-music.html");
+    const long = "x".repeat(5000);
+    const s = amazonMusic.read(env(mediaSession({ title: long, artist: long, album: long }), "https://music.amazon.com/"));
+    expect(s?.title).toHaveLength(MAX_TEXT);
+    expect(s?.artist).toHaveLength(MAX_TEXT);
+    expect(s?.album).toHaveLength(MAX_TEXT);
   });
 
   it("ignores non-https artwork", () => {

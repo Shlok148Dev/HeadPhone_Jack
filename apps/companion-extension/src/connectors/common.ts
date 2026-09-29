@@ -108,7 +108,15 @@ export function textOf(doc: Document, selector: string): string | undefined {
   return t || undefined;
 }
 
-/** Build a TrackState, dropping empty optional fields. */
+/** Page-supplied text is capped before it leaves the page. */
+export const MAX_TEXT = 512;
+export const MAX_URL = 2048;
+/** Longer than a day is not a track (live streams report Infinity or huge values). */
+const MAX_DURATION_MS = 24 * 3600_000;
+
+const cap = (s: string): string => (s.length > MAX_TEXT ? s.slice(0, MAX_TEXT) : s);
+
+/** Build a TrackState, dropping empty optional fields and capping page-supplied values. */
 export function buildState(
   platform: PlatformId,
   meta: SessionMeta,
@@ -117,11 +125,11 @@ export function buildState(
   originUrl?: string,
 ): TrackState | null {
   if (!meta.title || !meta.artist) return null;
-  const s: TrackState = { platform, artist: meta.artist, title: meta.title, isPlaying };
-  if (meta.album) s.album = meta.album;
-  if (timing.durationMs !== undefined) s.durationMs = timing.durationMs;
-  if (timing.positionMs !== undefined) s.positionMs = timing.positionMs;
-  if (originUrl) s.originUrl = originUrl;
-  if (meta.artworkUrl) s.artworkUrl = meta.artworkUrl;
+  const s: TrackState = { platform, artist: cap(meta.artist), title: cap(meta.title), isPlaying };
+  if (meta.album) s.album = cap(meta.album);
+  if (timing.durationMs !== undefined && timing.durationMs <= MAX_DURATION_MS) s.durationMs = timing.durationMs;
+  if (timing.positionMs !== undefined && timing.positionMs <= MAX_DURATION_MS) s.positionMs = timing.positionMs;
+  if (originUrl && originUrl.length <= MAX_URL) s.originUrl = originUrl;
+  if (meta.artworkUrl && meta.artworkUrl.length <= MAX_URL) s.artworkUrl = meta.artworkUrl;
   return s;
 }

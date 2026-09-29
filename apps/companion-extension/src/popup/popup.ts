@@ -14,7 +14,7 @@ const ERRORS: Record<string, string> = {
   invalid_token: "That token wasn't accepted by Jingle.",
   unreachable: "Can't reach Jingle at that address.",
   wrong_origin: "That page isn't your configured Jingle server.",
-  invalid_origin: "Use an https:// address (or http://localhost).",
+  invalid_origin: "Use an https:// address, or http://127.0.0.1:8080 for a local Jingle.",
 };
 
 function send<T>(msg: PopupMessage): Promise<T> {
@@ -35,7 +35,7 @@ function showError(code: string | null): void {
 
 async function render(): Promise<void> {
   const s = await send<Status>({ type: "popup:status" });
-  const connected = s.userName !== null;
+  const connected = s.userName !== null && s.lastError !== "token_rejected";
   $("signed-in").hidden = !connected;
   $("signed-out").hidden = connected;
   $<HTMLInputElement>("origin").value = s.settings.origin;
@@ -79,7 +79,9 @@ async function render(): Promise<void> {
 /** A custom origin needs its host permission (and `scripting` for auto-pairing), asked for on click. */
 async function ensureOriginPermission(origin: string): Promise<boolean> {
   if (BUILTIN_ORIGINS.includes(origin)) return true;
-  const granted = await chrome.permissions.request({ origins: [`${origin}/*`], permissions: ["scripting"] });
+  const granted = await chrome.permissions
+    .request({ origins: [`${origin}/*`], permissions: ["scripting"] })
+    .catch(() => false);
   if (granted) await send({ type: "popup:originChanged" });
   return granted;
 }

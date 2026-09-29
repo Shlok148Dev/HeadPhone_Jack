@@ -1,4 +1,4 @@
-import { BUILTIN_ORIGINS, chromeKV, type Settings } from "../shared/settings";
+import { chromeKV, isBuiltinOrigin, type Settings } from "../shared/settings";
 import type { ContentMessage, PopupMessage } from "../shared/types";
 import { Companion } from "./service";
 
@@ -26,12 +26,27 @@ async function syncPairingScript(): Promise<void> {
   const { origin } = await companion.settings();
   const registered = await chrome.scripting.getRegisteredContentScripts({ ids: [PAIRING_SCRIPT_ID] });
   if (registered.length > 0) await chrome.scripting.unregisterContentScripts({ ids: [PAIRING_SCRIPT_ID] });
-  if (BUILTIN_ORIGINS.includes(origin)) return;
+  if (isBuiltinOrigin(origin)) return;
   const granted = await chrome.permissions.contains({ origins: [`${origin}/*`] });
   if (!granted) return;
   await chrome.scripting.registerContentScripts([
     { id: PAIRING_SCRIPT_ID, matches: [`${origin}/connect/companion*`], js: ["content/pairing.js"], runAt: "document_idle" },
   ]);
+}
+
+/**
+ * Leaving a custom origin gives its runtime host permission back; returning to a built-in
+ * origin also gives back `scripting`. Grants never accumulate.
+ */
+async function revokeOldOrigin(oldOrigin: string, newOrigin: string): Promise<void> {
+  if (!isBuiltinOrigin(oldOrigin)) await chrome.permissions.remove({ origins: [`${oldOrigin}/*`] });
+  if (isBuiltinOrigin(newOrigin) && (await chrome.permissions.contains({ permissions: ["scripting"] }))) {
+    if (chrome.scripting) {
+      const ids = (await chrome.scripting.getRegisteredContentScripts({ ids: [PAIRING_SCRIPT_ID] })).map((s) => s.id);
+      if (ids.length > 0) await chrome.scripting.unregisterContentScripts({ ids });
+    }
+    await chrome.permissions.remove({ permissions: ["scripting"] });
+  }
 }
 
 chrome.runtime.onInstalled.addListener(() => void ensureAlarm().then(syncPairingScript));
@@ -81,12 +96,13 @@ chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
       void companion.status().then(sendResponse);
       return true;
     case "popup:settings":
-      void companion
-        .updateSettings(msg.patch as Partial<Settings>)
-        .then(async (r) => {
-          await syncPairingScript().catch(() => undefined);
-          sendResponse(r);
-        });
+      void (async () => {
+        const before = (await companion.settings()).origin;
+        const r = await companion.updateSettings(msg.patch as Partial<Settings>);
+        if (!("error" in r) && r.origin !== before) await revokeOldOrigin(before, r.origin).catch(() => undefined);
+        await syncPairingScript().catch(() => undefined);
+        sendResponse(r);
+      })();
       return true;
     case "popup:pair":
       void companion.pair(msg.token, null).then(sendResponse);

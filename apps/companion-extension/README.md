@@ -17,17 +17,20 @@ Primary signal is always the standard `navigator.mediaSession.metadata` / `playb
 
 ## Privacy
 
-- **Sends only to your Jingle server** (the address in the popup; default `http://localhost:8080`). No analytics, no third parties.
-- Fields sent (ListenBrainz format, `POST {origin}/ingest/1/submit-listens`, `Authorization: Token <your token>`): artist, track title, album (if known), and `additional_info` = `music_service` (player host), `origin_url` (link to the track, when the page exposes one), `duration_ms`, `submission_client` = "Jingle Companion", `submission_client_version`. Finished listens also carry `listened_at` (start time).
-- Nothing is sent while **Pause sharing** is on, for players you switched off, or before you sign in.
-- The token is stored only in `chrome.storage.local`, never logged, and is removed on sign-out or when you change the server address.
-- Permissions: `storage`, `alarms`; host access to the four players and `localhost:8080` / `127.0.0.1:8080`. A custom Jingle address (https) is requested at runtime for that one origin only, together with `scripting` so the pairing page can hand over the token.
+- **Sends only to your Jingle server** (the address in the popup; default `http://127.0.0.1:8080` per ADR-0016, `http://localhost:8080` also accepted). No analytics, no third parties.
+- Fields sent (ListenBrainz format, `POST {origin}/ingest/1/submit-listens`, `Authorization: Token <your token>`): artist, track title, album (if known; each capped at 512 characters), and `additional_info` = `music_service` (player host), `origin_url`, `duration_ms`, `submission_client` = "Jingle Companion", `submission_client_version`. Finished listens also carry `listened_at` (start time). Artwork is never sent.
+- `origin_url` is a link to the **playing** track only: the YouTube Music `watch?v=` link, the Spotify track link from the player bar, and for Apple Music the song page only when that page is the track that is playing (title and artist match), stripped to address + path (no query string). Browsing other pages is never reported. Amazon Music sends none.
+- Nothing is sent while **Pause sharing** is on, for players you switched off, before you sign in, or after Jingle rejects the token (until you sign in again).
+- **Stored locally in this browser** (`chrome.storage.local`, unencrypted like all extension storage): your token, your settings, and an offline queue of up to 500 finished listens (artist, title, album, time, link) waiting to be sent. The queue is cleared on sign-out, when you sign in (possibly as someone else) and when you change the server address.
+- The token is never logged, never shown back in the popup, and is removed on sign-out or when you change the server address.
+- Permissions: `storage`, `alarms`; host access to the four players and `127.0.0.1:8080` / `localhost:8080`. A custom Jingle address (https only) is requested at runtime for that one origin, together with `scripting` so its pairing page can hand over the token. When you switch to another address, the old origin's permission is given back (and `scripting` too when you return to a local address). Extension pages run under an explicit CSP (`script-src 'self'; object-src 'none'; base-uri 'none'`).
 
 ## Scrobble rules
 
 - `playing_now` when a track starts or resumes, then every 30 s while playing (keeps Jingle's 90 s Live window fresh). Nothing while paused or after the tab closes, so Jingle naturally falls back to Recent.
+- No false Live (BR-01): the player page re-reports every 15 s while playing. If it goes silent for 45 s (tab crashed or frozen, laptop asleep), heartbeats stop, and listening time is only credited up to 20 s after the page's last report.
 - One `single` per play once you have **listened** to ≥ 50% of the track or 4 min (whichever is first); never for tracks shorter than 30 s. Seeking forward does not count as listening; replaying a finished track counts again.
-- `single` listens that fail (offline, server down, token rejected) wait in an offline queue (max 500, retry 30 s → 1 h backoff). `playing_now` is never queued.
+- `single` listens that fail (offline, server down) wait in the offline queue (max 500, retry 30 s → 1 h backoff). `playing_now` is never queued. If Jingle rejects the token (401/403), all sending and retries stop until you sign in again.
 
 ## Build and load
 
@@ -47,7 +50,14 @@ Other scripts: `dev` (rebuild on change, then press reload on the extensions pag
 3. The signed-in page issues a scrobble token and calls `window.postMessage({type: "JINGLE_COMPANION_TOKEN", token}, location.origin)`.
 4. The extension accepts it only from the same window and same origin, with that exact type; the worker additionally checks the page origin equals the configured Jingle origin, validates with `GET {origin}/ingest/1/validate-token` (expects `{valid: true, user_name}`), stores it, and replies `{type: "JINGLE_COMPANION_PAIRED", ok, userName?, error?}` (`error` ∈ `invalid_token`, `unreachable`, `wrong_origin`, `extension_error`).
 
+Pairing again (even as another Jingle user) first clears the previous account's offline queue and in-progress play.
+
 Fallback: paste a token under **Paste a token instead** in the popup.
+
+**Requirements on the web page** (`/connect/companion`, owned by the web app). `window.postMessage` is visible to every script running in the page, so the token handover is only as safe as that page:
+- a strict CSP with no third-party scripts on this route, and `frame-ancestors 'none'`;
+- the token is issued only after an explicit user click, through a CSRF-protected POST; never from a URL parameter or fragment, and never automatically on page load;
+- the token is a dedicated, revocable scrobble token with ingest scope only, gated server-side on the user's age check and consent, and revoked on consent withdrawal or account deletion.
 
 ## How to verify
 

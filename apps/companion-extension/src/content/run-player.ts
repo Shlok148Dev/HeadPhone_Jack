@@ -12,4 +12,8 @@ export function runPlayer(connector: Connector): void {
   const observer = createObserver({ connector, env: browserEnv, send });
   observer.start();
   window.addEventListener("pagehide", () => observer.stop());
+  // Restored from the back/forward cache: resume observing.
+  window.addEventListener("pageshow", (ev) => {
+    if (ev.persisted) observer.start();
+  });
 }

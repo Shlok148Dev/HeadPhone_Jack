@@ -76,4 +76,16 @@ describe("ListenBrainz payload", () => {
     expect(pkg.version).toBe(VERSION);
     expect(manifest.version).toBe(VERSION);
   });
+
+  it("manifest pins a strict extension-page CSP and minimal permissions", () => {
+    const m = JSON.parse(readFileSync(resolve(__dirname, "../public/manifest.json"), "utf8")) as {
+      content_security_policy: { extension_pages: string };
+      permissions: string[];
+      optional_permissions: string[];
+    };
+    expect(m.content_security_policy.extension_pages).toContain("script-src 'self'");
+    expect(m.content_security_policy.extension_pages).toContain("object-src 'none'");
+    expect(m.permissions).toEqual(["storage", "alarms"]);
+    expect(m.optional_permissions).toEqual(["scripting"]);
+  });
 });

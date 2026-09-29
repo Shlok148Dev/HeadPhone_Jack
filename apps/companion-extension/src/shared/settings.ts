@@ -1,9 +1,10 @@
 import { PLATFORMS, type PlatformId } from "./types";
 
-export const DEFAULT_ORIGIN = "http://localhost:8080";
+/** ADR-0016: Jingle is served at PUBLIC_BASE_URL=http://127.0.0.1:8080 (one cookie origin). */
+export const DEFAULT_ORIGIN = "http://127.0.0.1:8080";
 
 /** Origins covered by the static host_permissions in manifest.json. */
-export const BUILTIN_ORIGINS: readonly string[] = ["http://localhost:8080", "http://127.0.0.1:8080"];
+export const BUILTIN_ORIGINS: readonly string[] = ["http://127.0.0.1:8080", "http://localhost:8080"];
 
 export interface Settings {
   origin: string;
@@ -32,7 +33,8 @@ export const STORAGE_KEYS = {
 
 /**
  * Normalise a user-entered Jingle origin to `scheme://host[:port]`.
- * Only https, or http on loopback, is accepted. Returns null when invalid.
+ * Accepted: any https origin (granted at runtime), or one of the built-in local origins over
+ * http (the only http origins the manifest can grant). Returns null when invalid.
  */
 export function normaliseOrigin(input: string): string | null {
   let url: URL;
@@ -41,11 +43,13 @@ export function normaliseOrigin(input: string): string | null {
   } catch {
     return null;
   }
-  const loopback = url.hostname === "localhost" || url.hostname === "127.0.0.1" || url.hostname === "[::1]";
-  if (url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) return null;
   if (url.username || url.password) return null;
-  return url.origin;
+  if (url.protocol === "https:") return url.origin;
+  if (url.protocol === "http:" && BUILTIN_ORIGINS.includes(url.origin)) return url.origin;
+  return null;
 }
+
+export const isBuiltinOrigin = (origin: string): boolean => BUILTIN_ORIGINS.includes(origin);
 
 export function mergeSettings(stored: Partial<Settings> | undefined): Settings {
   return {

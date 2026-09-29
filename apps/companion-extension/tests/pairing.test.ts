@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { installPairingListener, isPlausibleToken, MSG } from "../src/content/pairing-listener";
 import type { PairResult } from "../src/shared/types";
 
-const ORIGIN = "http://localhost:8080";
+const ORIGIN = "http://127.0.0.1:8080";
 const TOKEN = "jgl_abcdefghijklmnop";
 
 function fakeWindow() {
