@@ -1,10 +1,194 @@
 @import "tailwindcss";
+@import "@jingle/design-tokens/tokens.css";
 
-:root {
-  --bg: #08080b;
-  --text: #f4f3f8;
+/* Theme is driven by data-theme on <html>, not by the OS media query. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Breakpoints (UX_SPEC §3, min-width). */
+@theme {
+  --breakpoint-sm: 390px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  --breakpoint-2xl: 1920px;
 }
-body {
-  background: var(--bg);
-  color: var(--text);
+
+/* Map Tailwind utilities onto the Jingle CSS variables (bg-surface-1, text-text-muted, rounded-md…). */
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-glass: var(--surface-glass);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-brand-violet: var(--brand-violet);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-accent-text: var(--accent-text);
+  --color-on-brand: var(--on-brand);
+  --color-live: var(--live);
+  --color-live-soft: var(--live-soft);
+  --color-live-text: var(--live-text);
+  --color-on-live: var(--on-live);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-bg: var(--danger-bg);
+  --color-on-danger: var(--on-danger);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-focus-ring: var(--focus-ring);
+  --color-skeleton: var(--skeleton);
+  --color-scrim: var(--scrim);
+
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-pill: var(--r-pill);
+
+  --shadow-1: var(--elevation-1);
+  --shadow-2: var(--elevation-2);
+
+  --blur-sm: var(--backdrop-sm);
+  --blur-md: var(--backdrop-md);
+  --blur-glass: var(--backdrop-glass);
+  --blur-lg: var(--backdrop-lg);
+
+  --ease-standard: var(--ease-standard);
+  --ease-exit: var(--ease-exit);
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--brand-violet) 40%, transparent);
+  }
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Focus ring: 2 px outline in --focus-ring with a --focus-ring-2 halo (violet→cyan / deep violet→teal). */
+  .ds-focus:focus-visible,
+  .ds-focus-within:focus-within {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--focus-ring-2) 55%, transparent);
+  }
+  .bg-gradient-brand {
+    background-image: var(--gradient-brand);
+    background-size: 120% 120%;
+    background-position: 0% 50%;
+  }
+  .ds-scrollbar-none {
+    scrollbar-width: none;
+  }
+  .ds-scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .ds-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* live.equaliser: scaleY 0.25↔1 from the bottom, alternate. */
+@keyframes ds-eq {
+  from {
+    transform: scaleY(0.25);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.ds-eq-bar {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: ds-eq var(--eq-dur, 1s) ease-in-out infinite alternate;
+  animation-delay: var(--eq-delay, 0s);
+}
+
+/* blip.idle: scale 1↔1.03, 3.2 s. */
+@keyframes ds-bob {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.03);
+  }
+}
+.ds-blip-bob {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: ds-bob 1.6s ease-in-out infinite alternate;
+}
+
+/* skeleton.shimmer */
+@keyframes ds-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.ds-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+  animation: ds-shimmer 1.4s linear infinite;
+}
+
+@keyframes ds-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.ds-spin {
+  animation: ds-spin 0.8s linear infinite;
+}
+
+/* Reduced motion: everything becomes static / instant. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ds-eq-bar,
+  .ds-blip-bob,
+  .ds-shimmer::after {
+    animation: none !important;
+  }
 }
