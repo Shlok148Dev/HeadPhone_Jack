@@ -14,10 +14,16 @@
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 	}
 	@api path /api/* /admin/*
+	request_body @api {
+		max_size 60MB
+	}
 	reverse_proxy @api core-api:8000 {
 		header_up X-Request-ID {http.request.uuid}
 	}
 	@ingest path /ingest/*
+	request_body @ingest {
+		max_size 2MB
+	}
 	reverse_proxy @ingest ingest-ml:8001 {
 		header_up X-Request-ID {http.request.uuid}
 	}
