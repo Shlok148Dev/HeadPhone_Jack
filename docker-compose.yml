@@ -1,0 +1,110 @@
+# Jingle — whole stack on one machine (ADR-0001). Only the edge publishes a host port.
+# Quick start: cp .env.example .env && docker compose up --build  →  http://localhost:8080
+name: jingle
+
+x-py-env: &py-env
+  env_file: .env
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-jingle}
+      POSTGRES_USER: ${POSTGRES_USER:-jingle}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-jingle-local}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 20
+
+  mongo:
+    image: mongo:7
+    command: ["--quiet", "--wiredTigerCacheSizeGB", "0.25"]
+    volumes: [mongodata:/data/db]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    volumes: [qdrantdata:/qdrant/storage]
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 5s
+      retries: 20
+
+  core-api:
+    <<: *py-env
+    build: { context: ., dockerfile: services/core_api/Dockerfile, target: api }
+    command: ["api"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+
+  ingest-ml:
+    <<: *py-env
+    build: { context: ., dockerfile: services/ingest_ml/Dockerfile }
+    depends_on:
+      core-api: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+
+  workers:
+    <<: *py-env
+    build: { context: ., dockerfile: services/core_api/Dockerfile, target: worker }
+    command: ["worker"]
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A core_api inspect ping -d celery@$$HOSTNAME -t 5 >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+    depends_on:
+      core-api: { condition: service_healthy }
+      qdrant: { condition: service_healthy }
+
+  beat:
+    <<: *py-env
+    build: { context: ., dockerfile: services/core_api/Dockerfile, target: worker }
+    command: ["beat"]
+    healthcheck: { disable: true }
+    depends_on:
+      core-api: { condition: service_healthy }
+
+  realtime:
+    env_file: .env
+    build: { context: ., dockerfile: apps/realtime/Dockerfile }
+    depends_on:
+      redis: { condition: service_healthy }
+
+  web:
+    build: { context: ., dockerfile: apps/web/Dockerfile }
+    environment:
+      NEXT_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+
+  edge:
+    image: caddy:2-alpine
+    ports: ["${JINGLE_HTTP_PORT:-8080}:8080"]
+    volumes: ["./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro"]
+    depends_on:
+      web: { condition: service_healthy }
+      core-api: { condition: service_healthy }
+      ingest-ml: { condition: service_healthy }
+      realtime: { condition: service_healthy }
+
+volumes:
+  pgdata:
+  mongodata:
+  redisdata:
+  qdrantdata:

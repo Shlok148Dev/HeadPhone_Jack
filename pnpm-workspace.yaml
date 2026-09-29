@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/design-tokens"
+  - "packages/ts-client"
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - "@parcel/watcher"
+  - "@tailwindcss/oxide"

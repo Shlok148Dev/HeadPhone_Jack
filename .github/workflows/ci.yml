@@ -1,0 +1,80 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [packages/py-common, services/ingest_ml, services/core_api]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_DB: jingle, POSTGRES_USER: jingle, POSTGRES_PASSWORD: jingle-local }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U jingle" --health-interval 5s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      DATABASE_URL: postgres://jingle:jingle-local@localhost:5432/jingle
+      REDIS_URL: redis://localhost:6379/0
+      TOKEN_KEK_B64: ZGV2LW9ubHktMzItYnl0ZS1rZXktZm9yLWxvY2FsISE=
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with: { python-version: "3.12" }
+      - run: uv sync --frozen || uv sync
+      - run: uv run ruff check .
+      - run: uv run mypy jingle_common
+        if: matrix.project == 'packages/py-common'
+      - run: uv run mypy ingest_ml
+        if: matrix.project == 'services/ingest_ml'
+      - run: uv run pytest --cov --cov-report=term-missing
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r typecheck
+      - run: pnpm -r test
+      - run: pnpm -r build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: pnpm install --frozen-lockfile && pnpm audit --audit-level critical
+
+  compose:
+    runs-on: ubuntu-latest
+    needs: [python, node]
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp .env.example .env
+      - run: docker compose up -d --build --wait --wait-timeout 300
+      - run: curl -fsS http://localhost:8080/api/v1/ping && curl -fsS http://localhost:8080/
+      - if: failure()
+        run: docker compose logs --no-color | tail -200
