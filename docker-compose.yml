@@ -61,6 +61,16 @@ services:
       redis: { condition: service_healthy }
       mongo: { condition: service_healthy }
 
+  demo-simulator:
+    # ADR-0010: plays for the demo personas through the real push endpoint (idle unless JINGLE_DEMO=1)
+    <<: *py-env
+    build: { context: ., dockerfile: services/ingest_ml/Dockerfile }
+    command: ["python", "-m", "ingest_ml.demo.simulator"]
+    healthcheck: { disable: true }
+    restart: unless-stopped
+    depends_on:
+      ingest-ml: { condition: service_healthy }
+
   workers:
     <<: *py-env
     build: { context: ., dockerfile: services/core_api/Dockerfile, target: worker }

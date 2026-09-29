@@ -49,7 +49,7 @@ class TestConnections:
             "live_on_web": True, "live_on_phone": True, "history": True}
         assert rows["YOUTUBE_MUSIC"]["capabilities"] == {
             "live_on_web": True, "live_on_phone": False, "history": True}
-        assert "Recent" in rows["YOUTUBE_MUSIC"]["note"]
+        assert "isn't shared yet" in rows["YOUTUBE_MUSIC"]["note"]
         assert rows["APPLE_MUSIC"]["capabilities"]["live_on_phone"] is False
         assert rows["AMAZON_MUSIC"]["capabilities"] == {
             "live_on_web": False, "live_on_phone": False, "history": False}

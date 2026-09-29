@@ -13,14 +13,19 @@ _SPOTIFY_ANY_DEVICE = {SourceKind.SPOTIFY, SourceKind.LASTFM, SourceKind.LISTENB
 
 NOTES = {
     Platform.SPOTIFY: "",
+    # UX_SPEC §10 copy. In the zero-approval pilot there is no phone route for these three
+    # (Apple Music's direct link is flagged off), so phone listening is not shared at all.
     Platform.YOUTUBE_MUSIC: (
-        "Live works while you listen in your browser. Phone listening shows up as Recent."
+        "Live works while you listen in your browser. Phone listening on YouTube Music isn't"
+        " shared yet. Import your history to include it."
     ),
     Platform.APPLE_MUSIC: (
-        "Live works while you listen in your browser. Phone listening shows up as Recent."
+        "Live works while you listen in your browser. Phone listening on Apple Music isn't"
+        " shared yet."
     ),
     Platform.AMAZON_MUSIC: (
-        "Live works while you listen in your browser. Phone listening shows up as Recent."
+        "Live works while you listen in your browser. Phone listening on Amazon Music isn't"
+        " shared yet."
     ),
     Platform.UNKNOWN: "",
 }
