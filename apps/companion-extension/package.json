@@ -1,0 +1,23 @@
+{
+  "name": "@jingle/companion-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Jingle Companion: MV3 browser extension that shares what you play in the YouTube Music, Spotify, Apple Music and Amazon Music web players with your own Jingle server.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "icons": "node scripts/make-icons.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^22.20.4",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.0"
+  }
+}

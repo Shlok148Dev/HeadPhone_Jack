@@ -1,0 +1,74 @@
+:root {
+  --violet: #8b6bff;
+  --cyan: #3fe7d8;
+  --bg: #ffffff;
+  --surface: #f4f2fb;
+  --text: #16131f;
+  --muted: #5d5870;
+  --border: #d9d4ea;
+  --error: #b3261e;
+  --focus: #6a4cf0;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0d16;
+    --surface: #1b1826;
+    --text: #f3f1fa;
+    --muted: #aaa4bf;
+    --border: #332e45;
+    --error: #ff8a80;
+    --focus: #b3a1ff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  width: 340px;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+main { padding: 16px; display: grid; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand h1 { font-size: 16px; margin: 0; font-weight: 650; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.error { color: var(--error); }
+button, input { font: inherit; }
+button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+button.primary {
+  width: 100%;
+  border: 0;
+  color: #0f0d16;
+  font-weight: 600;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, var(--violet), var(--cyan));
+}
+button.link { border: 0; background: none; padding: 0; color: var(--muted); text-decoration: underline; justify-self: start; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+input[type="url"], input[type="password"] {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+form { display: grid; gap: 8px; margin-top: 8px; }
+details summary { cursor: pointer; color: var(--muted); }
+fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; margin: 0; }
+legend { color: var(--muted); padding: 0 4px; font-size: 12px; }
+.switch-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; }
+section { display: grid; gap: 10px; }
+section[hidden] { display: none; }
+input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--violet); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
