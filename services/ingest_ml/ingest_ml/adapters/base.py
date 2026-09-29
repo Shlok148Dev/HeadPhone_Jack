@@ -97,6 +97,16 @@ class SourceAdapter(Protocol):
     async def write_playlist(self, src: LinkedSource, pl: PlaylistSpec) -> str: ...
 
 
+@runtime_checkable
+class PollingAdapter(SourceAdapter, Protocol):
+    """An adapter the poller can drive: returns normalised plays (``ingest_ml.record.Play``)."""
+
+    via: Via
+
+    async def poll_now(self, src: LinkedSource, now: datetime) -> Any: ...
+    async def recent_plays(self, src: LinkedSource, since: datetime) -> list[Any]: ...
+
+
 def assert_live(adapter: HasCapabilities) -> None:
     if not adapter.caps.live:
         raise NotSupported(f"{adapter.kind} cannot report now-playing")

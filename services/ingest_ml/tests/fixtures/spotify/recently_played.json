@@ -1,0 +1,5 @@
+{"items": [
+  {"played_at": "2026-09-29T18:20:00.000Z", "track": {"type": "track", "id": "t1", "name": "Snooze", "duration_ms": 201000,
+   "artists": [{"name": "SZA"}], "album": {"name": "SOS", "images": []}}},
+  {"played_at": "2026-09-29T18:10:00.000Z", "track": {"type": "episode", "id": "e1", "name": "A podcast"}}],
+ "cursors": {"after": "1790700000000", "before": "1790699000000"}}

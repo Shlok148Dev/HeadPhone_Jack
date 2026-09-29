@@ -1,10 +1,13 @@
 """Process-wide clients, built once in the app lifespan (or injected by tests)."""
 
+import base64
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 import httpx
 from fastapi import Request
+from jingle_common.crypto import TokenCipher
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine
 
@@ -30,6 +33,9 @@ class Resources:
     listen_bucket: TokenBucket  # listens per user per hour
     auth_fail_bucket: TokenBucket  # failed auth per client IP per minute
     mb_user_bucket: TokenBucket  # MusicBrainz lookups per user per minute
+    cipher: TokenCipher | None = None  # platform-token envelope encryption (NFR-SEC-01)
+    source_buckets: dict[str, TokenBucket] = field(default_factory=dict)  # per-source budgets
+    background: set[Any] = field(default_factory=set)  # running import tasks (kept referenced)
 
     @classmethod
     def build(
@@ -56,6 +62,18 @@ class Resources:
         else:
             log.info("musicbrainz lookups disabled (no MUSICBRAINZ_CONTACT, demo mode or tests)")
         return cls(
+            cipher=make_cipher(settings),
+            source_buckets={
+                **{
+                    name: TokenBucket(redis, max(1, int(rps)), 1.0)
+                    for name, rps in (
+                        ("lastfm", settings.lastfm_requests_per_second),
+                        ("listenbrainz", settings.listenbrainz_requests_per_second),
+                        ("spotify", settings.spotify_requests_per_second),
+                    )
+                },
+                "apple": TokenBucket(redis, 5, 5.0),  # 1 req/s on average, bursts of 5
+            },
             settings=settings,
             engine=engine,
             redis=redis,
@@ -73,6 +91,21 @@ class Resources:
         await self.redis.aclose()
         await self.engine.dispose()
         self.mongo.client.close()
+
+
+# Same value as .env.example; accepted only when JINGLE_ENV is local or test.
+_DEV_KEK_B64 = "ZGV2LW9ubHktMzItYnl0ZS1rZXktZm9yLWxvY2FsISE="
+
+
+def make_cipher(settings: Settings) -> TokenCipher:
+    raw = settings.token_kek_b64
+    if not raw:
+        if settings.jingle_env not in ("local", "test"):
+            raise RuntimeError("TOKEN_KEK_B64 must be set outside local/test")
+        raw = _DEV_KEK_B64
+    elif raw == _DEV_KEK_B64 and settings.jingle_env not in ("local", "test"):
+        raise RuntimeError("TOKEN_KEK_B64 is the public development key; generate a real one")
+    return TokenCipher(base64.b64decode(raw), settings.token_kek_id)
 
 
 def get_resources(request: Request) -> Resources:

@@ -52,6 +52,10 @@ filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
 strict = true
 plugins = ["pydantic.mypy"]
 
+[[tool.mypy.overrides]]
+module = ["ijson", "ijson.*"]
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
@@ -62,3 +66,5 @@ ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106"]
+# FastAPI dependency injection uses call defaults by design.
+"ingest_ml/api/*.py" = ["B008"]

@@ -1,0 +1,4 @@
+{"timestamp": 1790700000000, "progress_ms": 42000, "is_playing": true, "currently_playing_type": "track",
+ "item": {"type": "track", "id": "3n3Ppam7vgaVa1iaRUc9Lp", "name": "Not Like Us", "duration_ms": 274000,
+  "artists": [{"name": "Kendrick Lamar"}], "album": {"name": "GNX", "images": [{"url": "https://i.scdn.co/image/ab67616d0000b273redacted", "width": 640, "height": 640}]},
+  "external_urls": {"spotify": "https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp"}}}

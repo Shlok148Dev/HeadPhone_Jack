@@ -36,6 +36,23 @@ class Settings(BaseSettings):
     spotify_client_secret: str = ""
     spotify_redirect_uri: str = ""
     spotify_allowlist: str = ""
+    public_base_url: str = "http://127.0.0.1:8080"
+    # AES-256-GCM key-encryption key (base64, 32 bytes) for stored platform tokens (NFR-SEC-01).
+    token_kek_b64: str = ""
+    token_kek_id: str = "local-1"  # noqa: S105 - key identifier, not a secret
+    # Approval-gated integrations (ADR-0001); their flags stay off until approvals arrive.
+    apple_music_team_id: str = ""
+    apple_music_key_id: str = ""
+    apple_music_private_key_path: str = ""
+    amazon_music_client_id: str = ""
+    amazon_music_client_secret: str = ""
+    amazon_music_api_key: str = ""
+    google_dataportability_client_id: str = ""
+    google_dataportability_client_secret: str = ""
+    # Budgets per source in requests per second, at most 80 % of each limit (NFR-SCAL-06).
+    lastfm_requests_per_second: float = 4.0
+    listenbrainz_requests_per_second: float = 8.0
+    spotify_requests_per_second: float = 3.0
 
     @model_validator(mode="after")
     def _refuse_weak_service_token(self) -> "Settings":

@@ -1,0 +1,5 @@
+{"data": [
+  {"id": "i.1001", "type": "library-songs", "attributes": {"name": "cold/mess", "artistName": "Prateek Kuhad",
+   "albumName": "cold/mess", "durationInMillis": 301000, "isrc": "INZ031900123",
+   "artwork": {"url": "https://is1-ssl.mzstatic.com/image/thumb/Music/{w}x{h}bb.jpg"}}},
+  {"id": "i.1002", "type": "songs", "attributes": {"name": "Levitating", "artistName": "Dua Lipa", "albumName": "Future Nostalgia"}}]}

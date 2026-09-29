@@ -1,0 +1,6 @@
+{"payload": {"count": 2, "user_id": "lb_listener", "latest_listen_ts": 1790700000, "listens": [
+  {"listened_at": 1790700000, "track_metadata": {"artist_name": "Arijit Singh", "track_name": "Kesariya",
+   "release_name": "Brahmastra", "additional_info": {"music_service": "music.youtube.com",
+   "recording_mbid": "0d8a0f61-7c4b-4a4a-9b8e-2b6f6b6a9e11", "duration_ms": 268000}}},
+  {"listened_at": 1790699000, "track_metadata": {"artist_name": "Anuv Jain", "track_name": "Husn",
+   "additional_info": {}}}]}}

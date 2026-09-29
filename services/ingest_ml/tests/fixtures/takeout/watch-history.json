@@ -1,0 +1,10 @@
+[
+  {"header": "YouTube Music", "title": "Watched Kesariya (From \"Brahmastra\")", "titleUrl": "https://music.youtube.com/watch?v=BddP6PYo2gs",
+   "subtitles": [{"name": "Arijit Singh - Topic", "url": "https://www.youtube.com/channel/UC1"}], "time": "2026-09-28T15:44:03.123Z",
+   "products": ["YouTube"], "activityControls": ["YouTube watch history"]},
+  {"header": "YouTube", "title": "Watched How to cook dal", "titleUrl": "https://www.youtube.com/watch?v=abcdefghijk",
+   "subtitles": [{"name": "Some Cook"}], "time": "2026-09-28T12:00:00Z", "products": ["YouTube"]},
+  {"header": "YouTube Music", "title": "Watched Excuses", "titleUrl": "https://music.youtube.com/watch?v=vX2cDW8LUWk",
+   "subtitles": [{"name": "AP Dhillon"}], "time": "2026-09-27T20:01:00Z", "products": ["YouTube"]},
+  {"header": "YouTube Music", "title": "Watched a video that has been removed", "time": "2026-09-26T20:01:00Z"}
+]

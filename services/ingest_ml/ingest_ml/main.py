@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from jingle_common.logging import configure, request_id_var
 
-from .api import internal, push
+from .api import connect, internal, push
 from .middleware import RequestIdMiddleware
 from .resources import Resources
 from .settings import Settings, settings
@@ -42,6 +42,7 @@ def create_app(resources: Resources | None = None, app_settings: Settings | None
         app.state.resources = resources
     app.add_middleware(RequestIdMiddleware)
     app.include_router(push.router)
+    app.include_router(connect.router)
     app.include_router(internal.router)
 
     @app.exception_handler(HTTPException)
