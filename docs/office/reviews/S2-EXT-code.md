@@ -69,3 +69,44 @@ The work is solid overall. The scrobble engine is pure and well tested with a fa
 The tests assert behaviour, not just that code runs: payloads are compared exactly, thresholds are checked with a fake clock, and origin rejection cases are covered. The one gap is the missing staleness test (B1).
 
 VERDICT: CHANGES REQUESTED
+
+## Re-review (commit 9f6d7c6)
+
+Scope: `git diff 4071af0 9f6d7c6 -- apps/companion-extension`. This commit fixes B1 and B2, the security review's M1 and M2, and several lows.
+
+### B1: fixed
+- `scrobbler.ts` adds `lastContentAt`, which only `update()` sets. It also adds `RULES.staleMs = 45_000` and `RULES.creditGraceMs = 20_000`.
+- In `tick()`, a session with no page report for more than 45 s is set to not playing, gets no heartbeat, and is dropped as the active tab.
+- `accrue()` credits play time only up to `lastContentAt + 20 s`, so a silent page cannot earn listening time or a false `single`.
+- A stale session resumes with an immediate `playing_now` when the page reports again.
+- The heartbeat test now feeds page updates. New tests cover a page that goes silent, resume after stale, credit gaps and switching a platform off.
+- Re-ran the reviewer's scratch repro (1 update, then 60 ticks 30 s apart with no page reports). Before the fix it sent 60 `playing_now` and 1 `single`. It now sends **1 `playing_now` and 0 `single`**.
+
+### B2: fixed
+- `DEFAULT_ORIGIN` is now `http://127.0.0.1:8080`, citing ADR-0016. localhost stays a built-in alternative.
+- The placeholder, README and error copy are updated.
+- `normaliseOrigin` now accepts http only for the two built-in origins, which the manifest can grant. This also resolves non-blocking item 3: `permissions.request` failures are caught in the popup.
+
+### Other changes checked
+- Re-pairing is isolated per account. `resetAccountState()` clears the queue and any in-progress plays on pair, sign-out and origin change. The pair step no longer flushes the previous account's queue with the new token.
+- After a 401/403, nothing is sent until the user re-pairs (`usableAuth`), and the popup shows the signed-out view.
+- The worker checks every `TrackState` it receives through `sanitizeTrack`: platform allowlist, types, 512-character text cap, https-only URLs of at most 2048 characters, and durations of at most 24 h.
+- The Apple Music `origin_url` is sent only when the open song page matches the track that is playing, and only as origin plus path, so no browsing activity leaks.
+- Switching a platform off ends its sessions at once (`endPlatform`). This resolves non-blocking item 5.
+- The observer restarts on a back/forward-cache restore. This resolves non-blocking item 7.
+- Leaving a custom origin gives its host permission back, and returning to a built-in origin gives back `scripting`.
+- A strict `content_security_policy` is set for extension pages.
+- Still open (not blocking): items 1 (pairing contract in CONTRACTS.md), 2 (canonical `music_service`), 4 (drop player `host_permissions`), 6 (retry a failed `playing_now`) and 8 (slow queue test).
+
+### New non-blocking notes
+1. One heartbeat can still go out 30–45 s after the last page report. With the 90 s `np:` TTL, a dead page can therefore show Live for up to about 135 s after its last real signal. Only sending a heartbeat when `t - lastContentAt <= creditGraceMs` would tighten this to about 110 s and cost nothing. This is not blocking, because the heartbeat reflects a page report that was genuinely recent.
+2. A muted playing tab is not "audible", so Chrome may throttle its timers to once a minute after 5 minutes hidden. The session then goes stale, and Live drops even though the song is still playing. The failure is honest (a missed Live, never a false one). Mention it in the README or listen for `timeupdate` events.
+3. A scrobbler snapshot without `lastContentAt` would never go stale (`NaN` comparison). `chrome.storage.session` is cleared when the extension reloads or updates, so this cannot happen in practice. A `?? lastUpdateAt` default would still be a cheap guard.
+
+### Tests run (worktree at 9f6d7c6)
+- `pnpm --filter @jingle/companion-extension test`: 7 files, **74 passed**, 0 failed.
+- `typecheck`: clean.
+- `build`: `Built Jingle Companion 0.1.0 → dist/ (7 bundles)`.
+- Reviewer's stale-session scratch repro: passes (1 heartbeat, 0 singles).
+
+VERDICT: APPROVED

@@ -87,3 +87,32 @@ The statement is mostly accurate. The destination, the fields sent, the fact tha
 No Critical or High findings. Three Medium findings: M1 and M2 are small code fixes in this ticket; M3 is a documented requirement on the web pairing page. Eight Low findings.
 
 VERDICT: CHANGES REQUESTED
+
+---
+
+## Re-review (commit 9f6d7c6)
+
+Date: 2026-09-29. I read the fix diff for `apps/companion-extension/`. `vitest run` passes (7 files, 74 tests) and `tsc --noEmit` is clean.
+
+| Finding | Status | Evidence |
+| --- | --- | --- |
+| M1 re-pair carries previous account's data | **Fixed** | `service.ts` `pair()` calls `resetAccountState()` (clears queue, `endAll()`, `nowPlaying=null`, persist) after validation and before storing the new token. The forced flush after pairing is removed. Test: "M1: pairing a new token drops the previous account's queue and in-progress play". |
+| M2 Apple origin_url = viewed page | **Fixed** | `apple-music.ts` `appleSongUrl()` requires an exact `/xx/song/<slug>/<id>` path and a page title that starts with the playing title and contains the artist. It returns `origin + pathname` only (no query or hash). Tests cover the matching page and "browsing a different song page ... sends no origin_url". |
+| M3 postMessage handover depends on web page | **Carried** | The requirements are recorded in `docs/office/BOARD.md` "Carry-over requirements" (WEB-PAIR) and in the README "Requirements on the web page". This is acceptable for this ticket. The WEB-PAIR ticket's security review must verify them. |
+| L1 permission accumulation | **Fixed** | `index.ts` `revokeOldOrigin()` removes the old custom origin's host permission. On return to a built-in origin, it also unregisters the pairing script and removes `scripting`. |
+| L2 dev defaults in store build | **Accepted for now** | The default is now `http://127.0.0.1:8080` per ADR-0016, and the localhost host permissions remain. This is fine for the current local-only deployment. It must become a build-time flag (https default, no loopback hosts) before any public or store build. Keep it on the release checklist. |
+| L3 401 retried forever | **Fixed** | `usableAuth()` returns nothing while `lastError === token_rejected`, so `emit()` and `flushQueue()` send nothing. `emit()` returns on the first 401. Only a successful re-pair clears the flag, and the popup then shows the signed-out state. Test: "a rejected token (401) suspends all sending ...". |
+| L4 no length caps | **Fixed** | `buildState` caps text at 512 and URLs at 2048, and bounds durations. The worker now also validates the message itself: `sanitizeTrack()` checks the platform enum, the types, the 512/2048 caps, https-only URLs and numeric range, and `onTrack` takes `unknown`. Test: "rejects malformed track messages at the worker". The server must still enforce its own limits and rate limit. |
+| L5 unreachable loopback origins | **Fixed** | `normaliseOrigin` accepts only https or the built-in http origins. `permissions.request` failures are caught. |
+| L6 local queue undisclosed | **Fixed** | The README privacy section now describes what is stored locally and when it is cleared. |
+| L7 explicit CSP | **Fixed** | `manifest.json` sets `extension_pages: script-src 'self'; object-src 'none'; base-uri 'none'`. |
+| L8 server-side DPDP gates | **Carried** | The README web-page requirements include the age check, consent, and revocation on withdrawal or deletion. These belong to the server ingest and WEB-PAIR tickets. |
+
+The other changes in the commit do not raise security issues:
+- Sessions that stop reporting now time out (no heartbeat, no credit after 20 s or 45 s), which strengthens BR-01.
+- Switching a platform toggle off ends its sessions immediately.
+- Observation resumes when a page is restored from the back/forward cache.
+
+The README privacy statement now matches the code. No new findings.
+
+VERDICT: APPROVED
