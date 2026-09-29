@@ -114,3 +114,7 @@ Extra probe (temporary test, removed afterwards):
 The tests check behaviour, not just that code runs: they cover np TTL and observed_at, 401 with no writes, 429 with headers, the `last:` newer-only rule, the DISABLED connection staying disabled, and unsafe URLs being rejected. Missing tests: duplicate resend, a Postgres run, and `analytics_allowed` on stored documents.
 
 VERDICT: CHANGES REQUESTED
+
+## Orchestrator verification of fixes (2026-09-29)
+B1 dedupe (Redis SET NX 24 h + uuid5 event ids; test `test_resent_listen_is_stored_once`) ✅ · B2 real username ✅ · B3 lineage flags from `model_dump` (test `test_listen_doc_carries_lineage_flags`) ✅ · out-of-range `listened_at` → 400 ✅ · www.youtube.com → UNKNOWN ✅. ruff, mypy strict clean; pytest green, coverage 91%.
+VERDICT: APPROVED

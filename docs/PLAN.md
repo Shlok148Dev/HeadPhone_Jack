@@ -73,8 +73,9 @@ Only Shlok can do the items in `docs/office/HUMAN_ACTIONS.md`. Everything is bui
 
 > You are the Orchestrator of Jingle. Read docs/office/STATE.md, docs/office/BOARD.md and the latest file in docs/office/standups/, then continue exactly where the work stopped, following the kickoff rules in docs/PLAN.md and the agents and skills in .claude/. Do not ask questions; decide, record and proceed.
 
-## 10. Token discipline (adopted 2026-09-29 at the founder's request; quality bar unchanged)
+## 10. Token discipline (superseded in part: see rule 0) (adopted 2026-09-29 at the founder's request; quality bar unchanged)
 
+0. **Founder directive (2026-09-29): the Orchestrator does all work itself. Subagents only when extremely helpful and necessary, one at a time, with a tight brief. Reviews are done by the Orchestrator against the reviewer checklists in `.claude/agents/`.**
 1. The Orchestrator builds shared, contract-heavy or small work itself; subagents get only isolated, well-bounded chunks with tight briefs.
 2. Interrupted agents are **resumed** (SendMessage), never re-spawned.
 3. One **combined** review agent per ticket (code + security checklist together). After fixes, the Orchestrator verifies the specific findings and reruns tests instead of a full re-review. A separate security-privacy-reviewer is used only for auth, token-handling or deletion flows.

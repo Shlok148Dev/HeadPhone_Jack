@@ -121,3 +121,7 @@ Fix: when `jingle_env` is not in `{local, test}`, fail at startup if the service
 `git grep` on the branch found no keys or private keys. `.env.example` contains only placeholders.
 
 VERDICT: CHANGES REQUESTED
+
+## Orchestrator verification of fixes (2026-09-29)
+H1 exact-host allowlist, rebuilt URLs, ON CONFLICT DO NOTHING (7 forbidden-URL tests) ✅ · M1 per-IP failed-auth bucket before DB, token-shape precheck ✅ · M2 Content-Length + streamed 2 MB cap → 413, Caddy cap ✅ · M3 per-user request + listen-count budgets, 5-token cap, per-user MusicBrainz share ✅ · M4 pending set + drain hook `/internal/identity/drain` ✅ · M5 stream MINID 7 d, `DELETE /internal/users/{id}/data` idempotent with test ✅ · M6 weak SERVICE_TOKEN refused outside local/test ✅.
+VERDICT: APPROVED
