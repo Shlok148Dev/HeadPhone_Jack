@@ -13,7 +13,7 @@ _SPOTIFY_ANY_DEVICE = {SourceKind.SPOTIFY, SourceKind.LASTFM, SourceKind.LISTENB
 
 NOTES = {
     Platform.SPOTIFY: "",
-    # UX_SPEC ง10 copy. In the zero-approval pilot there is no phone route for these three
+    # UX_SPEC ยง10 copy. In the zero-approval pilot there is no phone route for these three
     # (Apple Music's direct link is flagged off), so phone listening is not shared at all.
     Platform.YOUTUBE_MUSIC: (
         "Live works while you listen in your browser. Phone listening on YouTube Music isn't"

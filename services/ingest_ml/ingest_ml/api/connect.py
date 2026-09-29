@@ -124,6 +124,22 @@ async def unlink(
     return JSONResponse(None, status_code=204)
 
 
+@router.delete("/sources/{user_id}/{kind}", status_code=204)
+async def remove_route(
+    user_id: UUID, kind: SourceKind, res: Resources = Depends(get_resources)
+) -> JSONResponse:
+    """Consent withdrawal for one route (e.g. ``lastfm_link``): stop reading it at once."""
+    from ..sources_store import delete_sources, get_source
+
+    src = await get_source(res.engine, user_id, kind)
+    if src is not None:
+        await res.redis.zrem("poll:next", str(src.id))
+        if kind is SourceKind.SPOTIFY:
+            await _orch(res).purge_direct_spotify(user_id)
+        await delete_sources(res.engine, user_id, [kind])
+    return JSONResponse(None, status_code=204)
+
+
 class PollRequest(BaseModel):
     flags: dict[str, bool] = Field(default_factory=dict)
     limit: int = Field(default=50, ge=1, le=200)

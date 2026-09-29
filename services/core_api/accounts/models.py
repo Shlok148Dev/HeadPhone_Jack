@@ -115,6 +115,7 @@ class ConsentPurpose(models.TextChoices):
     CONTACT_MATCHING = "contact_matching"
     PUSH_NOTIFICATIONS = "push_notifications"
     EMAIL_DIGEST = "email_digest"
+    LASTFM_LINK = "lastfm_link"
 
 
 CONSENT_DESCRIPTIONS: dict[str, str] = {
@@ -133,6 +134,10 @@ CONSENT_DESCRIPTIONS: dict[str, str] = {
     ),
     ConsentPurpose.PUSH_NOTIFICATIONS: "Send notifications to this browser.",
     ConsentPurpose.EMAIL_DIGEST: "Email you a short digest of what your friends played.",
+    ConsentPurpose.LASTFM_LINK: (
+        "Read what you play from your Last.fm account (Last.fm terms, ADR-0016). "
+        "Stopping disconnects Last.fm."
+    ),
 }
 
 REQUIRED_PURPOSES = frozenset({ConsentPurpose.CORE_SERVICE})

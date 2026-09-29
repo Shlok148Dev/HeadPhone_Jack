@@ -164,7 +164,7 @@ class TestConsents:
         items = {i["purpose"]: i for i in r.json()}
         assert set(items) == {
             "core_service", "activity_sharing", "suggestions_discoverability",
-            "contact_matching", "push_notifications", "email_digest",
+            "contact_matching", "push_notifications", "email_digest", "lastfm_link",
         }
         assert items["core_service"]["given"] is True
         assert items["core_service"]["required"] is True

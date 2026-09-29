@@ -190,6 +190,29 @@ paths:
                 items:
                   $ref: '#/components/schemas/Connection'
           description: ''
+  /api/v1/connections/{platform}:
+    delete:
+      operationId: connections_destroy
+      description: 'JNG-01-09: disconnect one music app without affecting the others.'
+      parameters:
+      - in: path
+        name: platform
+        schema:
+          type: string
+        required: true
+      tags:
+      - sources
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/flags:
     get:
       operationId: flags_list
@@ -206,6 +229,72 @@ paths:
               schema:
                 $ref: '#/components/schemas/PublicFlags'
           description: ''
+  /api/v1/imports/{job_id}:
+    get:
+      operationId: imports_retrieve
+      parameters:
+      - in: path
+        name: job_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - sources
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportStatus'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/imports/youtube:
+    post:
+      operationId: imports_youtube_create
+      description: 'JNG-01-06: upload a Google Takeout watch history (≤ 50 MB) → 202
+        + job id.'
+      tags:
+      - sources
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TakeoutUploadRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJob'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONSENT_REQUIRED
+        '413':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: FILE_TOO_LARGE
   /api/v1/me:
     get:
       operationId: me_retrieve
@@ -349,6 +438,7 @@ paths:
           - contact_matching
           - core_service
           - email_digest
+          - lastfm_link
           - push_notifications
           - suggestions_discoverability
         required: true
@@ -457,6 +547,40 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+  /api/v1/sources/{platform}/connect:
+    post:
+      operationId: sources_connect_create
+      description: 'JNG-01-14: one button per platform; the orchestrator picks the
+        route (BR-13).'
+      parameters:
+      - in: path
+        name: platform
+        schema:
+          type: string
+        required: true
+      tags:
+      - sources
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectPlan'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONSENT_REQUIRED
   /api/v1/sources/companion/token:
     post:
       operationId: sources_companion_token_create
@@ -491,8 +615,129 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: UPSTREAM_UNAVAILABLE
+  /api/v1/sources/lastfm/callback:
+    get:
+      operationId: sources_lastfm_callback_retrieve
+      description: Last.fm's web-auth callback (``?state=…&token=…``).
+      parameters:
+      - in: query
+        name: state
+        schema:
+          type: string
+      - in: query
+        name: token
+        schema:
+          type: string
+      tags:
+      - sources
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
+  /api/v1/sources/lastfm/username:
+    post:
+      operationId: sources_lastfm_username_create
+      description: Connect a public Last.fm profile by username (needs the ``lastfm_link``
+        consent).
+      tags:
+      - sources
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkLastfmRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LinkLastfmRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LinkLastfmRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: LASTFM_FAILED
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONSENT_REQUIRED
+  /api/v1/sources/listenbrainz:
+    post:
+      operationId: sources_listenbrainz_create
+      description: 'JNG-01-02 "Other ways to connect": paste a ListenBrainz user token.'
+      tags:
+      - sources
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkListenBrainzRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LinkListenBrainzRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LinkListenBrainzRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: TOKEN_INVALID
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CONSENT_REQUIRED
+  /api/v1/sources/spotify/callback:
+    get:
+      operationId: sources_spotify_callback_retrieve
+      description: Spotify's redirect target. State-bound (no cookies needed; ADR-0016).
+      parameters:
+      - in: query
+        name: code
+        schema:
+          type: string
+      - in: query
+        name: state
+        schema:
+          type: string
+      tags:
+      - sources
+      security:
+      - {}
+      responses:
+        '302':
+          description: No response body
 components:
   schemas:
+    ActionEnum:
+      enum:
+      - redirect
+      - lastfm_then_spotify
+      - browser
+      type: string
+      description: |-
+        * `redirect` - redirect
+        * `lastfm_then_spotify` - lastfm_then_spotify
+        * `browser` - browser
     ActivityVisibilityEnum:
       enum:
       - friends
@@ -568,6 +813,22 @@ components:
           type: string
       required:
       - token
+    ConnectPlan:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        url:
+          type:
+          - string
+          - 'null'
+          format: uri
+        live_on_phone:
+          type: boolean
+      required:
+      - action
+      - live_on_phone
+      - url
     Connection:
       type: object
       properties:
@@ -681,7 +942,7 @@ components:
             * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
             * `UNKNOWN` - UNKNOWN
           oneOf:
-          - $ref: '#/components/schemas/PlatformEnum'
+          - $ref: '#/components/schemas/FeedCardPlatformEnum'
           - $ref: '#/components/schemas/NullEnum'
         recording:
           oneOf:
@@ -707,6 +968,20 @@ components:
       - platform
       - recording
       - state
+    FeedCardPlatformEnum:
+      enum:
+      - SPOTIFY
+      - APPLE_MUSIC
+      - AMAZON_MUSIC
+      - YOUTUBE_MUSIC
+      - UNKNOWN
+      type: string
+      description: |-
+        * `SPOTIFY` - SPOTIFY
+        * `APPLE_MUSIC` - APPLE_MUSIC
+        * `AMAZON_MUSIC` - AMAZON_MUSIC
+        * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
+        * `UNKNOWN` - UNKNOWN
     FriendRef:
       type: object
       properties:
@@ -749,6 +1024,54 @@ components:
           maxLength: 4096
       required:
       - id_token
+    ImportJob:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+      required:
+      - job_id
+      - status
+    ImportStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        imported:
+          type: integer
+        found:
+          type: integer
+        error:
+          type: string
+      required:
+      - imported
+      - status
+    LinkLastfmRequest:
+      type: object
+      properties:
+        platform:
+          $ref: '#/components/schemas/MusicPlatformEnum'
+        username:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+      - platform
+      - username
+    LinkListenBrainzRequest:
+      type: object
+      properties:
+        platform:
+          $ref: '#/components/schemas/MusicPlatformEnum'
+        token:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - platform
+      - token
     Links:
       type: object
       properties:
@@ -841,6 +1164,18 @@ components:
       - needs_onboarding
       - private_mode
       - username
+    MusicPlatformEnum:
+      enum:
+      - SPOTIFY
+      - APPLE_MUSIC
+      - YOUTUBE_MUSIC
+      - AMAZON_MUSIC
+      type: string
+      description: |-
+        * `SPOTIFY` - SPOTIFY
+        * `APPLE_MUSIC` - APPLE_MUSIC
+        * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
+        * `AMAZON_MUSIC` - AMAZON_MUSIC
     NullEnum:
       type: 'null'
     PatchedMeUpdateRequest:
@@ -884,20 +1219,6 @@ components:
             * `8h` - 8 hours
             * `until_off` - Until I turn it off
             * `off` - Off
-    PlatformEnum:
-      enum:
-      - SPOTIFY
-      - APPLE_MUSIC
-      - AMAZON_MUSIC
-      - YOUTUBE_MUSIC
-      - UNKNOWN
-      type: string
-      description: |-
-        * `SPOTIFY` - SPOTIFY
-        * `APPLE_MUSIC` - APPLE_MUSIC
-        * `AMAZON_MUSIC` - AMAZON_MUSIC
-        * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
-        * `UNKNOWN` - UNKNOWN
     Privacy:
       type: object
       description: JNG-02-05 (precise last-active time), JNG-02-06 (Private mode).
@@ -956,8 +1277,11 @@ components:
             type: boolean
         google_signin_enabled:
           type: boolean
+        google_client_id:
+          type: string
       required:
       - flags
+      - google_client_id
       - google_signin_enabled
     PurposeEnum:
       enum:
@@ -967,6 +1291,7 @@ components:
       - contact_matching
       - push_notifications
       - email_digest
+      - lastfm_link
       type: string
       description: |-
         * `core_service` - Core Service
@@ -975,6 +1300,7 @@ components:
         * `contact_matching` - Contact Matching
         * `push_notifications` - Push Notifications
         * `email_digest` - Email Digest
+        * `lastfm_link` - Lastfm Link
     RegisterRequest:
       type: object
       properties:
@@ -986,7 +1312,7 @@ components:
         password:
           type: string
           writeOnly: true
-          minLength: 8
+          minLength: 10
           maxLength: 128
         username:
           type: string
@@ -1016,6 +1342,14 @@ components:
         * `RECENT` - RECENT
         * `TOP` - TOP
         * `HIDDEN` - HIDDEN
+    TakeoutUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+      - file
   securitySchemes:
     jwtAuth:
       type: http

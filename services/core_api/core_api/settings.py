@@ -128,6 +128,7 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
+    "ENUM_NAME_OVERRIDES": {"MusicPlatformEnum": "sources.connect_views.PLATFORMS"},
 }
 
 SIMPLE_JWT = {
@@ -159,9 +160,14 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_BEAT_SCHEDULE = {
     # Backstop for JNG-01-10 / NFR-PRIV-03: purge soft-deleted accounts older than 30 days.
     "accounts-purge-due-users": {"task": "accounts.tasks.purge_due_users", "schedule": 6 * 3600},
+    # Jingle Connect: poll routes that can't push; resolve queued recordings (Tech Bible 2.3).
+    "sources-poll": {"task": "sources.tasks.poll_sources", "schedule": 10.0},
+    "sources-drain-identity": {"task": "sources.tasks.drain_identity_queue", "schedule": 60.0},
 }
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
+# Jingle account emails of the ≤ 5 direct-Spotify testers (ADR-0013).
+SPOTIFY_ALLOWLIST = env("SPOTIFY_ALLOWLIST", default="")
 
 # Privacy (NFR-PRIV-01/02/03)
 CONSENT_VERSION = env("CONSENT_VERSION", default="2026-09")

@@ -146,6 +146,11 @@ def withdraw_consent(user: User, purpose: str) -> None:
 
 
 def _apply_consent_side_effects(user: User, purpose: str, *, given: bool) -> None:
+    if purpose == ConsentPurpose.LASTFM_LINK and not given:
+        from sources.connect_views import remove_route
+
+        uid = user.pk
+        transaction.on_commit(lambda: remove_route(uid, "LASTFM"))
     if purpose == ConsentPurpose.ACTIVITY_SHARING and not given:
         # Withdrawal = stop collecting and erase collected listening data (DPDP s.6(6)).
         from sources.views import delete_ingest_data

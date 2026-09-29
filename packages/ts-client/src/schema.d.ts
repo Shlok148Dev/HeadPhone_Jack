@@ -109,6 +109,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/connections/{platform}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description JNG-01-09: disconnect one music app without affecting the others. */
+        delete: operations["connections_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/flags": {
         parameters: {
             query?: never;
@@ -120,6 +137,39 @@ export interface paths {
         get: operations["flags_list"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["imports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/youtube": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description JNG-01-06: upload a Google Takeout watch history (≤ 50 MB) → 202 + job id. */
+        post: operations["imports_youtube_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -231,6 +281,23 @@ export interface paths {
         patch: operations["me_privacy_partial_update"];
         trace?: never;
     };
+    "/api/v1/sources/{platform}/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description JNG-01-14: one button per platform; the orchestrator picks the route (BR-13). */
+        post: operations["sources_connect_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sources/companion/token": {
         parameters: {
             query?: never;
@@ -248,10 +315,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sources/lastfm/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Last.fm's web-auth callback (``?state=…&token=…``). */
+        get: operations["sources_lastfm_callback_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sources/lastfm/username": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Connect a public Last.fm profile by username (needs the ``lastfm_link`` consent). */
+        post: operations["sources_lastfm_username_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sources/listenbrainz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description JNG-01-02 "Other ways to connect": paste a ListenBrainz user token. */
+        post: operations["sources_listenbrainz_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sources/spotify/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Spotify's redirect target. State-bound (no cookies needed; ADR-0016). */
+        get: operations["sources_spotify_callback_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * @description * `redirect` - redirect
+         *     * `lastfm_then_spotify` - lastfm_then_spotify
+         *     * `browser` - browser
+         * @enum {string}
+         */
+        ActionEnum: "redirect" | "lastfm_then_spotify" | "browser";
         /**
          * @description * `friends` - Friends
          *     * `circles` - Circles
@@ -285,6 +427,12 @@ export interface components {
         };
         CompanionToken: {
             token: string;
+        };
+        ConnectPlan: {
+            action: components["schemas"]["ActionEnum"];
+            /** Format: uri */
+            url: string | null;
+            live_on_phone: boolean;
         };
         Connection: {
             platform: string;
@@ -335,7 +483,7 @@ export interface components {
              *     * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
              *     * `UNKNOWN` - UNKNOWN
              */
-            platform: components["schemas"]["PlatformEnum"] | components["schemas"]["NullEnum"];
+            platform: components["schemas"]["FeedCardPlatformEnum"] | components["schemas"]["NullEnum"];
             recording: components["schemas"]["CardRecording"] | null;
             /**
              * Format: date-time
@@ -346,6 +494,15 @@ export interface components {
             degraded: boolean;
             attribution: components["schemas"]["AttributionEnum"] | components["schemas"]["NullEnum"];
         };
+        /**
+         * @description * `SPOTIFY` - SPOTIFY
+         *     * `APPLE_MUSIC` - APPLE_MUSIC
+         *     * `AMAZON_MUSIC` - AMAZON_MUSIC
+         *     * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
+         *     * `UNKNOWN` - UNKNOWN
+         * @enum {string}
+         */
+        FeedCardPlatformEnum: "SPOTIFY" | "APPLE_MUSIC" | "AMAZON_MUSIC" | "YOUTUBE_MUSIC" | "UNKNOWN";
         FriendRef: {
             /** Format: uuid */
             id: string;
@@ -361,6 +518,24 @@ export interface components {
         };
         GoogleSignInRequest: {
             id_token: string;
+        };
+        ImportJob: {
+            job_id: string;
+            status: string;
+        };
+        ImportStatus: {
+            status: string;
+            imported: number;
+            found?: number;
+            error?: string;
+        };
+        LinkLastfmRequest: {
+            platform: components["schemas"]["MusicPlatformEnum"];
+            username: string;
+        };
+        LinkListenBrainzRequest: {
+            platform: components["schemas"]["MusicPlatformEnum"];
+            token: string;
         };
         Links: {
             /** Format: uri */
@@ -393,6 +568,14 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /**
+         * @description * `SPOTIFY` - SPOTIFY
+         *     * `APPLE_MUSIC` - APPLE_MUSIC
+         *     * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
+         *     * `AMAZON_MUSIC` - AMAZON_MUSIC
+         * @enum {string}
+         */
+        MusicPlatformEnum: "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE_MUSIC" | "AMAZON_MUSIC";
         NullEnum: null;
         PatchedMeUpdateRequest: {
             display_name?: string;
@@ -416,15 +599,6 @@ export interface components {
              */
             private_mode?: components["schemas"]["PrivateModeEnum"];
         };
-        /**
-         * @description * `SPOTIFY` - SPOTIFY
-         *     * `APPLE_MUSIC` - APPLE_MUSIC
-         *     * `AMAZON_MUSIC` - AMAZON_MUSIC
-         *     * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
-         *     * `UNKNOWN` - UNKNOWN
-         * @enum {string}
-         */
-        PlatformEnum: "SPOTIFY" | "APPLE_MUSIC" | "AMAZON_MUSIC" | "YOUTUBE_MUSIC" | "UNKNOWN";
         /** @description JNG-02-05 (precise last-active time), JNG-02-06 (Private mode). */
         Privacy: {
             readonly activity_visibility: components["schemas"]["ActivityVisibilityEnum"];
@@ -453,6 +627,7 @@ export interface components {
                 [key: string]: boolean;
             };
             google_signin_enabled: boolean;
+            google_client_id: string;
         };
         /**
          * @description * `core_service` - Core Service
@@ -461,9 +636,10 @@ export interface components {
          *     * `contact_matching` - Contact Matching
          *     * `push_notifications` - Push Notifications
          *     * `email_digest` - Email Digest
+         *     * `lastfm_link` - Lastfm Link
          * @enum {string}
          */
-        PurposeEnum: "core_service" | "activity_sharing" | "suggestions_discoverability" | "contact_matching" | "push_notifications" | "email_digest";
+        PurposeEnum: "core_service" | "activity_sharing" | "suggestions_discoverability" | "contact_matching" | "push_notifications" | "email_digest" | "lastfm_link";
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -480,6 +656,10 @@ export interface components {
          * @enum {string}
          */
         StateEnum: "LIVE" | "RECENT" | "TOP" | "HIDDEN";
+        TakeoutUploadRequest: {
+            /** Format: binary */
+            file: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -709,6 +889,35 @@ export interface operations {
             };
         };
     };
+    connections_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     flags_list: {
         parameters: {
             query?: never;
@@ -724,6 +933,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicFlags"];
+                };
+            };
+        };
+    };
+    imports_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportStatus"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    imports_youtube_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["TakeoutUploadRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportJob"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description CONSENT_REQUIRED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description FILE_TOO_LARGE */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -896,7 +1185,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                purpose: "activity_sharing" | "contact_matching" | "core_service" | "email_digest" | "push_notifications" | "suggestions_discoverability";
+                purpose: "activity_sharing" | "contact_matching" | "core_service" | "email_digest" | "lastfm_link" | "push_notifications" | "suggestions_discoverability";
             };
             cookie?: never;
         };
@@ -1019,6 +1308,45 @@ export interface operations {
             };
         };
     };
+    sources_connect_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                platform: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConnectPlan"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description CONSENT_REQUIRED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     sources_companion_token_create: {
         parameters: {
             query?: never;
@@ -1062,6 +1390,132 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
                 };
+            };
+        };
+    };
+    sources_lastfm_callback_retrieve: {
+        parameters: {
+            query?: {
+                state?: string;
+                token?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sources_lastfm_username_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkLastfmRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LinkLastfmRequest"];
+                "multipart/form-data": components["schemas"]["LinkLastfmRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description LASTFM_FAILED */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description CONSENT_REQUIRED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sources_listenbrainz_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkListenBrainzRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["LinkListenBrainzRequest"];
+                "multipart/form-data": components["schemas"]["LinkListenBrainzRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description TOKEN_INVALID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description CONSENT_REQUIRED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sources_spotify_callback_retrieve: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
