@@ -52,6 +52,7 @@ dev = [
   "ruff>=0.6",
   "mypy>=1.11",
   "django-stubs>=5.0",
+  "respx>=0.23.1",
 ]
 
 [tool.uv.sources]
@@ -63,6 +64,11 @@ python_files = ["test_*.py"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+markers = [
+  "JNG-01-01: sign-up and sessions",
+  "JNG-02-06: Private mode",
+  "JNG-05-01: no false Live",
+]
 
 [tool.ruff]
 line-length = 100
@@ -72,6 +78,11 @@ extend-exclude = ["**/migrations/*"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "S", "DJ"]
 ignore = ["S101", "S105", "S106"]
+
+[tool.ruff.lint.per-file-ignores]
+# Shared ingestion-domain models (ADR-0006): schema owned jointly with ingest-ml; not reformatted here.
+"sources/models.py" = ["E501", "DJ001", "DJ008"]
+"tests/**" = ["S", "E501"]
 
 [tool.coverage.run]
 source = ["core_api", "accounts", "social", "circles", "recs", "rituals", "moderation", "feed", "sources", "jingle_ml"]

@@ -33,10 +33,12 @@ INSTALLED_APPS = [
     "core_api",
     "accounts",
     "sources",
+    "feed",
 ]
 
 MIDDLEWARE = [
     "core_api.middleware.RequestIdMiddleware",
+    "core_api.middleware.UTCMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -65,15 +67,30 @@ TEMPLATES = [
     }
 ]
 
-DATABASES = {"default": env.db("DATABASE_URL", default="sqlite:///" + str(BASE_DIR / "test.sqlite3"))}
+DATABASES = {
+    "default": env.db("DATABASE_URL", default="sqlite:///" + str(BASE_DIR / "test.sqlite3"))
+}
 DATABASES["default"]["CONN_MAX_AGE"] = 0  # PgBouncer-ready (Tech Bible 8.3)
 DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 
-REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
+_REDIS_URL_ENV = env("REDIS_URL", default="")
+REDIS_URL = _REDIS_URL_ENV or "redis://localhost:6379/0"
 MONGO_URL = env("MONGO_URL", default="mongodb://localhost:27017/jingle")
 QDRANT_URL = env("QDRANT_URL", default="http://localhost:6333")
 INGEST_INTERNAL_URL = env("INGEST_INTERNAL_URL", default="http://localhost:8001")
 SERVICE_TOKEN = env("SERVICE_TOKEN", default="test-service-token")
+
+# Django cache: Redis when REDIS_URL is set (rate limits, idempotency, flags); locmem in tests.
+if _REDIS_URL_ENV:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": _REDIS_URL_ENV,
+            "KEY_PREFIX": "core",
+        }
+    }
+else:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 AUTH_USER_MODEL = "accounts.User"
 PASSWORD_HASHERS = [
@@ -81,7 +98,10 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
 ]
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
 ]
 
@@ -136,8 +156,17 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="memory://")
 CELERY_RESULT_BACKEND = None
 CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+CELERY_BEAT_SCHEDULE = {
+    # Backstop for JNG-01-10 / NFR-PRIV-03: purge soft-deleted accounts older than 30 days.
+    "accounts-purge-due-users": {"task": "accounts.tasks.purge_due_users", "schedule": 6 * 3600},
+}
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
+
+# Privacy (NFR-PRIV-01/02/03)
+CONSENT_VERSION = env("CONSENT_VERSION", default="2026-09")
+MINIMUM_AGE = 18
+ACCOUNT_PURGE_AFTER_DAYS = 30
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="Jingle <no-reply@jingle.local>")
 
