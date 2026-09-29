@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID, uuid4
@@ -29,7 +30,11 @@ log = logging.getLogger(__name__)
 
 FUZZY_THRESHOLD = 90
 DURATION_TOLERANCE_MS = 5_000
-PENDING_KEY = "resolve:pending"
+PENDING_KEY = "resolve:pending"  # list of jobs, FIFO
+PENDING_IDS = "resolve:pending:ids"  # set of queued recording ids (dedupe)
+PENDING_MAX = 50_000
+
+RemoteGate = Callable[[], Awaitable[bool]]
 _ISRC = re.compile(r"^[A-Z]{2}[A-Z0-9]{3}\d{7}$")
 
 
@@ -131,7 +136,15 @@ class IdentityResolver:
             await conn.execute(stmt)
 
     # ---- main entry ----------------------------------------------------------------------
-    async def resolve(self, t: TrackInput, *, allow_remote: bool = True) -> Resolved:
+    async def resolve(
+        self,
+        t: TrackInput,
+        *,
+        allow_remote: bool = True,
+        remote_gate: RemoteGate | None = None,
+    ) -> Resolved:
+        """``remote_gate`` is awaited just before a MusicBrainz lookup (per-user budget);
+        returning False defers the lookup to ``resolve:pending``."""
         norm = normalise(t.artist, t.title)
         isrc = clean_isrc(t.isrc)
         async with self._engine.begin() as conn:
@@ -162,7 +175,7 @@ class IdentityResolver:
         # Remote fuzzy match (outside the DB transaction).
         match: MBRecording | None = None
         pending = False
-        if self._mb is not None and allow_remote:
+        if self._mb is not None and allow_remote and (remote_gate is None or await remote_gate()):
             try:
                 cands = await asyncio.wait_for(
                     self._mb.search_recordings(norm.artist, norm.title), self._timeout
@@ -305,6 +318,83 @@ class IdentityResolver:
         return Resolved(rid, "fuzzy", artwork_for(m.release_mbid or t.release_mbid))
 
     async def _enqueue(self, rid: UUID, t: TrackInput) -> None:
+        """Queue once per recording id, bounded at PENDING_MAX jobs."""
+        if not await self._redis.sadd(PENDING_IDS, str(rid)):
+            return  # already queued
+        if await self._redis.llen(PENDING_KEY) >= PENDING_MAX:
+            await self._redis.srem(PENDING_IDS, str(rid))
+            log.warning("resolve:pending is full; recording left unresolved")
+            return
         job = {"recording_id": str(rid), "artist": t.artist, "title": t.title,
                "duration_ms": t.duration_ms}
         await self._redis.rpush(PENDING_KEY, json.dumps(job))
+
+    async def drain_pending(self, limit: int = 20) -> dict[str, int]:
+        """Consume up to ``limit`` queued lookups (called by a periodic job).
+
+        Stops early and re-queues the job when MusicBrainz is rate-limited or down.
+        """
+        counts = {"processed": 0, "resolved": 0, "requeued": 0, "skipped": 0}
+        if self._mb is None:
+            return counts
+        for _ in range(max(0, limit)):
+            popped = await self._redis.lpop(PENDING_KEY)
+            if popped is None or isinstance(popped, list):
+                break
+            raw: str | bytes = popped
+            counts["processed"] += 1
+            try:
+                job = json.loads(raw)
+                rid = UUID(str(job["recording_id"]))
+            except (ValueError, KeyError, TypeError):
+                counts["skipped"] += 1
+                continue
+            async with self._engine.connect() as conn:
+                row = await self._one(conn, recordings.c.id == rid)
+            if row is None or row["resolution"] != "unresolved":
+                await self._redis.srem(PENDING_IDS, str(rid))
+                counts["skipped"] += 1
+                continue
+            try:
+                cands = await self._mb.search_recordings(row["artist_name"], row["title"])
+            except MusicBrainzUnavailable:
+                await self._redis.lpush(PENDING_KEY, raw)
+                counts["requeued"] += 1
+                break
+            await self._redis.srem(PENDING_IDS, str(rid))
+            norm = normalise(row["artist_name"], row["title"])
+            match = best_match(norm, row["duration_ms"], cands)
+            if match is not None and await self._apply_match(rid, match):
+                counts["resolved"] += 1
+        return counts
+
+    async def _apply_match(self, rid: UUID, m: MBRecording) -> bool:
+        """Upgrade an unresolved row in place. Skips if the MBID already has its own row."""
+        async with self._engine.begin() as conn:
+            if await self._one(conn, recordings.c.mbid == m.mbid):
+                return False
+            isrc = clean_isrc(m.isrc)
+            if isrc and await self._one(conn, recordings.c.isrc == isrc):
+                isrc = None
+            artist_id = await self._upsert_artist(conn, m.artist, m.artist_mbid)
+            values: dict[str, Any] = {
+                "mbid": m.mbid, "resolution": "fuzzy", "artist_id": artist_id,
+                "updated_at": now(),
+            }
+            if isrc:
+                values["isrc"] = isrc
+            if m.release_mbid:
+                values["release_mbid"] = m.release_mbid
+                values["artwork_url"] = artwork_for(m.release_mbid)
+            if m.release_title:
+                values["album"] = m.release_title[:500]
+            if m.duration_ms:
+                values["duration_ms"] = m.duration_ms
+            try:
+                async with conn.begin_nested():
+                    await conn.execute(
+                        update(recordings).where(recordings.c.id == rid).values(values)
+                    )
+            except IntegrityError:
+                return False
+        return True

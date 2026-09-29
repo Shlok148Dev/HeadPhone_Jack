@@ -5,18 +5,22 @@ Tokens are never logged and never placed in exception messages.
 
 import hashlib
 import hmac
+import re
 import secrets
 from dataclasses import dataclass
+from datetime import UTC, timedelta
 from uuid import UUID
 
 from fastapi import Depends, Header, HTTPException
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from .db import now, scrobble_tokens
+from .db import now, scrobble_tokens, users
 from .resources import Resources, get_resources
 
 TOKEN_PREFIX = "jng_"  # noqa: S105 - public prefix, not a secret
+TOKEN_RE = re.compile(r"^jng_[A-Za-z0-9_-]{43}$")
+TOUCH_INTERVAL = timedelta(seconds=60)  # throttle last_used_at writes
 
 
 def hash_token(token: str) -> str:
@@ -38,15 +42,23 @@ def parse_token_header(authorization: str | None) -> str | None:
     return value
 
 
+def well_formed(token: str) -> bool:
+    """Jingle tokens are ``jng_`` + 43 urlsafe chars; anything else is rejected without a DB hit."""
+    return TOKEN_RE.match(token) is not None
+
+
 @dataclass(frozen=True)
 class TokenPrincipal:
     token_id: UUID
     user_id: UUID
+    username: str | None = None
 
 
 async def lookup_token(
     engine: AsyncEngine, token: str, *, touch: bool = True
 ) -> TokenPrincipal | None:
+    if not well_formed(token):
+        return None
     digest = hash_token(token)
     async with engine.begin() as conn:
         row = (
@@ -55,6 +67,11 @@ async def lookup_token(
                     scrobble_tokens.c.id,
                     scrobble_tokens.c.user_id,
                     scrobble_tokens.c.token_sha256,
+                    scrobble_tokens.c.last_used_at,
+                    users.c.username,
+                )
+                .select_from(
+                    scrobble_tokens.outerjoin(users, users.c.id == scrobble_tokens.c.user_id)
                 )
                 .where(scrobble_tokens.c.token_sha256 == digest)
                 .where(scrobble_tokens.c.revoked_at.is_(None))
@@ -62,14 +79,17 @@ async def lookup_token(
         ).first()
         if row is None or not hmac.compare_digest(row.token_sha256, digest):
             return None
-        if touch:
-            ts = now()
+        ts = now()
+        last = row.last_used_at
+        if last is not None and last.tzinfo is None:
+            last = last.replace(tzinfo=UTC)
+        if touch and (last is None or ts - last > TOUCH_INTERVAL):
             await conn.execute(
                 update(scrobble_tokens)
                 .where(scrobble_tokens.c.id == row.id)
                 .values(last_used_at=ts, updated_at=ts)
             )
-        return TokenPrincipal(token_id=row.id, user_id=row.user_id)
+        return TokenPrincipal(token_id=row.id, user_id=row.user_id, username=row.username)
 
 
 def require_service_token(

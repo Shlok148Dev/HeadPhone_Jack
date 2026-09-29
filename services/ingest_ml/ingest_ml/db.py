@@ -45,7 +45,13 @@ def _ts() -> list[Column[Any]]:
     ]
 
 
-users = Table("users", metadata, Column("id", Uuid, primary_key=True))
+# Read-only mirror (Django owns and writes users); username is shown by validate-token.
+users = Table(
+    "users",
+    metadata,
+    Column("id", Uuid, primary_key=True),
+    Column("username", String(150), nullable=True),
+)
 
 platform_connections = Table(
     "platform_connections",

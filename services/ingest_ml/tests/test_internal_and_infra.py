@@ -186,11 +186,12 @@ async def test_token_bucket_refills() -> None:
 
 
 def test_settings_musicbrainz_switch() -> None:
+    tok = "s" * 40
     assert not Settings(jingle_env="test").musicbrainz_active
-    assert not Settings(jingle_env="prod").musicbrainz_active  # no contact → off
-    assert Settings(jingle_env="prod", musicbrainz_contact="a@b.c").musicbrainz_active
+    assert not Settings(jingle_env="prod", service_token=tok).musicbrainz_active  # no contact → off
+    assert Settings(jingle_env="prod", service_token=tok, musicbrainz_contact="a@b.c").musicbrainz_active
     assert not Settings(
-        jingle_env="prod", jingle_demo=True, musicbrainz_contact="a@b.c"
+        jingle_env="prod", service_token=tok, jingle_demo=True, musicbrainz_contact="a@b.c"
     ).musicbrainz_active
     assert Settings(
         jingle_env="test", musicbrainz_contact="a@b.c", musicbrainz_enabled=True
@@ -221,3 +222,11 @@ def test_empty_env_values_use_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PUSH_RATE_LIMIT_PER_MINUTE", "")
     s = Settings()
     assert s.musicbrainz_enabled is None and s.push_rate_limit_per_minute == 60
+
+
+def test_settings_refuse_weak_service_token_outside_dev() -> None:
+    for bad in ("", "test-service-token", "dev-only-change-me-service-token-0000000000000", "short"):
+        with pytest.raises(ValueError):
+            Settings(jingle_env="prod", service_token=bad or "test-service-token")
+    assert Settings(jingle_env="prod", service_token="s" * 40).service_token == "s" * 40
+    assert Settings(jingle_env="local").service_token == "test-service-token"

@@ -21,8 +21,9 @@ TABLE = [
     ("music.apple.com", None, None, P.APPLE_MUSIC),
     (None, "https://music.apple.com/in/album/x/123?i=456", None, P.APPLE_MUSIC),
     ("music.youtube.com", None, None, P.YOUTUBE_MUSIC),
-    ("youtube.com", None, None, P.YOUTUBE_MUSIC),
-    (None, "https://www.youtube.com/watch?v=abc", None, P.YOUTUBE_MUSIC),
+    # plain YouTube is not YouTube Music (Orchestrator decision, S1-INGEST review)
+    ("youtube.com", None, None, P.UNKNOWN),
+    (None, "https://www.youtube.com/watch?v=abc", None, P.UNKNOWN),
     ("music.amazon.in", None, None, P.AMAZON_MUSIC),
     (None, "https://music.amazon.com/albums/B0", None, P.AMAZON_MUSIC),
     ("amazon.co.uk", None, None, P.AMAZON_MUSIC),
@@ -52,7 +53,11 @@ def test_infer_platform(
 
 
 def test_safe_platform_url() -> None:
-    assert safe_platform_url("https://music.youtube.com/watch?v=x", P.YOUTUBE_MUSIC)
+    assert (
+        safe_platform_url("https://music.youtube.com/watch?v=dQw4w9WgXcQ&si=tracker", P.YOUTUBE_MUSIC)
+        == "https://music.youtube.com/watch?v=dQw4w9WgXcQ"
+    )
+    assert safe_platform_url("https://music.youtube.com/watch?v=x", P.YOUTUBE_MUSIC) is None
     assert safe_platform_url("http://music.youtube.com/watch?v=x", P.YOUTUBE_MUSIC) is None
     assert safe_platform_url("javascript:alert(1)", P.YOUTUBE_MUSIC) is None
     assert safe_platform_url("https://evil.com/?music.youtube.com", P.YOUTUBE_MUSIC) is None
@@ -73,7 +78,7 @@ def test_spotify_url_and_ids() -> None:
     assert spotify_url("https://open.spotify.com/track/abc") == "https://open.spotify.com/track/abc"
     assert spotify_url("https://evil.com/track/abc") is None
     assert spotify_url(None) is None
-    assert external_id_from_url("https://youtu.be/xyz", P.YOUTUBE_MUSIC) == "xyz"
+    assert external_id_from_url("https://music.youtube.com/watch?v=xyz", P.YOUTUBE_MUSIC) == "xyz"
     assert external_id_from_url("https://open.spotify.com/track/abc/", P.SPOTIFY) == "abc"
     assert external_id_from_url("https://music.apple.com/x", P.APPLE_MUSIC) == ""
 
@@ -90,3 +95,27 @@ def test_spotify_url_and_ids() -> None:
 )
 def test_trainable_flags(via: Via, platform: Platform, trainable: bool) -> None:
     assert default_trainable(via, platform) is trainable
+
+
+@pytest.mark.parametrize(
+    ("url", "platform"),
+    [
+        ("https://evil.com\@open.spotify.com/track/abc", P.SPOTIFY),  # backslash trick
+        ("https://user@open.spotify.com/track/abc", P.SPOTIFY),  # userinfo
+        ("https://open.spotify.com:8443/track/abc", P.SPOTIFY),  # explicit port
+        ("https://amazon.evil.com/x", P.AMAZON_MUSIC),  # label match must not pass
+        ("https://music.amazon.evil.com/x", P.AMAZON_MUSIC),
+        ("https://open.spotify.com/track/a" + chr(10) + "b", P.SPOTIFY),  # control char
+        ("https://open.spotify.com.evil.com/track/abc", P.SPOTIFY),
+    ],
+)
+def test_JNG_01_13_forbidden_link_urls(url: str, platform: Platform) -> None:
+    """SEC H1: attacker-controlled hosts must never become shared "Open in" links."""
+    assert safe_platform_url(url, platform) is None
+
+
+def test_safe_url_is_rebuilt_not_echoed() -> None:
+    assert (
+        safe_platform_url("https://open.spotify.com/track/abc?si=tracking#frag", P.SPOTIFY)
+        == "https://open.spotify.com/track/abc"
+    )

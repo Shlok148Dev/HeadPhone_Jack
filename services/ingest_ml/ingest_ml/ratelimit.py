@@ -23,7 +23,9 @@ if tokens == nil then tokens = capacity; ts = now end
 local elapsed = math.max(0, now - ts)
 tokens = math.min(capacity, tokens + elapsed * rate)
 local allowed = 0
-if tokens >= cost then tokens = tokens - cost; allowed = 1 end
+local need = math.max(cost, 1)
+if tokens >= need then tokens = tokens - cost; allowed = 1
+elseif ARGV[5] == '1' then tokens = math.max(0, tokens - cost) end
 redis.call('HSET', key, 'tokens', tostring(tokens), 'ts', tostring(now))
 redis.call('EXPIRE', key, math.ceil(capacity / rate) + 1)
 return {allowed, tostring(tokens)}
@@ -56,14 +58,20 @@ class TokenBucket:
         self.capacity = capacity
         self.rate = capacity / per_seconds  # tokens per second
 
-    async def take(self, key: str, cost: int = 1) -> BucketResult:
-        raw = await cast(Any, self._redis.eval(
-            _SCRIPT, 1, key, self.capacity, self.rate, repr(time.time()), cost
-        ))
+    async def take(self, key: str, cost: int = 1, *, force: bool = False) -> BucketResult:
+        """Take ``cost`` tokens. ``cost=0`` only checks that one token is available;
+        ``force`` charges even when the bucket is short (used to record failures)."""
+        raw = await cast(
+            Any,
+            self._redis.eval(
+                _SCRIPT, 1, key, self.capacity, self.rate, repr(time.time()), cost,
+                "1" if force else "0",
+            ),
+        )
         allowed = bool(int(raw[0]))
         tokens = float(raw[1])
         reset_in = math.ceil((self.capacity - tokens) / self.rate)
-        retry_after = 0.0 if allowed else max(0.0, (cost - tokens) / self.rate)
+        retry_after = 0.0 if allowed else max(0.0, (max(cost, 1) - tokens) / self.rate)
         return BucketResult(
             allowed=allowed,
             limit=self.capacity,

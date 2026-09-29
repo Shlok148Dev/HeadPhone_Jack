@@ -26,7 +26,10 @@ class Resources:
     mongo: MongoDatabase
     http: httpx.AsyncClient
     resolver: IdentityResolver
-    push_bucket: TokenBucket
+    push_bucket: TokenBucket  # requests per user per minute
+    listen_bucket: TokenBucket  # listens per user per hour
+    auth_fail_bucket: TokenBucket  # failed auth per client IP per minute
+    mb_user_bucket: TokenBucket  # MusicBrainz lookups per user per minute
 
     @classmethod
     def build(
@@ -60,6 +63,9 @@ class Resources:
             http=http,
             resolver=IdentityResolver(engine, redis, mb),
             push_bucket=TokenBucket(redis, settings.push_rate_limit_per_minute, 60.0),
+            listen_bucket=TokenBucket(redis, settings.push_listen_limit_per_hour, 3600.0),
+            auth_fail_bucket=TokenBucket(redis, settings.push_auth_fail_limit_per_minute, 60.0),
+            mb_user_bucket=TokenBucket(redis, settings.musicbrainz_user_lookups_per_minute, 60.0),
         )
 
     async def close(self) -> None:
