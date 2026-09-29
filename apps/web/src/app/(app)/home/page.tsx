@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { EmptyState, ErrorState, FeedCard, FeedCardSkeleton, Icons } from "@/components/ds";
+import { EmptyState, ErrorState, FeedCard, FeedCardSkeleton } from "@/components/ds";
 import { useAuth } from "@/lib/auth";
 import { useConnections, useMyCard } from "@/lib/queries";
 
@@ -38,7 +38,7 @@ export default function HomePage() {
             Your music apps
           </Link>
         </div>
-        <div className="max-w-sm">
+        <div className="w-full max-w-[240px] sm:max-w-[280px]">
           {card.isLoading ? (
             <FeedCardSkeleton />
           ) : card.isError ? (
@@ -67,11 +67,8 @@ export default function HomePage() {
         <EmptyState
           pose="wave"
           title="Your feed is waiting for friends"
-          description="Adding friends arrives in the next update. Soon you'll see what they're playing here, live."
+          description="Soon you'll add friends and see what they're playing here, live."
         />
-        <p className="flex items-center justify-center gap-2 pb-6 font-mono text-xs text-text-subtle">
-          <Icons.Info size={14} /> Friends, circles and the live feed are next on the build plan.
-        </p>
       </section>
     </div>
   );
