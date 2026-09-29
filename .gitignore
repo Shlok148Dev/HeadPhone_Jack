@@ -42,3 +42,6 @@ Thumbs.db
 .data/
 mlruns/
 artifacts/screenshots/tmp/
+
+# Agent worktrees
+.claude/worktrees/
