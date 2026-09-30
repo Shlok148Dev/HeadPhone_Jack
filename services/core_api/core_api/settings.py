@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     "social",
     "suggestions",
     "circles",
+    "sends",
+    "blends",
+    "listening",
     "feed",
 ]
 
@@ -171,6 +174,13 @@ CELERY_BEAT_SCHEDULE = {
     "sources-poll": {"task": "sources.tasks.poll_sources", "schedule": 10.0},
     "sources-drain-identity": {"task": "sources.tasks.drain_identity_queue", "schedule": 60.0},
     # Friend suggestions nightly at 03:00 IST (Tech Bible 7.4); on-change runs are event-driven.
+    # Sends: Played from the recipient's own listens; discovery credits daily (Tech Bible 6.4).
+    "sessions-sweep": {"task": "listening.tasks.sweep", "schedule": 30.0},
+    "sends-played": {"task": "sends.tasks.check_played", "schedule": 60.0},
+    "sends-credits-daily": {
+        "task": "sends.tasks.discovery_credits",
+        "schedule": crontab(hour=4, minute=30),
+    },
     "circles-suggest-weekly": {
         "task": "jingle_ml.tasks.suggest_circles",
         "schedule": crontab(hour=4, minute=0, day_of_week="sun"),

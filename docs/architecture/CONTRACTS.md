@@ -88,7 +88,7 @@ Published by ingest-ml to Redis Stream `events:listen` (field `data` = JSON) and
 | `sess:{id}:queue` / `sess:{id}:ver` | ZSET / counter | session life | core-api | Live queue |
 | `flags:cache` | Hash | 30 s | core-api | Feature flags for other services |
 
-Streams: `events:listen` (ingest → realtime, workers), `events:domain` (core-api → realtime: `feed.invalidate`, `notify`, `queue.delta`, `friendship.changed`, `block.created`).
+Streams: `events:listen` (ingest → realtime, workers), `events:domain` (core-api → realtime: `feed.invalidate`, `notify`, `queue.delta`, `friendship.changed`, `block.created`). `notify.type` values: `friend_request`, `circle_invite`, `send`, `send_status`, `send_reaction` (ADR-0020).
 
 ## 7. FeedCard (SRS 5.5, amended by ADR-0002)
 

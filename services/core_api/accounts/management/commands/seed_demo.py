@@ -106,6 +106,7 @@ class Command(BaseCommand):
                 )
         self._reset_demo_sandbox(users["demo"])
         self._seed_circles()
+        self._seed_sends(users)
         # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
         from jingle_ml.tasks import schedule_all_later
 
@@ -125,6 +126,34 @@ class Command(BaseCommand):
             status=FriendshipStatus.PENDING,
         ).delete()
         SuggestionFeedback.objects.filter(user=demo).delete()
+
+    def _seed_sends(self, users):
+        """A song and a mixtape in demo's inbox, and one send out, so EP-06 isn't empty."""
+        from jingle_common.demo import CATALOG
+
+        from sends import services as sends
+        from sends.models import Recommendation
+
+        if Recommendation.objects.filter(sender__username__in=["aanya", "kabir"]).exists():
+            return
+
+        def song(t):
+            return {"title": t.title, "artist": t.artist}
+
+        demo = users["demo"]
+        sends.send(
+            users["aanya"],
+            [song(CATALOG[4])],
+            note="This one's been on repeat since the fest. Trust me.",
+            user_ids=[demo.pk],
+        )
+        sends.send(
+            users["kabir"],
+            [song(t) for t in CATALOG[:6]],
+            note="Road trip mixtape for Saturday",
+            user_ids=[demo.pk],
+        )
+        sends.send(demo, [song(CATALOG[5])], note="You'll like this", user_ids=[users["zoya"].pk])
 
     def _seed_circles(self):
         """Two demo circles (Sprint 6): one the demo login owns, one it joined."""

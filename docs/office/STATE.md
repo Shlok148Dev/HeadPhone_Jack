@@ -1,9 +1,9 @@
 # STATE — Jingle
 
-_Last updated: 2026-09-30 — Sprint 6 complete_
+_Last updated: 2026-09-30 — Sprint 7 complete_
 
 ## Current sprint
-**Sprints 0–6 done.** Now: **Sprint 7 — sends and mixtapes** (see `BOARD.md`). Founder directive: advance sprint to sprint through S11 after each readiness check.
+**Sprints 0–7 done.** Now: **Sprint 8 — Blends and live sessions** (see `BOARD.md`). Founder directive: advance sprint to sprint through S11 after each readiness check.
 
 ## Done (on main)
 ### Sprint 0 — Setup
@@ -54,23 +54,34 @@ _Last updated: 2026-09-30 — Sprint 6 complete_
 - Retro: E2E caught a sticky `?invite=1` and demo-state drift (seed now resets the demo login's sandbox state). Home is at its 180 kB budget — S7 inbox must not add to Home's bundle.
 - Tests: circles 10 incl. Gherkin (Full circle, never auto-join); E2E 14 green; review `docs/office/reviews/S6-CIRCLES-review.md`.
 
+### Sprint 7 — Sends and mixtapes
+- `sends` app (ADR-0020): track or 5–8 mixtape with a ≤ 280 note to friends and/or circles; Sent → Delivered → Viewed → Played (Played from the recipient's own analysable listens after the send); reactions and reply-with-a-song; daily discovery credits (Tech Bible 6.4); song search over known recordings; demo sends.
+- Web: Send sheet (lazy) from any card and the Now Playing bar (recipient chips, mixtape builder, note counter), Inbox (Received/Sent, status chips, discovery credit, open on my platform with "Not found on {Platform}"), TopBar Inbox badge.
+- Retro: optimistic close dropped `mutate` callbacks (use `mutateAsync` after unmount); `next/dynamic` cost 1 kB in the shared layout — `React.lazy` instead; Suggestions shelf now lazy, Home back to 180 kB.
+- Tests: sends 12 incl. Gherkin JNG-06-03 (93 % cov), web unit 99, E2E 17; review `docs/office/reviews/S7-SENDS-review.md`.
+
 ## Working mode
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
-1. Sprint 7 — sends (track + 280-char note, to friends or a circle), mixtapes (5–8), open on the recipient's platform, Sent/Delivered/Viewed/Played, inbox, reactions/replies, discovery credit (JNG-06-01…07).
-2. Sprint 8 — Blends and live sessions.
+1. Sprint 8 — Blends (2–6 friends or a circle, one-line reasons, pin + regenerate, save where the API allows) and live sessions (shared queue, anonymous adds, votes re-order live, survives host leaving, rejoin) (JNG-07-01…09).
+2. Sprint 9 — compatibility, stats, taste timeline.
 
 ## Open risks
 - R-A: Host runs another project ("axis") on 5432/6379/6333/8025; Jingle publishes only 8080.
 - R-B: Heavy ML wheels (leidenalg) resolved in lock; LightFM decision deferred to S8.
-- R-D: Home first-load JS at 180 kB budget; new Home features lazy-load.
 - R-C: Spotify redirect must use 127.0.0.1; callbacks state-bound (ADR-0016).
 - R-D: Docker Desktop on this host stops intermittently; restart it before `docker compose up`.
 - R-F: Home route JS is at the 180 kB budget; new Home features must lazy-load.
 - R-E: Refresh-token rotation can race across two open tabs (second tab is signed out); acceptable for pilot, revisit with a grace window in S11.
 
 ## Retros
+### Sprint 7 (2026-09-30)
+- Went well: honest statuses fell out of existing lineage flags; the E2E caught a duplicate accessible name and a dropped toast.
+- Watch: shared layout JS creeps (friends 182 kB); keep new chrome tiny.
+### Sprint 6 (2026-09-30)
+- Went well: row lock + check constraint made the 50 limit safe; Gherkin covered the SRS scenarios directly.
+- Watch: containers must be rebuilt after backend commits before E2E (stale core-api cost one run).
 ### Sprint 5 (2026-09-30)
 - Went well: pure pipeline made the SRS safety scenarios exact unit tests; computing on the worker kept the API image light.
 - Watch: coverage metric needs a larger world; JS budget on Home.

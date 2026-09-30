@@ -16,6 +16,9 @@ urlpatterns = [
     path("api/v1/", include("social.urls")),
     path("api/v1/", include("suggestions.urls")),
     path("api/v1/", include("circles.urls")),
+    path("api/v1/", include("sends.urls")),
+    path("api/v1/", include("blends.urls")),
+    path("api/v1/", include("listening.urls")),
     # Service-to-service only (X-Service-Token); never routed by the edge.
     path("internal/", include("core_api.internal")),
 ]

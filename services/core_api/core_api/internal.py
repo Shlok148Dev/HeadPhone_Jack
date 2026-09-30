@@ -39,6 +39,30 @@ class UserFriendsView(InternalView):
         return Response(sorted(str(f) for f in ids))
 
 
+class SessionMemberView(InternalView):
+    """Realtime asks before joining a socket to `session:{id}` (Tech Bible 4.3)."""
+
+    @extend_schema(exclude=True)
+    def get(self, request, session_id, user_id):
+        from core_api.policy import is_blocked_either_way
+        from listening.models import ListeningSession
+
+        s = ListeningSession.objects.filter(pk=session_id, ended_at__isnull=True).first()
+        ok = bool(
+            s
+            and s.participants.filter(
+                user_id=user_id, joined_at__isnull=False, left_at__isnull=True
+            ).exists()
+            and not is_blocked_either_way(user_id, s.host_id)
+        )
+        return Response({"ok": ok}, status=200 if ok else 404)
+
+
 urlpatterns = [
     path("users/<uuid:user_id>/friends", UserFriendsView.as_view(), name="internal-user-friends"),
+    path(
+        "sessions/<uuid:session_id>/members/<uuid:user_id>",
+        SessionMemberView.as_view(),
+        name="internal-session-member",
+    ),
 ]

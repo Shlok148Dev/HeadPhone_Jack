@@ -2,16 +2,18 @@
 
 Owner: Orchestrator (founder directive: no agents unless necessary; advance sprint to sprint through S11). Story IDs from SRS v4.0.
 
-## Sprint 7 — Sends and mixtapes
-Goal: send a friend a song (or a 5–8 track mixtape) that opens on their own app, and see honestly whether it landed.
+## Sprint 8 — Blends and live sessions
+Goal: a shared playlist that explains itself, and a live listening room whose queue the group steers together.
 
 ### To do
-- S7-01 Recommendation + items + recipients models; `POST /recommendations` (track or mixtape, note ≤ 280, friends and/or circle; limits) (JNG-06-01, 06-02)
-- S7-02 Open on the recipient's platform: resolved links or search fallback, never a route word (JNG-06-03, Gherkin "Cross-platform send")
-- S7-03 Status Sent → Delivered → Viewed → Played; Played only from the recipient's own listens after the send (JNG-06-04)
-- S7-04 Inbox `GET /inbox` + unread count; reactions and track replies (JNG-06-06, 06-07)
-- S7-05 Discovery credit when the sent artist enters the friend's top artists (JNG-06-05)
-- S7-06 UI: Send sheet from any card (NowPlayingBar Send, FeedCard send), mixtape builder, Inbox page + Sent tab with statuses; demo sends
+- S8-01 Blend model + generator (Tech Bible 6.2) for 2–6 friends or a circle; trainable/analysable data only (JNG-07-01)
+- S8-02 One-line reason per track from facts members may see (JNG-07-02)
+- S8-03 Pin tracks; regenerate keeps pins (JNG-07-03)
+- S8-04 Save to my platform where its API allows; honest "not available" otherwise (JNG-07-04)
+- S8-05 Live session: host starts, invites friends or a circle; Redis queue `sess:{id}:queue` + version (JNG-07-05)
+- S8-06 Add to queue (optionally anonymous), one up/down vote per track, live re-order over `/rt` (`queue.delta`) (JNG-07-06, 07-07)
+- S8-07 Host leaves → next longest-present participant hosts; rejoin gets current versioned queue (JNG-07-08, 07-09)
+- S8-08 UI: Blends list + Blend page (reasons, pins, regenerate), Session room (queue, votes, presence), start/join flows; demo blend + session
 
 ### Done
-- Sprint 0–6: see STATE.md
+- Sprint 0–7: see STATE.md

@@ -30,6 +30,13 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-04-04 | Circle feed; `share_circle` policy | `test_JNG_04_04_circle_feed_and_circles_visibility`, `test_block_hides_member_in_circle`, `test_non_members_cannot_see_circle` | `circles/views.CircleFeedView`, `core_api/policy.py` | ✅ |
 | JNG-04-05 | Suggested circles (Leiden), never auto-join | Gherkin "Suggested circle is never auto-joined"; `test_leiden_names_and_skips_existing` | `jingle_ml/circles.py`, `jingle_ml/tasks.suggest_circles` | ✅ |
 | JNG-04-07 | Circle settings (members can invite, battle schedule) | roles test (`members_can_invite`) | `CircleDetailView.patch`, Settings dialog | 🟡 schedule editor with battles (S10) |
+| JNG-06-01 | Send a track to friends/circles with a ≤ 280 note | `tests/sends/test_sends.py::test_JNG_06_01_track_with_note_to_friends_only`, `test_send_to_circle_reaches_co_members_not_blocked`; E2E `ep06/JNG-06.spec.ts` | `sends/services.send`, `SendSheet` | ✅ |
+| JNG-06-02 | Mixtape of 5–8 tracks | `test_JNG_06_02_mixtape_is_5_to_8`; E2E mixtape | `sends/services._items`, `SendSheet` | ✅ |
+| JNG-06-03 | Opens on my own platform; "Not found on …" + search | Gherkin `features/ep06/JNG-06_sends.feature`; `apps/web/src/lib/sends.test.ts` | `sends/views.song`, `lib/sends.openTarget`, Inbox | ✅ |
+| JNG-06-04 | Sent, Delivered, Viewed, Played | `test_JNG_06_04_statuses_and_JNG_06_07_inbox`, `test_played_ignores_listens_before_the_send`; E2E Sent tab | `sends/services.check_played`, `StatusChips` | ✅ |
+| JNG-06-05 | Discovery credit | `test_JNG_06_05_discovery_credit`, `test_no_credit_when_artist_was_already_known` | `sends/services.discovery_credits` (daily) | ✅ |
+| JNG-06-06 | React or reply with a track | `test_JNG_06_06_react_and_reply_with_a_song`; E2E react | `sends/services.react`, reply via `reply_to` | ✅ |
+| JNG-06-07 | Inbox of received sends | `test_JNG_06_04_statuses_and_JNG_06_07_inbox`; E2E inbox | `sends/views.InboxView`, `(app)/inbox` | ✅ |
 | JNG-05-04 | Open in my own app (search fallback) | `test_JNG_05_04_search_links_for_open_in_my_app` | `feed/resolver._search_links`, `FeedCard.pickLink` | ✅ |
 | JNG-05-07 | Source down → cached card, honest time, delayed | `test_JNG_05_07_needs_reconnect_marks_recent_as_delayed` | `feed/resolver._source_delayed`, Home degraded line | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |

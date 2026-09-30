@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
   Blip,
   Button,
@@ -15,12 +15,15 @@ import {
   Skeleton,
   type Platform,
 } from "@/components/ds";
-import { SuggestionsShelf } from "@/components/app/Suggestions";
 import { useAuth } from "@/lib/auth";
+import { songFromCard, useOpenSend } from "@/lib/send";
 import { useCircles } from "@/lib/circles";
 import { isFreshLive, useFeed } from "@/lib/feed";
 import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
+
+// Below the fold: loads after first paint so Home stays inside its JS budget (R-D).
+const SuggestionsShelf = lazy(() => import("@/components/app/Suggestions").then((m) => ({ default: m.SuggestionsShelf })));
 
 function greeting(now = new Date()): string {
   const h = now.getHours();
@@ -44,6 +47,7 @@ function useTick(ms = 15_000): number {
  */
 export default function HomePage() {
   const { me } = useAuth();
+  const openSend = useOpenSend();
   const router = useRouter();
   const realtime = useRealtimeStatus();
   const [filter, setFilter] = useState("all");
@@ -118,7 +122,7 @@ export default function HomePage() {
             (live.length ? (
               <Shelf title="Live now" live count={live.length} itemWidth="clamp(148px, 40vw, 200px)">
                 {live.map((c, i) => (
-                  <FeedCard key={c.friend.id} card={c} myPlatform={myPlatform} index={i} sharedLayout={false} />
+                  <FeedCard key={c.friend.id} card={c} myPlatform={myPlatform} index={i} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} />
                 ))}
               </Shelf>
             ) : (
@@ -137,7 +141,7 @@ export default function HomePage() {
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(184px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
                 {shown.map((c, i) => (
                   <li key={c.friend.id}>
-                    <FeedCard card={c} myPlatform={myPlatform} index={i} sharedLayout={false} />
+                    <FeedCard card={c} myPlatform={myPlatform} index={i} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} />
                   </li>
                 ))}
               </ul>
@@ -151,7 +155,9 @@ export default function HomePage() {
         </>
       )}
 
-      <SuggestionsShelf />
+      <Suspense fallback={null}>
+        <SuggestionsShelf />
+      </Suspense>
 
       <section aria-labelledby="you-heading" className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">
@@ -164,7 +170,7 @@ export default function HomePage() {
           {mine.isLoading ? (
             <FeedCardSkeleton />
           ) : mine.data && mine.data.recording && mine.data.state !== "HIDDEN" ? (
-            <FeedCard card={mine.data} myPlatform={myPlatform} sharedLayout={false} />
+            <FeedCard card={mine.data} myPlatform={myPlatform} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} />
           ) : (
             <EmptyState
               pose="idle"

@@ -15,6 +15,8 @@ import {
 import { useAuth } from "@/lib/auth";
 import { toNowPlaying, useMyCard } from "@/lib/queries";
 import { RealtimeProvider, useRealtimeStatus } from "@/lib/realtime";
+import { SendProvider, songFromCard, useOpenSend } from "@/lib/send";
+import { useUnread } from "@/lib/sends";
 import { Logo } from "./Logo";
 
 interface NavItem {
@@ -64,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const profileHref = `/u/${me.username}`;
   return (
     <RealtimeProvider userId={me.id}>
+      <SendProvider>
       <div className="min-h-dvh bg-bg text-text">
         <a
           href="#main"
@@ -129,6 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Logo href="/home" className="text-lg" />
             </div>
             <div className="flex-1" />
+            <InboxButton active={isActive(pathname, "/inbox")} />
             <ThemeToggle />
             <Link
               href="/settings/connections"
@@ -155,8 +159,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </main>
         </div>
 
-        <NowPlayingBar
-          track={toNowPlaying(card.data)}
+        <MySendBar
+          card={card.data}
           className="bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-0 md:left-[72px] lg:left-60 xl:left-[280px]"
         />
 
@@ -187,8 +191,37 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
       </div>
+      </SendProvider>
     </RealtimeProvider>
   );
+}
+
+/** TopBar Inbox with the unviewed-sends badge (UX_SPEC TopBar; JNG-06-07). */
+function InboxButton({ active }: { active: boolean }) {
+  const unread = useUnread().data?.count ?? 0;
+  const label = unread ? `Inbox, ${unread} new` : "Inbox";
+  return (
+    <Link
+      href="/inbox"
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+    >
+      <Icons.Inbox size={22} />
+      {unread > 0 && (
+        <span aria-hidden className="absolute right-1 top-1 min-w-[18px] rounded-full bg-text px-1 text-center font-mono text-[11px] leading-[18px] text-bg">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+function MySendBar({ card, className }: { card: Parameters<typeof toNowPlaying>[0]; className?: string }) {
+  const openSend = useOpenSend();
+  const track = toNowPlaying(card);
+  const song = card ? songFromCard(card) : undefined;
+  return <NowPlayingBar track={track} onSend={song ? () => openSend({ song }) : undefined} className={className} />;
 }
 
 /** UX_SPEC §5.4 degraded: cards keep their last state while the live connection recovers. */

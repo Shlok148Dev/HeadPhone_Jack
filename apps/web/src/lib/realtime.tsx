@@ -85,10 +85,11 @@ export function RealtimeProvider({
         void qc.invalidateQueries({ queryKey: ["friends"] });
         void qc.invalidateQueries({ queryKey: ["feed"] });
       });
-      s.on(
-        "notify",
-        () => void qc.invalidateQueries({ queryKey: ["friends", "requests"] }),
-      );
+      s.on("notify", ({ type }: { type?: string }) => {
+        if (type && type.startsWith("send")) void qc.invalidateQueries({ queryKey: ["inbox"] });
+        else if (type === "circle_invite") void qc.invalidateQueries({ queryKey: ["circles", "invites"] });
+        else void qc.invalidateQueries({ queryKey: ["friends", "requests"] });
+      });
     });
     return () => {
       cancelled = true;

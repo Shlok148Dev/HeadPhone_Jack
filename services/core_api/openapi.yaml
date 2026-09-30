@@ -172,6 +172,185 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: RATE_LIMITED
+  /api/v1/blends:
+    get:
+      operationId: blends_list
+      tags:
+      - blends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blend'
+          description: ''
+    post:
+      operationId: blends_create
+      tags:
+      - blends
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlendRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateBlendRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateBlendRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blend'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/blends/{blend_id}:
+    get:
+      operationId: blends_retrieve
+      parameters:
+      - in: path
+        name: blend_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - blends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blend'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+    delete:
+      operationId: blends_destroy
+      parameters:
+      - in: path
+        name: blend_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - blends
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/blends/{blend_id}/regenerate:
+    post:
+      operationId: blends_regenerate_create
+      parameters:
+      - in: path
+        name: blend_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - blends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blend'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/blends/{blend_id}/tracks/{track_id}/pin:
+    post:
+      operationId: blends_pin
+      parameters:
+      - in: path
+        name: blend_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: track_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlendTrack'
+          description: ''
+    delete:
+      operationId: blends_unpin
+      parameters:
+      - in: path
+        name: blend_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: track_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlendTrack'
+          description: ''
   /api/v1/blocks:
     get:
       operationId: blocks_list
@@ -1021,6 +1200,140 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: FILE_TOO_LARGE
+  /api/v1/inbox:
+    get:
+      operationId: inbox_list
+      tags:
+      - sends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Received'
+          description: ''
+  /api/v1/inbox/{delivery_id}/react:
+    post:
+      operationId: inbox_react_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sends
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReactRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReactRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Received'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/inbox/{delivery_id}/view:
+    post:
+      operationId: inbox_view_create
+      parameters:
+      - in: path
+        name: delivery_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sends
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReactRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReactRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Received'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/inbox/sent:
+    get:
+      operationId: inbox_sent_list
+      tags:
+      - sends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sent'
+          description: ''
+  /api/v1/inbox/unread:
+    get:
+      operationId: inbox_unread_retrieve
+      tags:
+      - sends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxUnread'
+          description: ''
   /api/v1/invites/{code}:
     get:
       operationId: invites_retrieve
@@ -1399,6 +1712,89 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+  /api/v1/queue/{entry_id}/vote:
+    post:
+      operationId: queue_vote_create
+      parameters:
+      - in: path
+        name: entry_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueVoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QueueVoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QueueVoteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/recommendations:
+    post:
+      operationId: recommendations_create
+      tags:
+      - sends
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecommendationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateRecommendationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateRecommendationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedRecommendation'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/reports:
     post:
       operationId: reports_create
@@ -1435,6 +1831,256 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: RATE_LIMITED
+  /api/v1/sessions:
+    get:
+      operationId: sessions_list
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionSummary'
+          description: ''
+    post:
+      operationId: sessions_create
+      tags:
+      - sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StartSessionRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionState'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/sessions/{session_id}:
+    get:
+      operationId: sessions_retrieve
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionState'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/sessions/{session_id}/end:
+    post:
+      operationId: sessions_end_create
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionState'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/sessions/{session_id}/join:
+    post:
+      operationId: sessions_join_create
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionState'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/sessions/{session_id}/leave:
+    post:
+      operationId: sessions_leave_create
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionState'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/sessions/{session_id}/next:
+    post:
+      operationId: sessions_next_create
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionState'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/sessions/{session_id}/queue:
+    post:
+      operationId: sessions_queue_create
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sessions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueAddRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QueueAddRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QueueAddRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/songs/search:
+    get:
+      operationId: songs_search_list
+      description: Songs already known to Jingle (anyone's resolved plays); no third-party
+        search call.
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        required: true
+      tags:
+      - sends
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Song'
+          description: ''
   /api/v1/sources/{platform}/connect:
     post:
       operationId: sources_connect_create
@@ -1712,6 +2358,90 @@ components:
       required:
       - access
       - user
+    BlankEnum:
+      enum:
+      - ''
+    Blend:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        circle:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+        left_out:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+        generated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        track_count:
+          type: integer
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlendTrack'
+        save:
+          type: object
+          additionalProperties: {}
+      required:
+      - circle
+      - generated_at
+      - id
+      - left_out
+      - members
+      - name
+      - save
+      - track_count
+    BlendTrack:
+      type: object
+      properties:
+        id:
+          type: integer
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+        artist:
+          type: string
+        reason:
+          type: string
+        pinned:
+          type: boolean
+        links:
+          type: object
+          additionalProperties:
+            type:
+            - string
+            - 'null'
+        search_links:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - artist
+      - id
+      - links
+      - pinned
+      - reason
+      - recording_id
+      - search_links
+      - title
     BlockUserRequest:
       type: object
       properties:
@@ -1940,6 +2670,22 @@ components:
           type: boolean
       required:
       - given
+    CreateBlendRequest:
+      type: object
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        circle_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        name:
+          type: string
+          maxLength: 80
     CreateCircleRequest:
       type: object
       properties:
@@ -1951,6 +2697,33 @@ components:
           $ref: '#/components/schemas/VisibilityEnum'
       required:
       - name
+    CreateRecommendationRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemInRequest'
+        note:
+          type: string
+          maxLength: 280
+        user_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        circle_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        reply_to:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - items
     CreateReportRequest:
       type: object
       properties:
@@ -1968,6 +2741,17 @@ components:
       - reason
       - target_id
       - target_type
+    CreatedRecommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        recipients:
+          type: integer
+      required:
+      - id
+      - recipients
     DirectionEnum:
       enum:
       - incoming
@@ -1976,6 +2760,34 @@ components:
       description: |-
         * `incoming` - incoming
         * `outgoing` - outgoing
+    Entry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+        artist:
+          type: string
+        added_by:
+          oneOf:
+          - $ref: '#/components/schemas/SessionPerson'
+          - type: 'null'
+        score:
+          type: integer
+      required:
+      - added_by
+      - artist
+      - id
+      - recording_id
+      - score
+      - title
     ErrorBody:
       type: object
       properties:
@@ -2147,6 +2959,13 @@ components:
       required:
       - imported
       - status
+    InboxUnread:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+      - count
     Invite:
       type: object
       properties:
@@ -2186,6 +3005,30 @@ components:
           type: integer
       required:
       - invited
+    ItemInRequest:
+      type: object
+      properties:
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        artist:
+          type: string
+          minLength: 1
+          maxLength: 500
+    KindEnum:
+      enum:
+      - track
+      - mixtape
+      type: string
+      description: |-
+        * `track` - Track
+        * `mixtape` - Mixtape
     LinkLastfmRequest:
       type: object
       properties:
@@ -2326,6 +3169,23 @@ components:
         * `AMAZON_MUSIC` - AMAZON_MUSIC
     NullEnum:
       type: 'null'
+    Participant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        display_name:
+          type: string
+        online:
+          type: boolean
+      required:
+      - display_name
+      - id
+      - online
+      - username
     PatchedMeUpdateRequest:
       type: object
       properties:
@@ -2491,6 +3351,54 @@ components:
         * `push_notifications` - Push Notifications
         * `email_digest` - Email Digest
         * `lastfm_link` - Lastfm Link
+    QueueAddRequest:
+      type: object
+      properties:
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+        artist:
+          type: string
+          minLength: 1
+        anonymous:
+          type: boolean
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+      - idempotency_key
+    QueueVoteRequest:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/ValueEnum'
+      required:
+      - value
+    ReactRequest:
+      type: object
+      properties:
+        reaction:
+          oneOf:
+          - $ref: '#/components/schemas/ReactionEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+    ReactionEnum:
+      enum:
+      - "\U0001F525"
+      - ❤️
+      - "\U0001F602"
+      - "\U0001F92F"
+      - "\U0001F440"
+      - "\U0001F64C"
+      type: string
+      description: "* `\U0001F525` - \U0001F525\n* `❤️` - ❤️\n* `\U0001F602` - \U0001F602\n*
+        `\U0001F92F` - \U0001F92F\n* `\U0001F440` - \U0001F440\n* `\U0001F64C` - \U0001F64C\n*
+        `` - "
     ReasonEnum:
       enum:
       - spam
@@ -2507,6 +3415,65 @@ components:
         * `impersonation` - Impersonation
         * `inappropriate` - Inappropriate
         * `other` - Other
+    Received:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        sender:
+          $ref: '#/components/schemas/Person'
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+        circle:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
+        sent_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        reaction:
+          type: string
+        is_reply:
+          type: boolean
+      required:
+      - circle
+      - id
+      - is_reply
+      - items
+      - kind
+      - note
+      - reaction
+      - sender
+      - sent_at
+      - status
+    RecipientStatus:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/Person'
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        reaction:
+          type: string
+        credit_artist:
+          type:
+          - string
+          - 'null'
+      required:
+      - credit_artist
+      - reaction
+      - status
+      - user
     RegisterRequest:
       type: object
       properties:
@@ -2577,6 +3544,167 @@ components:
         username:
           type: string
           minLength: 1
+    Sent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        note:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Song'
+        sent_at:
+          type: string
+          format: date-time
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientStatus'
+      required:
+      - id
+      - items
+      - kind
+      - note
+      - recipients
+      - sent_at
+    SessionPerson:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        display_name:
+          type: string
+      required:
+      - display_name
+      - id
+      - username
+    SessionState:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        host:
+          $ref: '#/components/schemas/SessionPerson'
+        ended:
+          type: boolean
+        now_playing:
+          oneOf:
+          - $ref: '#/components/schemas/Entry'
+          - type: 'null'
+        queue:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entry'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        version:
+          type: integer
+        my_votes:
+          type: object
+          additionalProperties:
+            type: integer
+        joined:
+          type: boolean
+        now_playing_links:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
+      required:
+      - ended
+      - host
+      - id
+      - joined
+      - my_votes
+      - now_playing
+      - now_playing_links
+      - participants
+      - queue
+      - title
+      - version
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        host:
+          $ref: '#/components/schemas/SessionPerson'
+        circle:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
+        joined:
+          type: boolean
+        participant_count:
+          type: integer
+      required:
+      - circle
+      - host
+      - id
+      - joined
+      - participant_count
+      - title
+    Song:
+      type: object
+      properties:
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+        artist:
+          type: string
+        links:
+          type: object
+          additionalProperties:
+            type:
+            - string
+            - 'null'
+        search_links:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+      - artist
+      - links
+      - recording_id
+      - search_links
+      - title
+    StartSessionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 80
+        user_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        circle_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
     StateEnum:
       enum:
       - LIVE
@@ -2589,6 +3717,18 @@ components:
         * `RECENT` - RECENT
         * `TOP` - TOP
         * `HIDDEN` - HIDDEN
+    StatusEnum:
+      enum:
+      - sent
+      - delivered
+      - viewed
+      - played
+      type: string
+      description: |-
+        * `sent` - sent
+        * `delivered` - delivered
+        * `viewed` - viewed
+        * `played` - played
     SuggestedCircle:
       type: object
       properties:
@@ -2708,6 +3848,16 @@ components:
           items:
             type: string
             format: uuid
+    ValueEnum:
+      enum:
+      - 1
+      - -1
+      - 0
+      type: integer
+      description: |-
+        * `1` - 1
+        * `-1` - -1
+        * `0` - 0
     VisibilityEnum:
       enum:
       - private

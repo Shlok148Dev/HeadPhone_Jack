@@ -92,6 +92,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/blends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["blends_list"];
+        put?: never;
+        post: operations["blends_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/blends/{blend_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["blends_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["blends_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/blends/{blend_id}/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["blends_regenerate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/blends/{blend_id}/tracks/{track_id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["blends_pin"];
+        delete: operations["blends_unpin"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/blocks": {
         parameters: {
             query?: never;
@@ -524,6 +588,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inbox_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/{delivery_id}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["inbox_react_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/{delivery_id}/view": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["inbox_view_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inbox_sent_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/inbox/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["inbox_unread_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invites/{code}": {
         parameters: {
             query?: never;
@@ -683,6 +827,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/queue/{entry_id}/vote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["queue_vote_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recommendations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports": {
         parameters: {
             query?: never;
@@ -694,6 +870,135 @@ export interface paths {
         put?: never;
         /** @description JNG-12-01: report a user (circles, notes and comments join as they ship). */
         post: operations["reports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sessions_list"];
+        put?: never;
+        post: operations["sessions_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sessions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sessions_end_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sessions_join_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sessions_leave_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sessions_next_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sessions/{session_id}/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sessions_queue_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/songs/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Songs already known to Jingle (anyone's resolved plays); no third-party search call. */
+        get: operations["songs_search_list"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -879,6 +1184,40 @@ export interface components {
             access: string;
             user: components["schemas"]["Me"];
         };
+        /** @enum {unknown} */
+        BlankEnum: "";
+        Blend: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            circle: {
+                [key: string]: unknown;
+            } | null;
+            members: components["schemas"]["Person"][];
+            left_out: components["schemas"]["Person"][];
+            /** Format: date-time */
+            generated_at: string | null;
+            track_count: number;
+            tracks?: components["schemas"]["BlendTrack"][];
+            save: {
+                [key: string]: unknown;
+            };
+        };
+        BlendTrack: {
+            id: number;
+            /** Format: uuid */
+            recording_id: string | null;
+            title: string;
+            artist: string;
+            reason: string;
+            pinned: boolean;
+            links: {
+                [key: string]: string | null;
+            };
+            search_links: {
+                [key: string]: string;
+            };
+        };
         BlockUserRequest: {
             /** Format: uuid */
             user_id: string;
@@ -973,9 +1312,23 @@ export interface components {
         ConsentUpdateRequest: {
             given: boolean;
         };
+        CreateBlendRequest: {
+            user_ids?: string[];
+            /** Format: uuid */
+            circle_id?: string | null;
+            name?: string;
+        };
         CreateCircleRequest: {
             name: string;
             visibility?: components["schemas"]["VisibilityEnum"];
+        };
+        CreateRecommendationRequest: {
+            items: components["schemas"]["ItemInRequest"][];
+            note?: string;
+            user_ids?: string[];
+            circle_ids?: string[];
+            /** Format: uuid */
+            reply_to?: string | null;
         };
         CreateReportRequest: {
             target_type: components["schemas"]["TargetTypeEnum"];
@@ -984,12 +1337,27 @@ export interface components {
             reason: components["schemas"]["ReasonEnum"];
             details?: string;
         };
+        CreatedRecommendation: {
+            /** Format: uuid */
+            id: string;
+            recipients: number;
+        };
         /**
          * @description * `incoming` - incoming
          *     * `outgoing` - outgoing
          * @enum {string}
          */
         DirectionEnum: "incoming" | "outgoing";
+        Entry: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            recording_id: string | null;
+            title: string;
+            artist: string;
+            added_by: components["schemas"]["SessionPerson"] | null;
+            score: number;
+        };
         ErrorBody: {
             code: string;
             message: string;
@@ -1067,6 +1435,9 @@ export interface components {
             found?: number;
             error?: string;
         };
+        InboxUnread: {
+            count: number;
+        };
         Invite: {
             code: string;
             /** Format: uri */
@@ -1082,6 +1453,18 @@ export interface components {
         Invited: {
             invited: number;
         };
+        ItemInRequest: {
+            /** Format: uuid */
+            recording_id?: string | null;
+            title?: string;
+            artist?: string;
+        };
+        /**
+         * @description * `track` - Track
+         *     * `mixtape` - Mixtape
+         * @enum {string}
+         */
+        KindEnum: "track" | "mixtape";
         LinkLastfmRequest: {
             platform: components["schemas"]["MusicPlatformEnum"];
             username: string;
@@ -1134,6 +1517,13 @@ export interface components {
          */
         MusicPlatformEnum: "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE_MUSIC" | "AMAZON_MUSIC";
         NullEnum: null;
+        Participant: {
+            /** Format: uuid */
+            id: string;
+            username: string;
+            display_name: string;
+            online: boolean;
+        };
         PatchedMeUpdateRequest: {
             display_name?: string;
             username?: string;
@@ -1216,6 +1606,31 @@ export interface components {
          * @enum {string}
          */
         PurposeEnum: "core_service" | "activity_sharing" | "suggestions_discoverability" | "contact_matching" | "push_notifications" | "email_digest" | "lastfm_link";
+        QueueAddRequest: {
+            /** Format: uuid */
+            recording_id?: string | null;
+            title?: string;
+            artist?: string;
+            anonymous?: boolean;
+            idempotency_key: string;
+        };
+        QueueVoteRequest: {
+            value: components["schemas"]["ValueEnum"];
+        };
+        ReactRequest: {
+            reaction?: components["schemas"]["ReactionEnum"] | components["schemas"]["BlankEnum"];
+        };
+        /**
+         * @description * `🔥` - 🔥
+         *     * `❤️` - ❤️
+         *     * `😂` - 😂
+         *     * `🤯` - 🤯
+         *     * `👀` - 👀
+         *     * `🙌` - 🙌
+         *     * `` -
+         * @enum {string}
+         */
+        ReactionEnum: "🔥" | "❤️" | "😂" | "🤯" | "👀" | "🙌";
         /**
          * @description * `spam` - Spam
          *     * `harassment` - Harassment
@@ -1226,6 +1641,28 @@ export interface components {
          * @enum {string}
          */
         ReasonEnum: "spam" | "harassment" | "hate" | "impersonation" | "inappropriate" | "other";
+        Received: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["KindEnum"];
+            sender: components["schemas"]["Person"];
+            note: string;
+            items: components["schemas"]["Song"][];
+            circle: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            sent_at: string;
+            status: components["schemas"]["StatusEnum"];
+            reaction: string;
+            is_reply: boolean;
+        };
+        RecipientStatus: {
+            user: components["schemas"]["Person"];
+            status: components["schemas"]["StatusEnum"];
+            reaction: string;
+            credit_artist: string | null;
+        };
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -1256,6 +1693,69 @@ export interface components {
             user_id?: string;
             username?: string;
         };
+        Sent: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["KindEnum"];
+            note: string;
+            items: components["schemas"]["Song"][];
+            /** Format: date-time */
+            sent_at: string;
+            recipients: components["schemas"]["RecipientStatus"][];
+        };
+        SessionPerson: {
+            /** Format: uuid */
+            id: string;
+            username: string;
+            display_name: string;
+        };
+        SessionState: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            host: components["schemas"]["SessionPerson"];
+            ended: boolean;
+            now_playing: components["schemas"]["Entry"] | null;
+            queue: components["schemas"]["Entry"][];
+            participants: components["schemas"]["Participant"][];
+            version: number;
+            my_votes: {
+                [key: string]: number;
+            };
+            joined: boolean;
+            now_playing_links: {
+                [key: string]: unknown;
+            } | null;
+        };
+        SessionSummary: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            host: components["schemas"]["SessionPerson"];
+            circle: {
+                [key: string]: unknown;
+            } | null;
+            joined: boolean;
+            participant_count: number;
+        };
+        Song: {
+            /** Format: uuid */
+            recording_id: string | null;
+            title: string;
+            artist: string;
+            links: {
+                [key: string]: string | null;
+            };
+            search_links: {
+                [key: string]: string;
+            };
+        };
+        StartSessionRequest: {
+            title?: string;
+            user_ids?: string[];
+            /** Format: uuid */
+            circle_id?: string | null;
+        };
         /**
          * @description * `LIVE` - LIVE
          *     * `RECENT` - RECENT
@@ -1264,6 +1764,14 @@ export interface components {
          * @enum {string}
          */
         StateEnum: "LIVE" | "RECENT" | "TOP" | "HIDDEN";
+        /**
+         * @description * `sent` - sent
+         *     * `delivered` - delivered
+         *     * `viewed` - viewed
+         *     * `played` - played
+         * @enum {string}
+         */
+        StatusEnum: "sent" | "delivered" | "viewed" | "played";
         SuggestedCircle: {
             /** Format: uuid */
             id: string;
@@ -1307,6 +1815,13 @@ export interface components {
             name?: string;
             user_ids?: string[];
         };
+        /**
+         * @description * `1` - 1
+         *     * `-1` - -1
+         *     * `0` - 0
+         * @enum {integer}
+         */
+        ValueEnum: 1 | -1 | 0;
         /**
          * @description * `private` - Private
          *     * `discoverable` - Discoverable
@@ -1519,6 +2034,201 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    blends_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Blend"][];
+                };
+            };
+        };
+    };
+    blends_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CreateBlendRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateBlendRequest"];
+                "multipart/form-data": components["schemas"]["CreateBlendRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Blend"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    blends_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                blend_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Blend"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    blends_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                blend_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    blends_regenerate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                blend_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Blend"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    blends_pin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                blend_id: string;
+                track_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlendTrack"];
+                };
+            };
+        };
+    };
+    blends_unpin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                blend_id: string;
+                track_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlendTrack"];
                 };
             };
         };
@@ -2455,6 +3165,153 @@ export interface operations {
             };
         };
     };
+    inbox_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Received"][];
+                };
+            };
+        };
+    };
+    inbox_react_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                delivery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReactRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReactRequest"];
+                "multipart/form-data": components["schemas"]["ReactRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Received"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    inbox_view_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                delivery_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ReactRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReactRequest"];
+                "multipart/form-data": components["schemas"]["ReactRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Received"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    inbox_sent_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Sent"][];
+                };
+            };
+        };
+    };
+    inbox_unread_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxUnread"];
+                };
+            };
+        };
+    };
     invites_retrieve: {
         parameters: {
             query?: never;
@@ -2896,6 +3753,94 @@ export interface operations {
             };
         };
     };
+    queue_vote_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueVoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QueueVoteRequest"];
+                "multipart/form-data": components["schemas"]["QueueVoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    recommendations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRecommendationRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateRecommendationRequest"];
+                "multipart/form-data": components["schemas"]["CreateRecommendationRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedRecommendation"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     reports_create: {
         parameters: {
             query?: never;
@@ -2934,6 +3879,275 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionSummary"][];
+                };
+            };
+        };
+    };
+    sessions_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["StartSessionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StartSessionRequest"];
+                "multipart/form-data": components["schemas"]["StartSessionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionState"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionState"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_end_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionState"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_join_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionState"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_leave_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionState"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_next_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionState"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    sessions_queue_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueAddRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["QueueAddRequest"];
+                "multipart/form-data": components["schemas"]["QueueAddRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    songs_search_list: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Song"][];
                 };
             };
         };

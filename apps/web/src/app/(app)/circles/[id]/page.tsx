@@ -16,6 +16,7 @@ import {
 } from "@/components/ds";
 import { PersonRow } from "@/components/app/PersonRow";
 import { useAuth } from "@/lib/auth";
+import { songFromCard, useOpenSend } from "@/lib/send";
 import { useCircle, useCircleActions, useCircleFeed, type Circle, type Role } from "@/lib/circles";
 import { isFreshLive } from "@/lib/feed";
 import { useFriends } from "@/lib/social";
@@ -195,6 +196,7 @@ export default function CirclePage() {
   const router = useRouter();
   const search = useSearchParams();
   const { me } = useAuth();
+  const openSend = useOpenSend();
   const circle = useCircle(id);
   const feed = useCircleFeed(id);
   const { leave } = useCircleActions();
@@ -264,7 +266,7 @@ export default function CirclePage() {
         <>
           {!!live.length && (
             <Shelf title="Live now" live count={live.length} itemWidth="clamp(148px, 40vw, 200px)">
-              {live.map((card, i) => <FeedCard key={card.friend.id} card={card} index={i} sharedLayout={false} />)}
+              {live.map((card, i) => <FeedCard key={card.friend.id} card={card} index={i} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} />)}
             </Shelf>
           )}
           {!!rest.length && (
@@ -272,7 +274,7 @@ export default function CirclePage() {
               <h2 id="circle-feed-h" className="font-display text-xl font-semibold">{live.length ? "Everyone else" : "The circle"}</h2>
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(184px,1fr))]">
                 {rest.map((card, i) => (
-                  <li key={card.friend.id}><FeedCard card={card} index={i} sharedLayout={false} /></li>
+                  <li key={card.friend.id}><FeedCard card={card} index={i} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} /></li>
                 ))}
               </ul>
             </section>
