@@ -14,12 +14,18 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-01-07/08 | Google Data Portability, Amazon Music (flagged) | `test_flagged_adapters_absent_while_flag_off` | `adapters/flagged.py` | ✅ built, flag off |
 | JNG-01-09 | Unlink one app, others keep working; Spotify data purged | `test_JNG_01_09_*`, core-api `test_JNG_01_09_unlink`, E2E disconnect | `orchestrator.unlink`, Settings | ✅ |
 | JNG-01-11 | Re-consent state on 401 / private profile | `test_lastfm_private_profile_needs_reconnect` | `poller.py`, Settings row | ✅ (notification in S10) |
-| JNG-01-12 | 4-step onboarding | — (E2E covers sources step landing) | `apps/web/src/app/onboarding/[step]` | 🟡 profile, sources, privacy built; friends step in S3 |
+| JNG-01-12 | 4-step onboarding | E2E sign-up lands on sources; screenshots of all steps | `apps/web/src/app/onboarding/[step]` | ✅ |
 | JNG-01-13 | Push playing-now shows Live within seconds; unknown token rejected | `services/ingest_ml/tests/acceptance/test_JNG_01_13.py` (+ `features/ep01/JNG-01-13_push.feature`), `test_push_api.py` | `ingest_ml/api/push.py`, `ingest_ml/push/service.py` | ✅ |
 | JNG-01-14 | One button per platform; orchestrator picks the route; no route words on cards | extension tests (74); `test_JNG_01_04_route_choice`; core-api `test_JNG_01_14_*`; E2E `JNG-01-14.spec.ts` | `orchestrator.py`, `Connect.tsx`, `app/connect/companion` | ✅ |
 | JNG-05-01 | Apple Music only never LIVE; stale now-playing 120 s → "2 min ago"; no route in card | `services/core_api/tests/acceptance/*JNG_05_01*` (pytest-bdd); `apps/web/e2e/ep05/JNG-05-01.spec.ts` | `feed/resolver.py`, `jingle_common/labels.py`, `apps/web/src/app/(app)/home` | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |
-| JNG-02-05, 02-06 | Hide precise time; Private mode | `tests/accounts/test_privacy*`, resolver tests | `accounts/views.py`, `feed/resolver.py` | ✅ API (UI in S3) |
+| JNG-02-01 | Search by username / display name | `tests/social/test_social.py::test_search_rules`; E2E `ep02/JNG-02.spec.ts` | `social/views.py`, `components/app/FindFriends.tsx` | ✅ |
+| JNG-02-02 | Send/accept/decline/cancel; duplicate request merges | Gherkin `features/ep02/JNG-02-03_04_remove_block.feature` (Duplicate request); `test_request_accept_decline_cancel`; E2E | `social/services.py`, Friends page | ✅ |
+| JNG-02-03 | Remove friend hides activity at once | `test_JNG_02_03_*`; E2E | `social/services.remove_friend`, `PersonMenu` | ✅ |
+| JNG-02-04 | Block hides both ways, no notification | Gherkin (Blocking hides everything both ways) | `social/services.block`, `policy.py` | ✅ |
+| JNG-02-05, 02-06 | Hide precise time; Private mode | `tests/accounts/test_privacy*`, resolver tests, `test_privacy_visibility_rules`; E2E privacy | `accounts/views.py`, `feed/resolver.py`, `settings/privacy` | ✅ |
+| JNG-02-07 | Invite link + QR auto-sends a request | `test_JNG_02_07_*`; E2E invite/QR | `social/views.py`, `app/invite/[code]`, `lib/invite.ts` | ✅ |
+| JNG-12-01 | Report a user | `test_JNG_12_01_report_user` | `social/views.ReportsView`, `PersonMenu` | ✅ (queue in S10) |
 | BR-01 | No false Live | resolver tests; ingest NP TTL tests; extension staleness tests; simulator tests | `feed/resolver.py`, `push/service.py`, `companion-extension/src/background/scrobbler.ts` | ✅ |
 | BR-03/04 | Lineage flags (`trainable`, `analytics_allowed`) | `packages/py-common/tests`, ingest `test_listen_doc_carries_lineage_flags` | `jingle_common/events.py`, `push/service.py` | ✅ |
 | BR-14 | No route words in product | web E2E `ROUTE_WORDS` check; `jingle_common` label tests | labels, cards | ✅ |

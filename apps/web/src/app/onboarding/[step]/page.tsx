@@ -5,15 +5,16 @@ import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button, Skeleton, cn } from "@/components/ds";
 import { ConnectPlatformCard, ConnectSheet, PLATFORMS, type MusicPlatform } from "@/components/app/Connect";
+import { FindFriends } from "@/components/app/FindFriends";
 import { FocusShell } from "@/components/app/FocusShell";
 import { FormAlert, SelectField, TextField, birthYearOptions, fieldErrors } from "@/components/app/forms";
 import { ApiError, api, json, type Me } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useConnections } from "@/lib/queries";
 
-const STEPS = ["profile", "sources", "privacy"] as const;
+const STEPS = ["profile", "sources", "privacy", "friends"] as const;
 type Step = (typeof STEPS)[number];
-const LABELS: Record<Step, string> = { profile: "Profile", sources: "Sources", privacy: "Privacy" };
+const LABELS: Record<Step, string> = { profile: "Profile", sources: "Sources", privacy: "Privacy", friends: "Friends" };
 
 function Stepper({ current }: { current: Step }) {
   const idx = STEPS.indexOf(current);
@@ -187,7 +188,7 @@ function PrivacyStep({ done }: { done: () => void }) {
       </label>
       <p className="text-xs text-text-muted">You can change these any time in Settings → Privacy.</p>
       <Button type="submit" size="lg" loading={busy} loadingLabel="Saving">
-        Go to my feed
+        Continue
       </Button>
     </form>
   );
@@ -209,7 +210,7 @@ export default function OnboardingPage() {
   const go = (s: Step | "home") => router.push(s === "home" ? "/home" : `/onboarding/${s}`);
 
   return (
-    <FocusShell wide={current === "sources"}>
+    <FocusShell wide={current === "sources" || current === "friends"}>
       <Stepper current={current} />
       {status !== "signed-in" || !me ? (
         <Skeleton className="h-64" rounded="lg" />
@@ -218,7 +219,18 @@ export default function OnboardingPage() {
       ) : current === "sources" ? (
         <SourcesStep next={() => go("privacy")} />
       ) : (
-        <PrivacyStep done={() => go("home")} />
+        current === "privacy" ? (
+          <PrivacyStep done={() => go("friends")} />
+        ) : (
+          <div className="flex flex-col gap-5">
+            <div>
+              <h1 className="font-display text-2xl font-semibold">Find your friends</h1>
+              <p className="mt-1 text-sm text-text-muted">Search for people you know, or share your invite link.</p>
+            </div>
+            <FindFriends />
+            <Button size="lg" onClick={() => go("home")}>Go to my feed</Button>
+          </div>
+        )
       )}
     </FocusShell>
   );

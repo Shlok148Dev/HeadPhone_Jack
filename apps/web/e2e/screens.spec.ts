@@ -28,7 +28,10 @@ for (const theme of ["dark", "light"] as const) {
         ["onboarding-sources", "/onboarding/sources"],
         ["settings-connections", "/settings/connections"],
         ["connect-companion", "/connect/companion"],
-        ["friends-coming-soon", "/friends"],
+        ["friends", "/friends?tab=friends"],
+        ["friends-find", "/friends?tab=find"],
+        ["settings-privacy", "/settings/privacy"],
+        ["onboarding-friends", "/onboarding/friends"],
       ] as const) {
         await page.goto(path);
         await page.waitForTimeout(3500);

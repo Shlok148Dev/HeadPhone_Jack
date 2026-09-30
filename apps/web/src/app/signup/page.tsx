@@ -9,6 +9,7 @@ import { GoogleButton } from "@/components/app/GoogleButton";
 import { FormAlert, SelectField, TextField, birthYearOptions, fieldErrors } from "@/components/app/forms";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { redeemPendingInvite } from "@/lib/invite";
 
 /** JNG-01-01 sign-up with the 18+ gate (NFR-PRIV-02, UX_SPEC §5.2). */
 export default function SignUpPage() {
@@ -38,6 +39,7 @@ export default function SignUpPage() {
     setBusy(true);
     try {
       await signUp({ ...form, birth_year: Number(form.birth_year), display_name: form.username });
+      await redeemPendingInvite();
       router.replace("/onboarding/sources");
     } catch (err) {
       if (err instanceof ApiError && err.code === "AGE_RESTRICTED") setBlocked(true);

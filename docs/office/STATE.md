@@ -1,9 +1,9 @@
 # STATE — Jingle
 
-_Last updated: 2026-09-30 — Sprint 2 complete_
+_Last updated: 2026-09-30 — Sprint 3 complete; Sprint 4 in progress_
 
 ## Current sprint
-**Sprints 0–2 done.** Next: **Sprint 3 — social graph** (see `BOARD.md`).
+**Sprints 0–3 done.** Now: **Sprint 4 — realtime gateway and friends' feed** (see `BOARD.md`).
 
 ## Done (on main)
 ### Sprint 0 — Setup
@@ -29,13 +29,18 @@ _Last updated: 2026-09-30 — Sprint 2 complete_
 - Web: Connect sheet runs the orchestrator plan (consent prompts, platform consent redirect, Last.fm → Spotify link step, browser steps, "Other ways to connect": ListenBrainz token, Last.fm username, Takeout upload with progress); Settings → Connections with Reconnect / Disconnect and return toasts; honest capability lines.
 - Tests: ingest ~165 (86 % cov), core-api ~205 (97 % cov), web unit 94, E2E JNG-01-14 (2) green; review `docs/office/reviews/S2-CONNECT-review.md`.
 
+### Sprint 3 — Social graph and privacy
+- `social` app: friendships (ordered pair, merge on duplicate, 30/day), requests, remove, blocks (BR-07 both ways, silent), reports, search (username; display name only if discoverable), personal invite links + QR; policy helpers real; `/internal/users/{id}/friends` live; demo friendships seeded (11 friends + 1 pending).
+- Web: Friends page (Friends / Requests / Find with invite QR), person menu (remove, block, report), invite landing `/invite/{code}` (remembered across sign-up), onboarding step 4 (friends), Settings → Privacy (visibility, Private mode, exact time, discoverability, blocked list) with settings sub-nav.
+- Fix: "Only circles I choose" no longer lets plain friends see activity.
+- Tests: social 12 (Gherkin JNG-02-03/04), E2E 9 green; review `docs/office/reviews/S3-SOCIAL-review.md`.
+
 ## Working mode
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
-1. Sprint 3 — social graph: search, friend requests (30/day), accept/decline/cancel/remove, blocks (BR-07 everywhere), reports, privacy UI incl. Private mode, invite links + QR (JNG-02-01…07, JNG-12-01); onboarding friends step; seed demo friendships; policy helpers become real.
-2. Sprint 4 — realtime gateway (Socket.IO, JWT, rooms, Redis Streams fan-out), friends' Live/Recent/Top feed with honest degradation, Live shelf, filter chips, presence-driven adaptive polling.
-3. When HA-1/HA-2 keys arrive: live-verify Spotify direct and Last.fm flows (fixtures only so far).
+1. Sprint 4 — realtime gateway (JWT handshake, rooms per friend, Redis Streams fan-out of `events:listen`/`events:domain`, presence), friends' feed API (`GET /feed` with Live/Recent/Top, BR-02 ordering, degraded flag, circle filter placeholder), Home with Live now shelf + filter chips + everyone grid, live updates without refresh (JNG-05-01…08), presence-driven adaptive polling.
+2. When HA-1/HA-2 keys arrive: live-verify Spotify direct and Last.fm flows.
 
 ## Open risks
 - R-A: Host runs another project ("axis") on 5432/6379/6333/8025; Jingle publishes only 8080.
@@ -45,6 +50,9 @@ Founder directive: the Orchestrator does all work itself; subagents only when ex
 - R-E: Refresh-token rotation can race across two open tabs (second tab is signed out); acceptable for pilot, revisit with a grace window in S11.
 
 ## Retros
+### Sprint 3 (2026-09-30)
+- Went well: rules centralised in services/policy made the Gherkin block scenario straightforward.
+- Watch: E2E tests must not depend on mutable demo state; tests now create their own data.
 ### Sprint 2 (2026-09-30)
 - Went well: one shared write path made every new route inherit dedupe, lineage and BR-01; fixture-based contract tests caught a too-tight Apple budget and a wrong-encoding file.
 - Watch: always write files as UTF-8 (a cp1252 write truncated one file; restored from git). Presence-based polling still pending.
