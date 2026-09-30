@@ -100,6 +100,9 @@ def accept(user, f: Friendship) -> Friendship:
     f.status, f.accepted_at = FriendshipStatus.ACCEPTED, timezone.now()
     f.save(update_fields=["status", "accepted_at", "updated_at"])
     _changed(f.user_low_id, f.user_high_id, "accepted")
+    from jingle_ml.tasks import schedule_recompute
+
+    transaction.on_commit(lambda: schedule_recompute(f.user_low_id, f.user_high_id))
     return f
 
 

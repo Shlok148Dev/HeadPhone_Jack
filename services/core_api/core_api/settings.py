@@ -4,6 +4,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import environ
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
@@ -34,6 +35,7 @@ INSTALLED_APPS = [
     "accounts",
     "sources",
     "social",
+    "suggestions",
     "feed",
 ]
 
@@ -164,6 +166,11 @@ CELERY_BEAT_SCHEDULE = {
     # Jingle Connect: poll routes that can't push; resolve queued recordings (Tech Bible 2.3).
     "sources-poll": {"task": "sources.tasks.poll_sources", "schedule": 10.0},
     "sources-drain-identity": {"task": "sources.tasks.drain_identity_queue", "schedule": 60.0},
+    # Friend suggestions nightly at 03:00 IST (Tech Bible 7.4); on-change runs are event-driven.
+    "suggestions-nightly": {
+        "task": "jingle_ml.tasks.recompute_all",
+        "schedule": crontab(hour=3, minute=0),
+    },
 }
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")

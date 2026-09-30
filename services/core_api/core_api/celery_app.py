@@ -13,3 +13,4 @@ app.conf.task_queues = [Queue(q) for q in ("poll", "ingest", "ml", "notify", "de
 app.conf.task_default_queue = "default"
 app.conf.timezone = "Asia/Kolkata"
 app.autodiscover_tasks()
+app.autodiscover_tasks(['jingle_ml'], related_name='tasks', force=False)

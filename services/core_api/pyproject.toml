@@ -85,5 +85,5 @@ ignore = ["S101", "S105", "S106"]
 "tests/**" = ["S", "E501"]
 
 [tool.coverage.run]
-source = ["core_api", "accounts", "social", "circles", "recs", "rituals", "moderation", "feed", "sources", "jingle_ml"]
+source = ["core_api", "accounts", "social", "suggestions", "circles", "recs", "rituals", "moderation", "feed", "sources", "jingle_ml"]
 omit = ["*/migrations/*", "*/tests/*"]

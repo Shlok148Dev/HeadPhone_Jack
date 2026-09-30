@@ -466,6 +466,24 @@ export interface paths {
         patch: operations["me_privacy_partial_update"];
         trace?: never;
     };
+    "/api/v1/me/taste": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-03-07: provisional taste from onboarding (3+ artists or genres). */
+        get: operations["me_taste_retrieve"];
+        /** @description JNG-03-07: provisional taste from onboarding (3+ artists or genres). */
+        put: operations["me_taste_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports": {
         parameters: {
             query?: never;
@@ -579,6 +597,39 @@ export interface paths {
         get: operations["sources_spotify_callback_retrieve"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suggestions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["suggestions_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/suggestions/{user_id}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description JNG-03-05: dismissed people don't return for 90 days. */
+        post: operations["suggestions_dismiss_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -950,6 +1001,17 @@ export interface components {
          * @enum {string}
          */
         StateEnum: "LIVE" | "RECENT" | "TOP" | "HIDDEN";
+        SuggestionItem: {
+            user: components["schemas"]["Person"];
+            /** Format: double */
+            score: number;
+            reasons: string[];
+        };
+        SuggestionsResponse: {
+            results: components["schemas"]["SuggestionItem"][];
+            pending: boolean;
+            cold_start: boolean;
+        };
         TakeoutUploadRequest: {
             /** Format: binary */
             file: string;
@@ -959,6 +1021,15 @@ export interface components {
          * @enum {string}
          */
         TargetTypeEnum: "user";
+        Taste: {
+            artists: string[];
+            genres: string[];
+            genre_options: string[];
+        };
+        TasteUpdateRequest: {
+            artists: string[];
+            genres: string[];
+        };
     };
     responses: never;
     parameters: never;
@@ -2002,6 +2073,58 @@ export interface operations {
             };
         };
     };
+    me_taste_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Taste"];
+                };
+            };
+        };
+    };
+    me_taste_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TasteUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TasteUpdateRequest"];
+                "multipart/form-data": components["schemas"]["TasteUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     reports_create: {
         parameters: {
             query?: never;
@@ -2252,6 +2375,54 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    suggestions_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestionsResponse"];
+                };
+            };
+        };
+    };
+    suggestions_dismiss_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
             };
         };
     };

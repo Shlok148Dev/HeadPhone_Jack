@@ -881,6 +881,49 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+  /api/v1/me/taste:
+    get:
+      operationId: me_taste_retrieve
+      description: 'JNG-03-07: provisional taste from onboarding (3+ artists or genres).'
+      tags:
+      - suggestions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Taste'
+          description: ''
+    put:
+      operationId: me_taste_update
+      description: 'JNG-03-07: provisional taste from onboarding (3+ artists or genres).'
+      tags:
+      - suggestions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TasteUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TasteUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TasteUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
   /api/v1/reports:
     post:
       operationId: reports_create
@@ -1096,6 +1139,44 @@ paths:
       responses:
         '302':
           description: No response body
+  /api/v1/suggestions:
+    get:
+      operationId: suggestions_retrieve
+      tags:
+      - suggestions
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuggestionsResponse'
+          description: ''
+  /api/v1/suggestions/{user_id}/dismiss:
+    post:
+      operationId: suggestions_dismiss_create
+      description: 'JNG-03-05: dismissed people don''t return for 90 days.'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - suggestions
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/users/search:
     get:
       operationId: users_search_list
@@ -1893,6 +1974,38 @@ components:
         * `RECENT` - RECENT
         * `TOP` - TOP
         * `HIDDEN` - HIDDEN
+    SuggestionItem:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/Person'
+        score:
+          type: number
+          format: double
+        reasons:
+          type: array
+          items:
+            type: string
+          maxItems: 3
+      required:
+      - reasons
+      - score
+      - user
+    SuggestionsResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SuggestionItem'
+        pending:
+          type: boolean
+        cold_start:
+          type: boolean
+      required:
+      - cold_start
+      - pending
+      - results
     TakeoutUploadRequest:
       type: object
       properties:
@@ -1906,6 +2019,45 @@ components:
       - user
       type: string
       description: '* `user` - user'
+    Taste:
+      type: object
+      properties:
+        artists:
+          type: array
+          items:
+            type: string
+        genres:
+          type: array
+          items:
+            type: string
+        genre_options:
+          type: array
+          items:
+            type: string
+      required:
+      - artists
+      - genre_options
+      - genres
+    TasteUpdateRequest:
+      type: object
+      properties:
+        artists:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 80
+          maxItems: 20
+        genres:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 40
+          maxItems: 20
+      required:
+      - artists
+      - genres
   securitySchemes:
     jwtAuth:
       type: http
