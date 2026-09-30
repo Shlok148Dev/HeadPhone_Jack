@@ -37,6 +37,7 @@ class CardRecordingSerializer(serializers.Serializer):
     album = serializers.CharField(allow_null=True)
     artwork_url = serializers.URLField(allow_null=True)
     links = LinksSerializer()
+    search_links = serializers.DictField(child=serializers.URLField(), required=False)
 
 
 class FeedCardSerializer(serializers.Serializer):
@@ -83,8 +84,11 @@ class MyCardView(APIView):
 
     @extend_schema(
         tags=["feed"],
-        responses={200: FeedCardSerializer, 401: err("UNAUTHENTICATED"),
-                   403: err("ONBOARDING_REQUIRED")},
+        responses={
+            200: FeedCardSerializer,
+            401: err("UNAUTHENTICATED"),
+            403: err("ONBOARDING_REQUIRED"),
+        },
     )
     def get(self, request):
         resp = Response(resolve_card(request.user, request.user))
@@ -104,9 +108,10 @@ class ConnectionsView(APIView):
                 "kind", flat=True
             )
         )
-        has_companion = SourceKind.COMPANION in kinds or ScrobbleToken.objects.filter(
-            user=user, revoked_at__isnull=True
-        ).exists()
+        has_companion = (
+            SourceKind.COMPANION in kinds
+            or ScrobbleToken.objects.filter(user=user, revoked_at__isnull=True).exists()
+        )
         data = [
             {
                 "platform": c.platform,
@@ -119,3 +124,76 @@ class ConnectionsView(APIView):
             for c in rows
         ]
         return Response(ConnectionSerializer(data, many=True).data)
+
+
+# ---- Friends' feed (JNG-05-01, 05-03, 05-06, 05-07) -----------------------------------------
+
+_RANK = {"LIVE": 0, "RECENT": 1, "TOP": 2, "HIDDEN": 3}
+
+
+def _sort_key(card: dict) -> tuple:
+    """BR-02: Live first, then newest Recent, then Top, then Hidden; ties by name."""
+    from datetime import datetime
+
+    obs = card.get("observed_at")
+    ts = datetime.fromisoformat(obs.replace("Z", "+00:00")).timestamp() if obs else 0.0
+    return (_RANK.get(card["state"], 9), -ts, card["friend"]["display_name"].casefold())
+
+
+class FeedResponseSerializer(serializers.Serializer):
+    results = FeedCardSerializer(many=True)
+    live_count = serializers.IntegerField()
+    degraded = serializers.BooleanField()
+    next_cursor = serializers.CharField(allow_null=True)
+
+
+MAX_FEED = 200  # NFR-PERF-03 sizes the feed for up to 200 friends
+
+
+class FeedView(APIView):
+    """Cards of my friends, ordered Live → Recent (newest) → Top → Hidden."""
+
+    permission_classes = [IsAuthenticated, IsOnboarded]
+
+    @extend_schema(tags=["feed"], operation_id="feed_list", responses={200: FeedResponseSerializer})
+    def get(self, request):
+        from accounts.models import User
+        from social.services import friend_ids
+
+        only_live = request.GET.get("filter") == "live"
+        friends = User.objects.filter(
+            pk__in=friend_ids(request.user.pk), is_active=True, deleted_at__isnull=True
+        )[:MAX_FEED]
+        cards = sorted((resolve_card(f, request.user) for f in friends), key=_sort_key)
+        live = sum(1 for c in cards if c["state"] == "LIVE")
+        if only_live:
+            cards = [c for c in cards if c["state"] == "LIVE"]
+        resp = Response(
+            {
+                "results": cards,
+                "live_count": live,
+                "degraded": any(c["degraded"] for c in cards),
+                "next_cursor": None,
+            }
+        )
+        resp["Cache-Control"] = "private, no-store"
+        return resp
+
+
+class FeedCardDetailView(APIView):
+    """One friend's card, fetched after a realtime hint (ADR-0018). Hidden if not visible."""
+
+    permission_classes = [IsAuthenticated, IsOnboarded]
+
+    @extend_schema(tags=["feed"], responses={200: FeedCardSerializer, 404: err("NOT_FOUND")})
+    def get(self, request, user_id):
+        from accounts.models import User
+        from core_api.errors import ApiError
+        from core_api.policy import are_friends
+
+        owner = User.objects.filter(pk=user_id, is_active=True, deleted_at__isnull=True).first()
+        if owner is None or (owner.pk != request.user.pk and not are_friends(request.user, owner)):
+            raise ApiError("NOT_FOUND", "Not found.", 404)
+        resp = Response(resolve_card(owner, request.user))
+        resp["Cache-Control"] = "private, no-store"
+        return resp

@@ -273,6 +273,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: NOT_FOUND
+  /api/v1/feed:
+    get:
+      operationId: feed_list
+      description: Cards of my friends, ordered Live → Recent (newest) → Top → Hidden.
+      tags:
+      - feed
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedResponse'
+          description: ''
+  /api/v1/feed/{user_id}:
+    get:
+      operationId: feed_retrieve
+      description: One friend's card, fetched after a realtime hint (ADR-0018). Hidden
+        if not visible.
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - feed
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedCard'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/flags:
     get:
       operationId: flags_list
@@ -1055,8 +1099,8 @@ paths:
   /api/v1/users/search:
     get:
       operationId: users_search_list
-      description: 'JNG-02-01: by username (anyone) or display name (discoverable
-        people only). Blocks hide both ways.'
+      description: 'JNG-02-01: by username, or display name if discoverable. Blocks
+        hide both ways.'
       parameters:
       - in: query
         name: q
@@ -1156,6 +1200,11 @@ components:
           format: uri
         links:
           $ref: '#/components/schemas/Links'
+        search_links:
+          type: object
+          additionalProperties:
+            type: string
+            format: uri
       required:
       - album
       - artist
@@ -1364,6 +1413,26 @@ components:
         * `AMAZON_MUSIC` - AMAZON_MUSIC
         * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
         * `UNKNOWN` - UNKNOWN
+    FeedResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedCard'
+        live_count:
+          type: integer
+        degraded:
+          type: boolean
+        next_cursor:
+          type:
+          - string
+          - 'null'
+      required:
+      - degraded
+      - live_count
+      - next_cursor
+      - results
     FriendRef:
       type: object
       properties:

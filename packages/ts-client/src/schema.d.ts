@@ -158,6 +158,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cards of my friends, ordered Live → Recent (newest) → Top → Hidden. */
+        get: operations["feed_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/feed/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One friend's card, fetched after a realtime hint (ADR-0018). Hidden if not visible. */
+        get: operations["feed_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/flags": {
         parameters: {
             query?: never;
@@ -558,7 +592,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description JNG-02-01: by username (anyone) or display name (discoverable people only). Blocks hide both ways. */
+        /** @description JNG-02-01: by username, or display name if discoverable. Blocks hide both ways. */
         get: operations["users_search_list"];
         put?: never;
         post?: never;
@@ -613,6 +647,9 @@ export interface components {
             /** Format: uri */
             artwork_url: string | null;
             links: components["schemas"]["Links"];
+            search_links?: {
+                [key: string]: string;
+            };
         };
         CompanionToken: {
             token: string;
@@ -705,6 +742,12 @@ export interface components {
          * @enum {string}
          */
         FeedCardPlatformEnum: "SPOTIFY" | "APPLE_MUSIC" | "AMAZON_MUSIC" | "YOUTUBE_MUSIC" | "UNKNOWN";
+        FeedResponse: {
+            results: components["schemas"]["FeedCard"][];
+            live_count: number;
+            degraded: boolean;
+            next_cursor: string | null;
+        };
         FriendRef: {
             /** Format: uuid */
             id: string;
@@ -1234,6 +1277,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    feed_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedResponse"];
+                };
+            };
+        };
+    };
+    feed_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedCard"];
+                };
             };
             /** @description NOT_FOUND */
             404: {

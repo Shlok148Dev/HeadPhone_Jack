@@ -181,6 +181,22 @@ def _links(recording_id: str | None) -> dict[str, str | None]:
     return links
 
 
+_SEARCH = {
+    "SPOTIFY": "https://open.spotify.com/search/{q}",
+    "APPLE_MUSIC": "https://music.apple.com/search?term={q}",
+    "YOUTUBE_MUSIC": "https://music.youtube.com/search?q={q}",
+    "AMAZON_MUSIC": "https://music.amazon.com/search/{q}",
+}
+
+
+def _search_links(title: str, artist: str) -> dict[str, str]:
+    """JNG-06-03 fallback: a search on each platform when no verified link exists."""
+    from urllib.parse import quote
+
+    q = quote(f"{title} {artist}".strip()[:200])
+    return {p: url.format(q=q) for p, url in _SEARCH.items()} if q else {}
+
+
 def _recording(signal: Signal) -> dict[str, Any]:
     ev = signal.event
     raw = ev.get("raw") or {}
@@ -192,6 +208,7 @@ def _recording(signal: Signal) -> dict[str, Any]:
         "album": raw.get("album") or None,
         "artwork_url": ev.get("artwork_url") or None,
         "links": _links(rid),
+        "search_links": _search_links(raw.get("title") or "", raw.get("artist") or ""),
     }
 
 
@@ -235,6 +252,17 @@ def _newest(*signals: Signal | None) -> Signal | None:
         return None
     epoch = datetime.min.replace(tzinfo=UTC)
     return max(present, key=lambda s: s.observed_at or epoch)
+
+
+def _source_delayed(owner, platform: Platform) -> bool:
+    """NFR-AVAIL-03: a platform whose route needs reconnecting shows cached plays as delayed."""
+    from sources.models import PlatformConnection, SourceStatus
+
+    return PlatformConnection.objects.filter(
+        user=owner,
+        platform=platform.value,
+        status__in=[SourceStatus.NEEDS_REAUTH, SourceStatus.ERROR],
+    ).exists()
 
 
 def resolve_card(owner, viewer, now: datetime | None = None) -> dict[str, Any]:
@@ -285,6 +313,8 @@ def resolve_card(owner, viewer, now: datetime | None = None) -> dict[str, Any]:
     card["freshness_label"] = freshness_label(
         state, signal.platform, signal.observed_at, now, show_precise_time=precise
     )
-    card["degraded"] = degraded
+    card["degraded"] = degraded or (
+        state is CardState.RECENT and _source_delayed(owner, signal.platform)
+    )
     card["attribution"] = "SPOTIFY" if signal.is_spotify_direct else None
     return card
