@@ -2,15 +2,16 @@
 
 Owner: Orchestrator (founder directive: no agents unless necessary). Story IDs from SRS v4.0.
 
-## Sprint 4 — Realtime gateway and the friends' feed
-Goal: friends' Live, Recent and Top cards on Home, updating without refresh, honest when a source is delayed.
+## Sprint 5 — Friend suggestions
+Goal: up to 20 explained suggestions that never leak private listening or cross hard boundaries.
 
-### In progress
-- S4-01 Feed API `GET /api/v1/feed` (JNG-05-01, BR-02 ordering, privacy/blocks, degraded flag, cursor) + Top from Mongo
-- S4-02 Realtime gateway: JWT handshake, `friends:{id}` rooms from `/internal/users/{id}/friends`, stream consumers (`events:listen` → `feed:update` with per-viewer privacy via core-api), presence (JNG-05-02)
-- S4-03 Home: Live now shelf, filter chips (All, Live), everyone grid, live updates, degraded line (JNG-05-03, 05-06, 05-07, 05-08)
-- S4-04 Open in my app (JNG-05-04) using recording links + platform search fallback
-- S4-05 Presence-driven adaptive polling (Tech Bible 2.3)
+### To do
+- S5-01 Taste vectors (TF-IDF over artists/tags → SVD, permitted data only) and Qdrant upsert (JNG-03-03)
+- S5-02 Candidate generation + hard filters + heuristic scoring + diversify + reasons (Tech Bible §5.1–5.2) (JNG-03-01, 03-02)
+- S5-03 `GET /suggestions`, `POST /suggestions/{id}/dismiss` (90 days), discoverability (JNG-03-05, 03-06)
+- S5-04 Cold start: onboarding genre/artist picker → provisional taste (JNG-03-07); shared-context signals (JNG-03-08)
+- S5-05 Celery: nightly + on-new-friendship recompute; Redis `sug:{user}` cache; offline eval (Recall@20, coverage, safety=0)
+- S5-06 UI: People you may know (Home shelf + Friends tab) with reasons, Add/Dismiss
 
 ### Done
-- Sprint 0–3: see STATE.md
+- Sprint 0–4: see STATE.md

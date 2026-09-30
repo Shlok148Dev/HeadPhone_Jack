@@ -25,11 +25,22 @@ export interface FeedCardProps {
   className?: string;
 }
 
-function pickLink(rec: FeedRecording, mine: Platform | undefined, source: Platform): string | null {
+/**
+ * JNG-06-03: open on the viewer's own platform. Verified link on my platform → search on my
+ * platform ("Search in Apple Music") → the friend's platform → any verified link.
+ */
+function pickLink(
+  rec: FeedRecording,
+  mine: Platform | undefined,
+  source: Platform,
+): { url: string; searchOn: Platform | null } | null {
   const links = rec.links ?? {};
-  if (mine && links[mine]) return links[mine] ?? null;
-  if (links[source]) return links[source] ?? null;
-  for (const v of Object.values(links)) if (v) return v;
+  const search = rec.search_links ?? {};
+  if (mine && links[mine]) return { url: links[mine] as string, searchOn: null };
+  if (mine && mine !== "UNKNOWN" && search[mine]) return { url: search[mine] as string, searchOn: mine };
+  if (links[source]) return { url: links[source] as string, searchOn: null };
+  for (const v of Object.values(links)) if (v) return { url: v, searchOn: null };
+  if (source !== "UNKNOWN" && search[source]) return { url: search[source] as string, searchOn: source };
   return null;
 }
 
@@ -92,9 +103,17 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
   const isTop = card.state === "TOP";
   const unresolved = rec.id === null;
   const spotifyData = card.attribution === "SPOTIFY";
-  const link = spotifyData ? (rec.links?.SPOTIFY ?? pickLink(rec, myPlatform, card.platform)) : pickLink(rec, myPlatform, card.platform);
+  const picked = pickLink(rec, myPlatform, card.platform);
+  const link = spotifyData ? (rec.links?.SPOTIFY ?? picked?.url ?? null) : (picked?.url ?? null);
   const platformName = card.platform === "UNKNOWN" ? null : PLATFORM_NAMES[card.platform];
-  const openLabel = spotifyData ? "Open Spotify" : unresolved && platformName ? `Search in ${platformName}` : "Open in my app";
+  const searchOn = !spotifyData && picked?.searchOn && picked.searchOn !== "UNKNOWN" ? PLATFORM_NAMES[picked.searchOn] : null;
+  const openLabel = spotifyData
+    ? "Open Spotify"
+    : searchOn
+      ? `Search in ${searchOn}`
+      : unresolved && platformName
+        ? `Search in ${platformName}`
+        : "Open in my app";
   const tops = isTop ? [rec, ...(topRecordings ?? [])].slice(0, 4) : [];
 
   return (

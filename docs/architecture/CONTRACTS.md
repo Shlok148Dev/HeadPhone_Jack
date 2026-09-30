@@ -121,7 +121,7 @@ Streams: `events:listen` (ingest → realtime, workers), `events:domain` (core-a
 ## 9. Socket.IO (`/rt`, Technical Bible 4.3)
 
 Handshake: `auth: { token: <access JWT> }`. Rooms: `user:{id}`, `friends:{id}`, `circle:{id}`, `session:{id}`.
-Server → client: `feed:update` (FeedCard), `presence`, `notify {type,id}`, `queue:state`, `queue:delta`.
+Server → client (ADR-0018: hints only): `feed:update {user_id}` → client refetches `GET /api/v1/feed/{user_id}`, `me:update`, `friends:changed`, `notify {type,id}`, `queue:state`, `queue:delta`.
 Client → server: `session:join`, `queue:add`, `vote:cast` (forwarded to core-api `/internal/rt/*` which validates membership and writes).
 
 ## 10. Environment variables

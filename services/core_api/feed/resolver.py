@@ -221,13 +221,19 @@ def _friend(owner) -> dict[str, Any]:
     }
 
 
-def hidden_card(owner, degraded: bool = False) -> dict[str, Any]:
+def hidden_card(owner, degraded: bool = False, no_data: bool = False) -> dict[str, Any]:
+    """HIDDEN for privacy, or (``no_data``) nothing captured yet: say so honestly, not "Hidden"."""
+    label = (
+        "No plays yet"
+        if no_data
+        else freshness_label(CardState.HIDDEN, Platform.UNKNOWN, None, _now())
+    )
     return {
         "friend": _friend(owner),
         "state": CardState.HIDDEN.value,
         "platform": None,
         "recording": None,
-        "freshness_label": freshness_label(CardState.HIDDEN, Platform.UNKNOWN, None, _now()),
+        "freshness_label": label,
         "degraded": degraded,
         "attribution": None,
     }
@@ -299,7 +305,7 @@ def resolve_card(owner, viewer, now: datetime | None = None) -> dict[str, Any]:
             degraded = degraded or top_degraded
             state = CardState.TOP
     if signal is None:
-        return hidden_card(owner, degraded=degraded)
+        return hidden_card(owner, degraded=degraded, no_data=True)
 
     precise = is_owner or PrivacySettings.for_user(owner).show_last_active
     card: dict[str, Any] = {

@@ -1,9 +1,9 @@
 # STATE — Jingle
 
-_Last updated: 2026-09-30 — Sprint 3 complete; Sprint 4 in progress_
+_Last updated: 2026-09-30 — Sprint 4 complete_
 
 ## Current sprint
-**Sprints 0–3 done.** Now: **Sprint 4 — realtime gateway and friends' feed** (see `BOARD.md`).
+**Sprints 0–4 done.** Next: **Sprint 5 — friend suggestions** (see `BOARD.md`).
 
 ## Done (on main)
 ### Sprint 0 — Setup
@@ -35,12 +35,18 @@ _Last updated: 2026-09-30 — Sprint 3 complete; Sprint 4 in progress_
 - Fix: "Only circles I choose" no longer lets plain friends see activity.
 - Tests: social 12 (Gherkin JNG-02-03/04), E2E 9 green; review `docs/office/reviews/S3-SOCIAL-review.md`.
 
+### Sprint 4 — Realtime gateway and friends' feed
+- `GET /feed` + `GET /feed/{user}`: BR-02 ordering, Live filter, privacy/blocks, delayed flag, search fallback links (ADR-0018).
+- Realtime gateway: JWT handshake, friend rooms, Redis Streams → coalesced hints, room re-sync on friendship/block changes, presence; adaptive polling in ingest.
+- Home: Live now shelf, All/Live chips, everyone-else grid, degraded line, reconnect banner, my card; "Open in my app" honours my platform with search fallback.
+- Tests: E2E 10 incl. live update without refresh; review `docs/office/reviews/S4-FEED-review.md`.
+
 ## Working mode
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
-1. Sprint 4 — realtime gateway (JWT handshake, rooms per friend, Redis Streams fan-out of `events:listen`/`events:domain`, presence), friends' feed API (`GET /feed` with Live/Recent/Top, BR-02 ordering, degraded flag, circle filter placeholder), Home with Live now shelf + filter chips + everyone grid, live updates without refresh (JNG-05-01…08), presence-driven adaptive polling.
-2. When HA-1/HA-2 keys arrive: live-verify Spotify direct and Last.fm flows.
+1. Sprint 5 — friend suggestions (Tech Bible §5): candidates (friends of friends, taste neighbours, shared context, same college/city), hard filters (blocks, discoverability, 90-day dismiss, adult–minor), heuristic score (Adamic–Adar + taste cosine + context + local), diversify, ≤ 3 reasons without leaking private listening; nightly + on-new-friend Celery job; `GET /suggestions`, dismiss; Friends/Home UI; cold-start genre picker.
+2. Sprint 6 — circles, invites, roles, circle feed + chips, Leiden suggested circles.
 
 ## Open risks
 - R-A: Host runs another project ("axis") on 5432/6379/6333/8025; Jingle publishes only 8080.
@@ -50,6 +56,9 @@ Founder directive: the Orchestrator does all work itself; subagents only when ex
 - R-E: Refresh-token rotation can race across two open tabs (second tab is signed out); acceptable for pilot, revisit with a grace window in S11.
 
 ## Retros
+### Sprint 4 (2026-09-30)
+- Went well: hint-based realtime kept privacy in one place; the E2E proved live updates arrive in seconds.
+- Watch: run a11y on settled UI; keep an eye on the 180 kB home budget (177 kB now).
 ### Sprint 3 (2026-09-30)
 - Went well: rules centralised in services/policy made the Gherkin block scenario straightforward.
 - Watch: E2E tests must not depend on mutable demo state; tests now create their own data.

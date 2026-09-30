@@ -39,6 +39,7 @@ POLLED_KINDS = [
 LIVE_INTERVAL = {SourceKind.SPOTIFY: 20, SourceKind.LISTENBRAINZ: 30, SourceKind.LASTFM: 60}
 RECENT_INTERVAL = {SourceKind.APPLE_MUSIC: 600}
 DEFAULT_RECENT_INTERVAL = 300
+IDLE_RECENT_INTERVAL = 900  # nobody watching: recents only, every 15 min (Tech Bible 2.3)
 BACKFILL = timedelta(days=14)
 ACTIVE = [SourceStatus.CONNECTED, SourceStatus.PENDING_FIRST_PLAY]
 
@@ -91,8 +92,14 @@ async def _poll_one(
     if adapter is None:
         counts["skipped"] += 1
         return None  # flag off or not configured: drop from schedule until re-linked
-    live_every = LIVE_INTERVAL.get(src.kind)
-    recent_every = RECENT_INTERVAL.get(src.kind, DEFAULT_RECENT_INTERVAL)
+    # Adaptive polling: live only while the user or a friend has Jingle open (realtime sets
+    # presence:{u} for the user and watched:{u} for each of their online friends' friends).
+    uid = str(src.user_id)
+    active = bool(await orch.res.redis.exists(f"presence:{uid}", f"watched:{uid}"))
+    live_every = LIVE_INTERVAL.get(src.kind) if active else None
+    recent_every = RECENT_INTERVAL.get(
+        src.kind, DEFAULT_RECENT_INTERVAL if active else IDLE_RECENT_INTERVAL
+    )
     meta = dict(src.meta)
     platform = Platform(meta.get("platform", "UNKNOWN"))
     now = datetime.fromtimestamp(now_ts, UTC)

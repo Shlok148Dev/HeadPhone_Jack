@@ -24,6 +24,8 @@ export interface FeedRecording {
   album?: string | null;
   artwork_url: string | null;
   links: Partial<Record<Platform, string | null>>;
+  /** Search on each platform when no verified link exists (JNG-06-03). */
+  search_links?: Partial<Record<Platform, string>>;
 }
 
 export interface FeedCardData {

@@ -25,6 +25,9 @@ export async function setTheme(page: Page, theme: "dark" | "light") {
 }
 
 export async function expectNoA11yViolations(page: Page) {
+  // Measure the settled UI: entry animations briefly fade text in, which axe reads as low contrast.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.waitForTimeout(400);
   const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
   expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.html.slice(0, 160)).join(" | ")}`)).toEqual([]);
 }

@@ -61,7 +61,9 @@ async def cres() -> AsyncIterator[Resources]:
 
 @pytest.fixture
 async def u(cres: Resources) -> User:
-    return await create_user(cres.engine)
+    user = await create_user(cres.engine)
+    await cres.redis.set(f"presence:{user.id}", "1")  # someone has Jingle open: live polling on
+    return user
 
 
 async def _conn_status(res: Resources, user_id: UUID, platform: Platform) -> str | None:
@@ -509,3 +511,26 @@ async def test_connect_api_requires_service_token(client: httpx.AsyncClient, use
     assert (
         await list_sources(client._transport.app.state.resources.engine, [SourceKind.SPOTIFY]) == []
     )  # type: ignore[attr-defined]
+
+
+@respx.mock
+async def test_adaptive_polling_skips_live_when_nobody_watches(cres: Resources) -> None:
+    idle = await create_user(cres.engine)  # no presence:/watched: keys
+    respx.get(f"{LB}/1/validate-token").mock(
+        return_value=httpx.Response(200, json=fx("listenbrainz/validate_token_ok.json"))
+    )
+    now_route = respx.get(f"{LB}/1/user/lb_listener/playing-now").mock(
+        return_value=httpx.Response(200, json=fx("listenbrainz/playing_now.json"))
+    )
+    respx.get(f"{LB}/1/user/lb_listener/listens").mock(
+        return_value=httpx.Response(200, json=fx("listenbrainz/listens.json"))
+    )
+    orch = Orchestrator(cres)
+    await orch.link_listenbrainz(idle.id, Platform.SPOTIFY, "tok")
+    counts = await poll_due(orch, {})
+    assert counts["live"] == 0 and counts["listens"] == 2 and not now_route.called
+    await cres.redis.set(f"watched:{idle.id}", "1")  # a friend opened Jingle
+    await cres.redis.zadd(
+        POLL_ZSET, {str((await get_source(cres.engine, idle.id, SourceKind.LISTENBRAINZ)).id): 0}
+    )  # type: ignore[union-attr]
+    assert (await poll_due(orch, {}))["live"] == 1

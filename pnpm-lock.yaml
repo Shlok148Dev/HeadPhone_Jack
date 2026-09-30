@@ -92,6 +92,9 @@ importers:
       react-dom:
         specifier: ^19.1.0
         version: 19.3.0(react@19.3.0)
+      socket.io-client:
+        specifier: ^4.8.4
+        version: 4.8.4
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.13.0

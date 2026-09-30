@@ -18,6 +18,10 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-01-13 | Push playing-now shows Live within seconds; unknown token rejected | `services/ingest_ml/tests/acceptance/test_JNG_01_13.py` (+ `features/ep01/JNG-01-13_push.feature`), `test_push_api.py` | `ingest_ml/api/push.py`, `ingest_ml/push/service.py` | ✅ |
 | JNG-01-14 | One button per platform; orchestrator picks the route; no route words on cards | extension tests (74); `test_JNG_01_04_route_choice`; core-api `test_JNG_01_14_*`; E2E `JNG-01-14.spec.ts` | `orchestrator.py`, `Connect.tsx`, `app/connect/companion` | ✅ |
 | JNG-05-01 | Apple Music only never LIVE; stale now-playing 120 s → "2 min ago"; no route in card | `services/core_api/tests/acceptance/*JNG_05_01*` (pytest-bdd); `apps/web/e2e/ep05/JNG-05-01.spec.ts` | `feed/resolver.py`, `jingle_common/labels.py`, `apps/web/src/app/(app)/home` | ✅ |
+| JNG-05-02 | Live cards update without refreshing | E2E `ep05/JNG-05-02.spec.ts`; realtime `test/gateway.test.ts` | `apps/realtime/src/*`, `lib/realtime.tsx` | ✅ |
+| JNG-05-03/06 | Live filter + Live now shelf (circle chips in S6) | `tests/feed/test_feed.py::test_JNG_05_06_live_filter`; E2E | `feed/views.FeedView`, Home | ✅ (circles S6) |
+| JNG-05-04 | Open in my own app (search fallback) | `test_JNG_05_04_search_links_for_open_in_my_app` | `feed/resolver._search_links`, `FeedCard.pickLink` | ✅ |
+| JNG-05-07 | Source down → cached card, honest time, delayed | `test_JNG_05_07_needs_reconnect_marks_recent_as_delayed` | `feed/resolver._source_delayed`, Home degraded line | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |
 | JNG-02-01 | Search by username / display name | `tests/social/test_social.py::test_search_rules`; E2E `ep02/JNG-02.spec.ts` | `social/views.py`, `components/app/FindFriends.tsx` | ✅ |
 | JNG-02-02 | Send/accept/decline/cancel; duplicate request merges | Gherkin `features/ep02/JNG-02-03_04_remove_block.feature` (Duplicate request); `test_request_accept_decline_cancel`; E2E | `social/services.py`, Friends page | ✅ |

@@ -128,7 +128,7 @@ class TestRecentTop:
         card = resolve_card(owner, owner, NOW)
         assert card["state"] == "HIDDEN"
         assert card["recording"] is None and card["platform"] is None
-        assert card["freshness_label"] == "Hidden"
+        assert card["freshness_label"] == "No plays yet"  # nothing captured is not "Hidden"
         assert card["degraded"] is False
 
     def test_mongo_unavailable_marks_degraded(self, owner, monkeypatch):
