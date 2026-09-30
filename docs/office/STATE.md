@@ -1,9 +1,9 @@
 # STATE — Jingle
 
-_Last updated: 2026-09-30 — Sprint 4 complete_
+_Last updated: 2026-09-30 — Sprint 5 complete_
 
 ## Current sprint
-**Sprints 0–4 done.** Next: **Sprint 5 — friend suggestions** (see `BOARD.md`).
+**Sprints 0–5 done.** Next: **Sprint 6 — circles** (see `BOARD.md`).
 
 ## Done (on main)
 ### Sprint 0 — Setup
@@ -41,21 +41,31 @@ _Last updated: 2026-09-30 — Sprint 4 complete_
 - Home: Live now shelf, All/Live chips, everyone-else grid, degraded line, reconnect banner, my card; "Open in my app" honours my platform with search fallback.
 - Tests: E2E 10 incl. live update without refresh; review `docs/office/reviews/S4-FEED-review.md`.
 
+### Sprint 5 — Friend suggestions
+- `jingle_ml` (ADR-0019): candidates → hard filters → Tech Bible 5.2 score → MMR diversify → ≤ 3 safe reasons; taste vectors from trainable listens + onboarding picks; Qdrant upsert; nightly + on-friendship + on-taste recompute on the ML worker; Redis cache; offline eval (demo: Recall@20 0.80, unsafe 0).
+- API: `GET /suggestions` (read-time re-filtering), dismiss (90 days), `GET/PUT /me/taste`.
+- Web: Suggestions tab, Home shelf, onboarding taste picker and suggestions. Demo: 3 new personas (2 friends-of-friends, 1 taste twin).
+- Tests: suggestions 15 incl. Gherkin safety; E2E 11 green.
+
 ## Working mode
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
-1. Sprint 5 — friend suggestions (Tech Bible §5): candidates (friends of friends, taste neighbours, shared context, same college/city), hard filters (blocks, discoverability, 90-day dismiss, adult–minor), heuristic score (Adamic–Adar + taste cosine + context + local), diversify, ≤ 3 reasons without leaking private listening; nightly + on-new-friend Celery job; `GET /suggestions`, dismiss; Friends/Home UI; cold-start genre picker.
-2. Sprint 6 — circles, invites, roles, circle feed + chips, Leiden suggested circles.
+1. Sprint 6 — circles: create (≤ 50 members, ≤ 20 per user), invites + 7-day links, owner/admin/member roles, leave/remove, circle feed + circle filter chips on Home, circle page with ambient header, suggested circles via Leiden (never auto-join), share_circle in policy (JNG-04-01…08, JNG-05-03).
+2. Sprint 7 — sends and mixtapes with delivery tracking, inbox.
 
 ## Open risks
 - R-A: Host runs another project ("axis") on 5432/6379/6333/8025; Jingle publishes only 8080.
 - R-B: Heavy ML wheels (leidenalg) resolved in lock; LightFM decision deferred to S8.
 - R-C: Spotify redirect must use 127.0.0.1; callbacks state-bound (ADR-0016).
 - R-D: Docker Desktop on this host stops intermittently; restart it before `docker compose up`.
+- R-F: Home route JS is at the 180 kB budget; new Home features must lazy-load.
 - R-E: Refresh-token rotation can race across two open tabs (second tab is signed out); acceptable for pilot, revisit with a grace window in S11.
 
 ## Retros
+### Sprint 5 (2026-09-30)
+- Went well: pure pipeline made the SRS safety scenarios exact unit tests; computing on the worker kept the API image light.
+- Watch: coverage metric needs a larger world; JS budget on Home.
 ### Sprint 4 (2026-09-30)
 - Went well: hint-based realtime kept privacy in one place; the E2E proved live updates arrive in seconds.
 - Watch: run a11y on settled UI; keep an eye on the 180 kB home budget (177 kB now).

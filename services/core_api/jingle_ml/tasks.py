@@ -165,3 +165,12 @@ def schedule_recompute(*user_ids) -> None:
         )
     except Exception:  # noqa: BLE001 - broker down: the nightly run catches up
         log.warning("could not enqueue suggestion recompute")
+
+
+def schedule_all_later(countdown: int) -> None:
+    from core_api.celery_app import app
+
+    try:
+        app.send_task("jingle_ml.tasks.recompute_all", queue="ml", countdown=countdown)
+    except Exception:  # noqa: BLE001
+        log.warning("could not enqueue suggestion run")

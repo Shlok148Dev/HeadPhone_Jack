@@ -2,16 +2,17 @@
 
 Owner: Orchestrator (founder directive: no agents unless necessary). Story IDs from SRS v4.0.
 
-## Sprint 5 — Friend suggestions
-Goal: up to 20 explained suggestions that never leak private listening or cross hard boundaries.
+## Sprint 6 — Circles
+Goal: friend groups with their own feed, invites and roles; Jingle suggests circles but never adds anyone.
 
 ### To do
-- S5-01 Taste vectors (TF-IDF over artists/tags → SVD, permitted data only) and Qdrant upsert (JNG-03-03)
-- S5-02 Candidate generation + hard filters + heuristic scoring + diversify + reasons (Tech Bible §5.1–5.2) (JNG-03-01, 03-02)
-- S5-03 `GET /suggestions`, `POST /suggestions/{id}/dismiss` (90 days), discoverability (JNG-03-05, 03-06)
-- S5-04 Cold start: onboarding genre/artist picker → provisional taste (JNG-03-07); shared-context signals (JNG-03-08)
-- S5-05 Celery: nightly + on-new-friendship recompute; Redis `sug:{user}` cache; offline eval (Recall@20, coverage, safety=0)
-- S5-06 UI: People you may know (Home shelf + Friends tab) with reasons, Add/Dismiss
+- S6-01 Circle, membership, invite models; create (name, cover, ≤ 50), ≤ 20 circles per user (JNG-04-01, 04-08)
+- S6-02 Invites to friends + 7-day links; full circle message (JNG-04-02, Gherkin "Full circle")
+- S6-03 Roles owner/admin/member; leave; remove; ownership hand-over (JNG-04-03, 04-06)
+- S6-04 Circle feed + Home circle chips; policy `share_circle` (JNG-04-04, JNG-05-03)
+- S6-05 Settings: battle schedule, members-can-invite (JNG-04-07)
+- S6-06 Suggested circles via Leiden weekly; never auto-join (JNG-04-05, Gherkin)
+- S6-07 UI: Circles list, circle page (ambient header), create/invite sheets; demo circles
 
 ### Done
-- Sprint 0–4: see STATE.md
+- Sprint 0–5: see STATE.md

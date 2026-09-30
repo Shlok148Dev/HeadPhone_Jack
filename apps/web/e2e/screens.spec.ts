@@ -30,6 +30,7 @@ for (const theme of ["dark", "light"] as const) {
         ["connect-companion", "/connect/companion"],
         ["friends", "/friends?tab=friends"],
         ["friends-find", "/friends?tab=find"],
+        ["friends-suggestions", "/friends?tab=suggestions"],
         ["settings-privacy", "/settings/privacy"],
         ["onboarding-friends", "/onboarding/friends"],
       ] as const) {

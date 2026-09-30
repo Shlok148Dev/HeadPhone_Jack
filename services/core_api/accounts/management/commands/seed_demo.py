@@ -41,6 +41,10 @@ PERSONA_PAIRS = (
     ("dev", "ishaan"),
     ("riya", "tara"),
     ("neel", "kabir"),
+    ("kiara", "aanya"),
+    ("kiara", "kabir"),
+    ("rohan", "dev"),
+    ("rohan", "ishaan"),
 )
 
 
@@ -100,4 +104,8 @@ class Command(BaseCommand):
                         "accepted_at": timezone.now() if accepted else None,
                     },
                 )
+        # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
+        from jingle_ml.tasks import schedule_all_later
+
+        schedule_all_later(120)
         self.stdout.write(f"demo world ready ({created} new users; login {DEMO_EMAIL})")

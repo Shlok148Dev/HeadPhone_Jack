@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Button, EmptyState, ErrorState, Skeleton, Tabs } from "@/components/ds";
 import { FindFriends } from "@/components/app/FindFriends";
+import { SuggestionsGrid, TastePicker } from "@/components/app/Suggestions";
 import { PersonMenu, PersonRow } from "@/components/app/PersonRow";
 import { useFriends, useRequests, useSocialActions } from "@/lib/social";
 
@@ -105,6 +106,21 @@ function FriendsPage() {
         items={[
           { id: "friends", label: "Friends", content: <FriendsTab onFind={() => go("find")} /> },
           { id: "requests", label: incoming ? `Requests (${incoming})` : "Requests", content: <RequestsTab /> },
+          {
+            id: "suggestions",
+            label: "Suggestions",
+            content: (
+              <div className="flex flex-col gap-8">
+                <SuggestionsGrid />
+                <details className="rounded-lg border border-border p-4">
+                  <summary className="cursor-pointer text-sm font-medium">Improve your suggestions</summary>
+                  <div className="mt-4">
+                    <TastePicker />
+                  </div>
+                </details>
+              </div>
+            ),
+          },
           { id: "find", label: "Find", content: <FindFriends /> },
         ]}
       />

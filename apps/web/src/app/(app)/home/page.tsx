@@ -15,6 +15,7 @@ import {
   Skeleton,
   type Platform,
 } from "@/components/ds";
+import { SuggestionsShelf } from "@/components/app/Suggestions";
 import { useAuth } from "@/lib/auth";
 import { isFreshLive, useFeed } from "@/lib/feed";
 import { useConnections, useMyCard } from "@/lib/queries";
@@ -142,6 +143,8 @@ export default function HomePage() {
           </section>
         </>
       )}
+
+      <SuggestionsShelf />
 
       <section aria-labelledby="you-heading" className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between">

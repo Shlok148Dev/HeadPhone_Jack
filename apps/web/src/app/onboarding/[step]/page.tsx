@@ -6,6 +6,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Button, Skeleton, cn } from "@/components/ds";
 import { ConnectPlatformCard, ConnectSheet, PLATFORMS, type MusicPlatform } from "@/components/app/Connect";
 import { FindFriends } from "@/components/app/FindFriends";
+import { SuggestionsGrid, TastePicker } from "@/components/app/Suggestions";
 import { FocusShell } from "@/components/app/FocusShell";
 import { FormAlert, SelectField, TextField, birthYearOptions, fieldErrors } from "@/components/app/forms";
 import { ApiError, api, json, type Me } from "@/lib/api";
@@ -64,6 +65,12 @@ function ProfileStep({ me, next }: { me: Me; next: () => void }) {
       <h1 className="font-display text-2xl font-semibold">How should friends see you?</h1>
       {alert && <FormAlert>{alert}</FormAlert>}
       <TextField label="Display name" value={displayName} maxLength={60} onChange={(e) => setDisplayName(e.target.value)} error={errors.display_name} />
+      <details className="rounded-md border border-border p-3">
+        <summary className="cursor-pointer text-sm font-medium">Tell us what you love (helps find your people)</summary>
+        <div className="mt-3">
+          <TastePicker />
+        </div>
+      </details>
       {me.needs_onboarding && (
         <SelectField
           label="Birth year"
@@ -227,6 +234,7 @@ export default function OnboardingPage() {
               <h1 className="font-display text-2xl font-semibold">Find your friends</h1>
               <p className="mt-1 text-sm text-text-muted">Search for people you know, or share your invite link.</p>
             </div>
+            <SuggestionsGrid />
             <FindFriends />
             <Button size="lg" onClick={() => go("home")}>Go to my feed</Button>
           </div>

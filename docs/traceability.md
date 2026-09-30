@@ -17,6 +17,10 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-01-12 | 4-step onboarding | E2E sign-up lands on sources; screenshots of all steps | `apps/web/src/app/onboarding/[step]` | ✅ |
 | JNG-01-13 | Push playing-now shows Live within seconds; unknown token rejected | `services/ingest_ml/tests/acceptance/test_JNG_01_13.py` (+ `features/ep01/JNG-01-13_push.feature`), `test_push_api.py` | `ingest_ml/api/push.py`, `ingest_ml/push/service.py` | ✅ |
 | JNG-01-14 | One button per platform; orchestrator picks the route; no route words on cards | extension tests (74); `test_JNG_01_04_route_choice`; core-api `test_JNG_01_14_*`; E2E `JNG-01-14.spec.ts` | `orchestrator.py`, `Connect.tsx`, `app/connect/companion` | ✅ |
+| JNG-03-01/02/03 | ≤ 20 ranked suggestions, ≤ 3 reasons; friends of friends; taste twins | `tests/suggestions/test_suggestions.py` (pipeline, Adamic–Adar, twins cap); E2E `ep03/JNG-03.spec.ts` | `jingle_ml/suggest.py`, `jingle_ml/taste.py`, `suggestions/views.py` | ✅ |
+| JNG-03-05/06 | Dismiss for 90 days; discoverability off excludes | Gherkin `features/ep03/JNG-03_suggestion_safety.feature`; `test_api_reads_cache_and_refilters` | `suggestions/views.py`, `jingle_ml/suggest.allowed` | ✅ |
+| JNG-03-07 | Cold-start starter state and taste picker | `test_api_cold_start_and_taste` | `TastePicker`, `SuggestionsGrid`, `/me/taste` | ✅ |
+| JNG-03-08 | Shared-context signal (sessions, battles, concerts) | `Graph.context` wired | `jingle_ml/suggest.py` | 🟡 fills in when those features ship (S6–S10) |
 | JNG-05-01 | Apple Music only never LIVE; stale now-playing 120 s → "2 min ago"; no route in card | `services/core_api/tests/acceptance/*JNG_05_01*` (pytest-bdd); `apps/web/e2e/ep05/JNG-05-01.spec.ts` | `feed/resolver.py`, `jingle_common/labels.py`, `apps/web/src/app/(app)/home` | ✅ |
 | JNG-05-02 | Live cards update without refreshing | E2E `ep05/JNG-05-02.spec.ts`; realtime `test/gateway.test.ts` | `apps/realtime/src/*`, `lib/realtime.tsx` | ✅ |
 | JNG-05-03/06 | Live filter + Live now shelf (circle chips in S6) | `tests/feed/test_feed.py::test_JNG_05_06_live_filter`; E2E | `feed/views.FeedView`, Home | ✅ (circles S6) |

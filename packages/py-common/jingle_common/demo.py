@@ -83,6 +83,10 @@ PERSONAS: tuple[Persona, ...] = (
     Persona("vikram", "Vikram", Platform.AMAZON_MUSIC, 0.0, (19, 18, 1)),  # phone only: never Live
     Persona("sana", "Sana", Platform.YOUTUBE_MUSIC, 0.3, (6, 5, 0, 2)),
     Persona("neel", "Neel", Platform.APPLE_MUSIC, 0.6, (9, 14, 17, 16)),
+    # Sprint 5: not the demo login's friends, so it has people to be suggested.
+    Persona("kiara", "Kiara", Platform.SPOTIFY, 0.6, (0, 1, 2, 8), "KJ Somaiya"),  # friend of friends
+    Persona("rohan", "Rohan", Platform.YOUTUBE_MUSIC, 0.5, (5, 6, 7, 3)),  # friend of friends
+    Persona("maya", "Maya", Platform.APPLE_MUSIC, 0.5, (0, 3, 9, 14), city="Pune"),  # taste twin
 )
 
 

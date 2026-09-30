@@ -297,14 +297,32 @@ def test_artist_counts_exclude_direct_spotify_and_lastfm(mongo_db):
     now = timezone.now()
 
     def doc(user, artist, via, trainable):
-        return {"played_at": now, "meta": {"user_id": user, "platform": "SPOTIFY", "via": via},
-                "raw": {"artist": artist, "title": "t"}, "trainable": trainable, "analytics_allowed": via != "DIRECT"}
+        return {
+            "played_at": now,
+            "meta": {"user_id": user, "platform": "SPOTIFY", "via": via},
+            "raw": {"artist": artist, "title": "t"},
+            "trainable": trainable,
+            "analytics_allowed": via != "DIRECT",
+        }
 
-    mongo_db.listens.insert_many([
-        doc("u1", "Arijit Singh", "COMPANION", True),
-        doc("u1", "Arijit Singh", "COMPANION", True),
-        doc("u1", "Taylor Swift", "DIRECT", False),
-        doc("u1", "Lucky Ali", "LASTFM", False),
-    ])
+    mongo_db.listens.insert_many(
+        [
+            doc("u1", "Arijit Singh", "COMPANION", True),
+            doc("u1", "Arijit Singh", "COMPANION", True),
+            doc("u1", "Taylor Swift", "DIRECT", False),
+            doc("u1", "Lucky Ali", "LASTFM", False),
+        ]
+    )
     counts = data.artist_counts("train")
     assert counts == {"u1": Counter({"Arijit Singh": 2})}
+
+
+def test_offline_eval_recall_and_safety():
+    from jingle_ml.evaluate import evaluate
+
+    people = [P(i) for i in ("a", "b", "c", "d", "e")] + [P("kid", adult=False)]
+    edges = [("a", "b"), ("b", "c"), ("a", "c"), ("c", "d"), ("d", "e"), ("b", "d")]
+    g = graph(people, edges, blocked={frozenset(("a", "e"))})
+    m = evaluate(g, {}, {}, hide_share=0.34)
+    assert m["unsafe_pairs"] == 0 and m["hidden_edges"] == 2
+    assert 0.0 <= m["recall_at_20"] <= 1.0 and 0.0 <= m["coverage"] <= 1.0
