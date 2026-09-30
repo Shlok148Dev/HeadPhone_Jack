@@ -232,6 +232,481 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/circles:
+    get:
+      operationId: circles_list
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Circle'
+          description: ''
+    post:
+      operationId: circles_create
+      tags:
+      - circles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCircleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateCircleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateCircleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circle'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CIRCLE_LIMIT
+  /api/v1/circles/{circle_id}:
+    get:
+      operationId: circles_retrieve
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circle'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+    patch:
+      operationId: circles_partial_update
+      description: 'JNG-04-07: admins set the name, visibility, who can invite and
+        the battle schedule.'
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateCircleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateCircleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateCircleRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circle'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: FORBIDDEN
+    delete:
+      operationId: circles_destroy
+      description: Leave (owners of a one-person circle close it; otherwise they transfer
+        first).
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/circles/{circle_id}/feed:
+    get:
+      operationId: circles_feed_list
+      description: 'JNG-04-04: members'' cards, each under that member''s own privacy
+        rules.'
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedCard'
+          description: ''
+  /api/v1/circles/{circle_id}/invites:
+    post:
+      operationId: circles_invite_friends
+      description: Invite friends (direct) — they must accept (BR-08).
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteFriendsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InviteFriendsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InviteFriendsRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invited'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CIRCLE_FULL
+  /api/v1/circles/{circle_id}/links:
+    post:
+      operationId: circles_links_create
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CircleLink'
+          description: ''
+  /api/v1/circles/{circle_id}/members/{user_id}:
+    patch:
+      operationId: circles_members_partial_update
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSetRoleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSetRoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSetRoleRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: FORBIDDEN
+    delete:
+      operationId: circles_members_destroy
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: FORBIDDEN
+  /api/v1/circles/{circle_id}/transfer:
+    post:
+      operationId: circles_transfer_create
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/circles/invites:
+    get:
+      operationId: circles_invites_list
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CircleInviteItem'
+          description: ''
+  /api/v1/circles/invites/{invite_id}/{action}:
+    post:
+      operationId: circles_invites_create
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: invite_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/circles/join/{token}:
+    get:
+      operationId: circles_join_retrieve
+      description: 'Share-link landing: public preview, and join for signed-in people.'
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - circles
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CirclePreview'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+    post:
+      operationId: circles_join_create
+      description: 'Share-link landing: public preview, and join for signed-in people.'
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circle'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: CIRCLE_FULL
+  /api/v1/circles/suggested:
+    get:
+      operationId: circles_suggested_list
+      description: 'JNG-04-05: suggestions only; creating one sends invites, it never
+        adds anyone (BR-08).'
+      tags:
+      - circles
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SuggestedCircle'
+          description: ''
+  /api/v1/circles/suggested/{suggestion_id}/{action}:
+    post:
+      operationId: circles_suggested_create
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: suggestion_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - circles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UseSuggestionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UseSuggestionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UseSuggestionRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Circle'
+          description: ''
+        '204':
+          description: No response body
   /api/v1/connections:
     get:
       operationId: connections_list
@@ -1293,6 +1768,87 @@ components:
       - id
       - links
       - title
+    Circle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+        member_count:
+          type: integer
+        my_role:
+          $ref: '#/components/schemas/CircleRoleEnum'
+        members_can_invite:
+          type: boolean
+        battle_schedule:
+          type: object
+          additionalProperties: {}
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Member'
+      required:
+      - battle_schedule
+      - id
+      - member_count
+      - members_can_invite
+      - my_role
+      - name
+      - visibility
+    CircleInviteItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        circle:
+          type: object
+          additionalProperties: {}
+        from:
+          $ref: '#/components/schemas/Person'
+      required:
+      - circle
+      - from
+      - id
+    CircleLink:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        expires_at:
+          type: string
+          format: date-time
+      required:
+      - expires_at
+      - url
+    CirclePreview:
+      type: object
+      properties:
+        name:
+          type: string
+        member_count:
+          type: integer
+        full:
+          type: boolean
+      required:
+      - full
+      - member_count
+      - name
+    CircleRoleEnum:
+      enum:
+      - owner
+      - admin
+      - member
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `admin` - Admin
+        * `member` - Member
     CompanionToken:
       type: object
       properties:
@@ -1384,6 +1940,17 @@ components:
           type: boolean
       required:
       - given
+    CreateCircleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        visibility:
+          $ref: '#/components/schemas/VisibilityEnum'
+      required:
+      - name
     CreateReportRequest:
       type: object
       properties:
@@ -1594,6 +2161,17 @@ components:
       - code
       - qr_svg
       - url
+    InviteFriendsRequest:
+      type: object
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 49
+      required:
+      - user_ids
     InvitePreview:
       type: object
       properties:
@@ -1601,6 +2179,13 @@ components:
           type: string
       required:
       - display_name
+    Invited:
+      type: object
+      properties:
+        invited:
+          type: integer
+      required:
+      - invited
     LinkLastfmRequest:
       type: object
       properties:
@@ -1717,6 +2302,16 @@ components:
       - needs_onboarding
       - private_mode
       - username
+    Member:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/Person'
+        role:
+          $ref: '#/components/schemas/CircleRoleEnum'
+      required:
+      - role
+      - user
     MusicPlatformEnum:
       enum:
       - SPOTIFY
@@ -1772,6 +2367,26 @@ components:
             * `8h` - 8 hours
             * `until_off` - Until I turn it off
             * `off` - Off
+    PatchedSetRoleRequest:
+      type: object
+      properties:
+        role:
+          type: string
+          minLength: 1
+    PatchedUpdateCircleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        visibility:
+          type: string
+          minLength: 1
+        members_can_invite:
+          type: boolean
+        battle_schedule:
+          type: object
+          additionalProperties: {}
     Person:
       type: object
       properties:
@@ -1974,6 +2589,22 @@ components:
         * `RECENT` - RECENT
         * `TOP` - TOP
         * `HIDDEN` - HIDDEN
+    SuggestedCircle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+      required:
+      - id
+      - members
+      - name
     SuggestionItem:
       type: object
       properties:
@@ -2058,6 +2689,33 @@ components:
       required:
       - artists
       - genres
+    TransferRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+      required:
+      - user_id
+    UseSuggestionRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        user_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    VisibilityEnum:
+      enum:
+      - private
+      - discoverable
+      type: string
+      description: |-
+        * `private` - Private
+        * `discoverable` - Discoverable
   securitySchemes:
     jwtAuth:
       type: http

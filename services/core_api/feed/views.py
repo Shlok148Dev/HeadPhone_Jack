@@ -150,6 +150,23 @@ class FeedResponseSerializer(serializers.Serializer):
 MAX_FEED = 200  # NFR-PERF-03 sizes the feed for up to 200 friends
 
 
+def _circle_member_ids(viewer, circle_id: str) -> set:
+    import uuid
+
+    from circles.models import CircleMember
+    from core_api.errors import ApiError
+    from social.services import blocked_ids
+
+    try:
+        cid = uuid.UUID(str(circle_id))
+    except ValueError:
+        raise ApiError("NOT_FOUND", "We couldn't find that circle.", 404) from None
+    if not CircleMember.objects.filter(circle_id=cid, user=viewer).exists():
+        raise ApiError("NOT_FOUND", "We couldn't find that circle.", 404)
+    members = CircleMember.objects.filter(circle_id=cid).exclude(user=viewer)
+    return set(members.values_list("user_id", flat=True)) - blocked_ids(viewer.pk)
+
+
 class FeedView(APIView):
     """Cards of my friends, ordered Live → Recent (newest) → Top → Hidden."""
 
@@ -161,9 +178,13 @@ class FeedView(APIView):
         from social.services import friend_ids
 
         only_live = request.GET.get("filter") == "live"
-        friends = User.objects.filter(
-            pk__in=friend_ids(request.user.pk), is_active=True, deleted_at__isnull=True
-        )[:MAX_FEED]
+        ids = friend_ids(request.user.pk)
+        circle_id = request.GET.get("circle")
+        if circle_id:  # JNG-05-03: scope the feed to one circle I belong to
+            ids = _circle_member_ids(request.user, circle_id)
+        friends = User.objects.filter(pk__in=ids, is_active=True, deleted_at__isnull=True)[
+            :MAX_FEED
+        ]
         cards = sorted((resolve_card(f, request.user) for f in friends), key=_sort_key)
         live = sum(1 for c in cards if c["state"] == "LIVE")
         if only_live:

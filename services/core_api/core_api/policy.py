@@ -1,6 +1,6 @@
 """Object-level visibility policy shared by every endpoint (BR-06, BR-07).
 
-Friendships and blocks are live (Sprint 3); circles arrive in Sprint 6.
+Friendships, blocks and circles are all live.
 """
 
 from __future__ import annotations
@@ -31,8 +31,10 @@ def are_friends(a, b) -> bool:
 
 
 def share_circle(a, b) -> bool:
-    # TODO(S6): query circle_members for a shared circle.
-    return False
+    from circles.models import CircleMember
+
+    mine = CircleMember.objects.filter(user_id=_id(a)).values("circle_id")
+    return CircleMember.objects.filter(user_id=_id(b), circle_id__in=mine).exists()
 
 
 def is_private_now(owner, now: datetime | None = None) -> bool:

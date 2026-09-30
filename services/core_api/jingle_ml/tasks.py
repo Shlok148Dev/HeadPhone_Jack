@@ -174,3 +174,34 @@ def schedule_all_later(countdown: int) -> None:
         app.send_task("jingle_ml.tasks.recompute_all", queue="ml", countdown=countdown)
     except Exception:  # noqa: BLE001
         log.warning("could not enqueue suggestion run")
+
+
+SUGGESTED_CIRCLE_SNOOZE_DAYS = 30
+
+
+@shared_task(queue="ml", ignore_result=True, soft_time_limit=600)
+def suggest_circles() -> dict[str, int]:
+    """Weekly Leiden run (Sunday 04:00 IST). Creates suggestions, never memberships (BR-08)."""
+    from circles.models import CircleMember, SuggestedCircle
+    from jingle_ml.circles import suggestions
+    from jingle_ml.tracking import log_run
+    from suggestions.models import TasteSeed
+
+    g = load_graph()
+    vecs, tops = load_taste()
+    by_circle: dict = {}
+    for cid, uid in CircleMember.objects.values_list("circle_id", "user_id"):
+        by_circle.setdefault(cid, set()).add(str(uid))
+    seeds = {
+        str(s.user_id): {"artists": s.artists, "genres": s.genres} for s in TasteSeed.objects.all()
+    }
+    since = timezone.now() - timedelta(days=SUGGESTED_CIRCLE_SNOOZE_DAYS)
+    made = 0
+    for owner, members, name in suggestions(g.friends, vecs, list(by_circle.values()), seeds, tops):
+        recent = SuggestedCircle.objects.filter(for_user_id=owner, created_at__gte=since)
+        if any(set(s.member_ids) == set(members) for s in recent):
+            continue  # already suggested (or dismissed) in the last 30 days
+        SuggestedCircle.objects.create(for_user_id=owner, member_ids=members, name=name)
+        made += 1
+    log_run("suggested-circles", params={"users": len(g.people)}, metrics={"created": made})
+    return {"created": made}

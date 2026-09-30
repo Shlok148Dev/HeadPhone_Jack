@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "sources",
     "social",
     "suggestions",
+    "circles",
     "feed",
 ]
 
@@ -131,7 +132,10 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
-    "ENUM_NAME_OVERRIDES": {"MusicPlatformEnum": "sources.connect_views.PLATFORMS"},
+    "ENUM_NAME_OVERRIDES": {
+        "MusicPlatformEnum": "sources.connect_views.PLATFORMS",
+        "CircleRoleEnum": "circles.models.Role",
+    },
 }
 
 SIMPLE_JWT = {
@@ -167,6 +171,10 @@ CELERY_BEAT_SCHEDULE = {
     "sources-poll": {"task": "sources.tasks.poll_sources", "schedule": 10.0},
     "sources-drain-identity": {"task": "sources.tasks.drain_identity_queue", "schedule": 60.0},
     # Friend suggestions nightly at 03:00 IST (Tech Bible 7.4); on-change runs are event-driven.
+    "circles-suggest-weekly": {
+        "task": "jingle_ml.tasks.suggest_circles",
+        "schedule": crontab(hour=4, minute=0, day_of_week="sun"),
+    },
     "suggestions-nightly": {
         "task": "jingle_ml.tasks.recompute_all",
         "schedule": crontab(hour=3, minute=0),

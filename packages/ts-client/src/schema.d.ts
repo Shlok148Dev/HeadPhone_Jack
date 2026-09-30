@@ -124,6 +124,205 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/circles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["circles_list"];
+        put?: never;
+        post: operations["circles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["circles_retrieve"];
+        put?: never;
+        post?: never;
+        /** @description Leave (owners of a one-person circle close it; otherwise they transfer first). */
+        delete: operations["circles_destroy"];
+        options?: never;
+        head?: never;
+        /** @description JNG-04-07: admins set the name, visibility, who can invite and the battle schedule. */
+        patch: operations["circles_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-04-04: members' cards, each under that member's own privacy rules. */
+        get: operations["circles_feed_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Invite friends (direct) — they must accept (BR-08). */
+        post: operations["circles_invite_friends"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["circles_links_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["circles_members_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["circles_members_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["circles_transfer_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["circles_invites_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/invites/{invite_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["circles_invites_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/join/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Share-link landing: public preview, and join for signed-in people. */
+        get: operations["circles_join_retrieve"];
+        put?: never;
+        /** @description Share-link landing: public preview, and join for signed-in people. */
+        post: operations["circles_join_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/suggested": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-04-05: suggestions only; creating one sends invites, it never adds anyone (BR-08). */
+        get: operations["circles_suggested_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/suggested/{suggestion_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["circles_suggested_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/connections": {
         parameters: {
             query?: never;
@@ -702,6 +901,45 @@ export interface components {
                 [key: string]: string;
             };
         };
+        Circle: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            visibility: components["schemas"]["VisibilityEnum"];
+            member_count: number;
+            my_role: components["schemas"]["CircleRoleEnum"];
+            members_can_invite: boolean;
+            battle_schedule: {
+                [key: string]: unknown;
+            };
+            members?: components["schemas"]["Member"][];
+        };
+        CircleInviteItem: {
+            /** Format: uuid */
+            id: string;
+            circle: {
+                [key: string]: unknown;
+            };
+            from: components["schemas"]["Person"];
+        };
+        CircleLink: {
+            /** Format: uri */
+            url: string;
+            /** Format: date-time */
+            expires_at: string;
+        };
+        CirclePreview: {
+            name: string;
+            member_count: number;
+            full: boolean;
+        };
+        /**
+         * @description * `owner` - Owner
+         *     * `admin` - Admin
+         *     * `member` - Member
+         * @enum {string}
+         */
+        CircleRoleEnum: "owner" | "admin" | "member";
         CompanionToken: {
             token: string;
         };
@@ -734,6 +972,10 @@ export interface components {
         };
         ConsentUpdateRequest: {
             given: boolean;
+        };
+        CreateCircleRequest: {
+            name: string;
+            visibility?: components["schemas"]["VisibilityEnum"];
         };
         CreateReportRequest: {
             target_type: components["schemas"]["TargetTypeEnum"];
@@ -831,8 +1073,14 @@ export interface components {
             url: string;
             qr_svg: string;
         };
+        InviteFriendsRequest: {
+            user_ids: string[];
+        };
         InvitePreview: {
             display_name: string;
+        };
+        Invited: {
+            invited: number;
         };
         LinkLastfmRequest: {
             platform: components["schemas"]["MusicPlatformEnum"];
@@ -873,6 +1121,10 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        Member: {
+            user: components["schemas"]["Person"];
+            role: components["schemas"]["CircleRoleEnum"];
+        };
         /**
          * @description * `SPOTIFY` - SPOTIFY
          *     * `APPLE_MUSIC` - APPLE_MUSIC
@@ -903,6 +1155,17 @@ export interface components {
              *     * `off` - Off
              */
             private_mode?: components["schemas"]["PrivateModeEnum"];
+        };
+        PatchedSetRoleRequest: {
+            role?: string;
+        };
+        PatchedUpdateCircleRequest: {
+            name?: string;
+            visibility?: string;
+            members_can_invite?: boolean;
+            battle_schedule?: {
+                [key: string]: unknown;
+            };
         };
         Person: {
             /** Format: uuid */
@@ -1001,6 +1264,12 @@ export interface components {
          * @enum {string}
          */
         StateEnum: "LIVE" | "RECENT" | "TOP" | "HIDDEN";
+        SuggestedCircle: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            members: components["schemas"]["Person"][];
+        };
         SuggestionItem: {
             user: components["schemas"]["Person"];
             /** Format: double */
@@ -1030,6 +1299,20 @@ export interface components {
             artists: string[];
             genres: string[];
         };
+        TransferRequest: {
+            /** Format: uuid */
+            user_id: string;
+        };
+        UseSuggestionRequest: {
+            name?: string;
+            user_ids?: string[];
+        };
+        /**
+         * @description * `private` - Private
+         *     * `discoverable` - Discoverable
+         * @enum {string}
+         */
+        VisibilityEnum: "private" | "discoverable";
     };
     responses: never;
     parameters: never;
@@ -1303,6 +1586,494 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    circles_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Circle"][];
+                };
+            };
+        };
+    };
+    circles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCircleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateCircleRequest"];
+                "multipart/form-data": components["schemas"]["CreateCircleRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Circle"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description CIRCLE_LIMIT */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Circle"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    circles_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedUpdateCircleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedUpdateCircleRequest"];
+                "multipart/form-data": components["schemas"]["PatchedUpdateCircleRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Circle"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_feed_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeedCard"][];
+                };
+            };
+        };
+    };
+    circles_invite_friends: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteFriendsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["InviteFriendsRequest"];
+                "multipart/form-data": components["schemas"]["InviteFriendsRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invited"];
+                };
+            };
+            /** @description CIRCLE_FULL */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_links_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CircleLink"];
+                };
+            };
+        };
+    };
+    circles_members_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_members_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSetRoleRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedSetRoleRequest"];
+                "multipart/form-data": components["schemas"]["PatchedSetRoleRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_transfer_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TransferRequest"];
+                "multipart/form-data": components["schemas"]["TransferRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    circles_invites_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CircleInviteItem"][];
+                };
+            };
+        };
+    };
+    circles_invites_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: string;
+                invite_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_join_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CirclePreview"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_join_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Circle"];
+                };
+            };
+            /** @description CIRCLE_FULL */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_suggested_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuggestedCircle"][];
+                };
+            };
+        };
+    };
+    circles_suggested_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: string;
+                suggestion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UseSuggestionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UseSuggestionRequest"];
+                "multipart/form-data": components["schemas"]["UseSuggestionRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Circle"];
+                };
+            };
             /** @description No response body */
             204: {
                 headers: {

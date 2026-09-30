@@ -31,9 +31,12 @@ class UserFriendsView(InternalView):
     """Friend ids of a user, for the realtime gateway's rooms (CONTRACTS.md §9)."""
 
     def get(self, request, user_id):
-        from social.services import friend_ids
+        from circles.services import co_member_ids
+        from social.services import blocked_ids, friend_ids
 
-        return Response([str(f) for f in friend_ids(user_id)])
+        # Everyone whose card this user can see live: friends and circle co-members (not blocked).
+        ids = (set(friend_ids(user_id)) | co_member_ids(user_id)) - blocked_ids(user_id)
+        return Response(sorted(str(f) for f in ids))
 
 
 urlpatterns = [

@@ -104,8 +104,28 @@ class Command(BaseCommand):
                         "accepted_at": timezone.now() if accepted else None,
                     },
                 )
+        self._seed_circles()
         # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
         from jingle_ml.tasks import schedule_all_later
 
         schedule_all_later(120)
         self.stdout.write(f"demo world ready ({created} new users; login {DEMO_EMAIL})")
+
+    def _seed_circles(self):
+        """Two demo circles (Sprint 6): one the demo login owns, one it joined."""
+        from circles.models import Circle, CircleMember, Role
+
+        circles = (
+            ("KJ Somaiya crew", "demo", ("aanya", "kabir", "dev", "ishaan")),
+            ("Indie night", "zoya", ("demo", "meera", "neel")),
+        )
+        users = {
+            u.username: u for u in User.objects.filter(username__in=[p.username for p in PERSONAS])
+        }
+        for name, owner, members in circles:
+            if Circle.objects.filter(name=name, owner=users[owner]).exists():
+                continue
+            c = Circle.objects.create(name=name, owner=users[owner], member_count=1 + len(members))
+            CircleMember.objects.create(circle=c, user=users[owner], role=Role.OWNER)
+            for m in members:
+                CircleMember.objects.create(circle=c, user=users[m], role=Role.MEMBER)
