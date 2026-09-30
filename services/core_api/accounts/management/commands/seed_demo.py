@@ -104,12 +104,27 @@ class Command(BaseCommand):
                         "accepted_at": timezone.now() if accepted else None,
                     },
                 )
+        self._reset_demo_sandbox(users["demo"])
         self._seed_circles()
         # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
         from jingle_ml.tasks import schedule_all_later
 
         schedule_all_later(120)
         self.stdout.write(f"demo world ready ({created} new users; login {DEMO_EMAIL})")
+
+    def _reset_demo_sandbox(self, demo):
+        """Demo is a sandbox login: each start clears its own pending requests to personas and its
+        suggestion dismissals, so the demo world (and the suggestions E2E) is repeatable."""
+        from django.db.models import Q
+
+        from suggestions.models import SuggestionFeedback
+
+        Friendship.objects.filter(
+            Q(user_low=demo) | Q(user_high=demo),
+            requested_by=demo,
+            status=FriendshipStatus.PENDING,
+        ).delete()
+        SuggestionFeedback.objects.filter(user=demo).delete()
 
     def _seed_circles(self):
         """Two demo circles (Sprint 6): one the demo login owns, one it joined."""

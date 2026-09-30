@@ -17,6 +17,7 @@ import {
 } from "@/components/ds";
 import { SuggestionsShelf } from "@/components/app/Suggestions";
 import { useAuth } from "@/lib/auth";
+import { useCircles } from "@/lib/circles";
 import { isFreshLive, useFeed } from "@/lib/feed";
 import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
@@ -38,17 +39,22 @@ function useTick(ms = 15_000): number {
 
 /**
  * Home (UX_SPEC §5.4): Live now shelf, filter chips, every friend's card, and me.
- * JNG-05-01…08. Circle chips join in Sprint 6; the hero carousel arrives with Blends and recaps.
+ * JNG-05-01…08; circle chips narrow the feed to one circle (JNG-05-03). The hero carousel arrives
+ * with Blends and recaps.
  */
 export default function HomePage() {
   const { me } = useAuth();
   const router = useRouter();
   const realtime = useRealtimeStatus();
-  const feed = useFeed(realtime === "live");
+  const [filter, setFilter] = useState("all");
+  const circleId = filter.startsWith("c:") ? filter.slice(2) : undefined;
+  const allFeed = useFeed(realtime === "live");
+  const circleFeed = useFeed(realtime === "live", circleId);
+  const feed = circleId ? circleFeed : allFeed;
+  const circles = useCircles();
   const mine = useMyCard();
   const connections = useConnections();
   const now = useTick();
-  const [filter, setFilter] = useState("all");
 
   const myPlatform: Platform | undefined = useMemo(() => {
     if (mine.data?.platform && mine.data.platform !== "UNKNOWN") return mine.data.platform;
@@ -60,7 +66,7 @@ export default function HomePage() {
   const liveIds = new Set(live.map((c) => c.friend.id));
   // "All": Live friends sit in the shelf above, so the grid is everyone else (UX_SPEC §5.4).
   const shown = filter === "live" ? live : cards.filter((c) => !liveIds.has(c.friend.id));
-  const hasFriends = cards.length > 0;
+  const hasFriends = cards.length > 0 || !!circleId;
 
   return (
     <div className="flex flex-col gap-8">
@@ -100,6 +106,7 @@ export default function HomePage() {
               options={[
                 { value: "all", label: "All" },
                 { value: "live", label: live.length ? `Live · ${live.length}` : "Live" },
+                ...(circles.data ?? []).map((c) => ({ value: `c:${c.id}`, label: c.name })),
               ]}
             />
             {feed.data?.degraded && (
@@ -107,7 +114,7 @@ export default function HomePage() {
             )}
           </div>
 
-          {filter === "all" &&
+          {filter !== "live" &&
             (live.length ? (
               <Shelf title="Live now" live count={live.length} itemWidth="clamp(148px, 40vw, 200px)">
                 {live.map((c, i) => (
@@ -124,7 +131,7 @@ export default function HomePage() {
 
           <section aria-labelledby="friends-h" className="flex flex-col gap-3">
             <h2 id="friends-h" className="font-display text-xl font-semibold">
-              {filter === "live" ? "Live now" : live.length ? "Everyone else" : "Your friends"}
+              {filter === "live" ? "Live now" : live.length ? "Everyone else" : circleId ? "In this circle" : "Your friends"}
             </h2>
             {shown.length ? (
               <ul className="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(184px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
@@ -136,7 +143,7 @@ export default function HomePage() {
               </ul>
             ) : (
               <div className="flex flex-col items-start gap-2">
-                <p className="text-sm text-text-muted">No one&rsquo;s live right now.</p>
+                <p className="text-sm text-text-muted">{circleId ? "Everyone in this circle is live above." : "No one’s live right now."}</p>
                 <Button variant="ghost" onClick={() => setFilter("all")}>Show everyone</Button>
               </div>
             )}

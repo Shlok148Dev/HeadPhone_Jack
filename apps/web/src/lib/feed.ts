@@ -35,10 +35,11 @@ export function isFreshLive(card: FeedCardData, now = Date.now()): boolean {
   return now - Date.parse(card.observed_at) < LIVE_MAX_AGE_MS;
 }
 
-export function useFeed(realtime: boolean) {
+/** Home feed; `circle` narrows it to that circle's members (JNG-05-03). */
+export function useFeed(realtime: boolean, circle?: string) {
   return useQuery({
-    queryKey: ["feed"],
-    queryFn: () => api<Feed>("/feed"),
+    queryKey: circle ? ["feed", "circle", circle] : ["feed"],
+    queryFn: () => api<Feed>(circle ? `/feed?circle=${encodeURIComponent(circle)}` : "/feed"),
     // Realtime hints keep it fresh; poll slowly as a safety net, faster when disconnected.
     refetchInterval: realtime ? 60_000 : 15_000,
   });

@@ -45,3 +45,7 @@ artifacts/screenshots/tmp/
 
 # Agent worktrees
 .claude/worktrees/
+
+# run outputs (screenshots, ML run logs)
+/artifacts/
+services/core_api/artifacts/

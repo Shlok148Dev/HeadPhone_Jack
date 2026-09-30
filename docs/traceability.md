@@ -23,7 +23,13 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-03-08 | Shared-context signal (sessions, battles, concerts) | `Graph.context` wired | `jingle_ml/suggest.py` | 🟡 fills in when those features ship (S6–S10) |
 | JNG-05-01 | Apple Music only never LIVE; stale now-playing 120 s → "2 min ago"; no route in card | `services/core_api/tests/acceptance/*JNG_05_01*` (pytest-bdd); `apps/web/e2e/ep05/JNG-05-01.spec.ts` | `feed/resolver.py`, `jingle_common/labels.py`, `apps/web/src/app/(app)/home` | ✅ |
 | JNG-05-02 | Live cards update without refreshing | E2E `ep05/JNG-05-02.spec.ts`; realtime `test/gateway.test.ts` | `apps/realtime/src/*`, `lib/realtime.tsx` | ✅ |
-| JNG-05-03/06 | Live filter + Live now shelf (circle chips in S6) | `tests/feed/test_feed.py::test_JNG_05_06_live_filter`; E2E | `feed/views.FeedView`, Home | ✅ (circles S6) |
+| JNG-05-03/06 | Live filter + Live now shelf + circle chips | `tests/feed/test_feed.py::test_JNG_05_06_live_filter`; `tests/circles/test_circles.py::test_JNG_04_04_circle_feed_and_circles_visibility`; E2E `ep04/JNG-04.spec.ts` (circle chip) | `feed/views.FeedView` (`?circle=`), Home chips | ✅ |
+| JNG-04-01/08 | Create circle; ≤ 50 members; ≤ 20 per user | `test_JNG_04_01_create_and_limit_of_20`; Gherkin "Full circle"; E2E `ep04/JNG-04.spec.ts` | `circles/services.py`, `(app)/circles/page.tsx` | ✅ |
+| JNG-04-02 | Invite friends + 7-day links; full circle message | `test_invites_only_friends_and_link_expiry`; Gherkin `features/ep04/JNG-04_circles.feature`; E2E link join | `circles/views.py`, `circles/join/[token]`, invite sheet | ✅ |
+| JNG-04-03/06 | Roles; leave, remove, hand over | `test_JNG_04_03_roles_and_JNG_04_06_leave_remove_transfer`; E2E hand-over + leave | `circles/services.py`, `(app)/circles/[id]` | ✅ |
+| JNG-04-04 | Circle feed; `share_circle` policy | `test_JNG_04_04_circle_feed_and_circles_visibility`, `test_block_hides_member_in_circle`, `test_non_members_cannot_see_circle` | `circles/views.CircleFeedView`, `core_api/policy.py` | ✅ |
+| JNG-04-05 | Suggested circles (Leiden), never auto-join | Gherkin "Suggested circle is never auto-joined"; `test_leiden_names_and_skips_existing` | `jingle_ml/circles.py`, `jingle_ml/tasks.suggest_circles` | ✅ |
+| JNG-04-07 | Circle settings (members can invite, battle schedule) | roles test (`members_can_invite`) | `CircleDetailView.patch`, Settings dialog | 🟡 schedule editor with battles (S10) |
 | JNG-05-04 | Open in my own app (search fallback) | `test_JNG_05_04_search_links_for_open_in_my_app` | `feed/resolver._search_links`, `FeedCard.pickLink` | ✅ |
 | JNG-05-07 | Source down → cached card, honest time, delayed | `test_JNG_05_07_needs_reconnect_marks_recent_as_delayed` | `feed/resolver._source_delayed`, Home degraded line | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |

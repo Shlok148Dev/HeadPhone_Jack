@@ -33,11 +33,15 @@ for (const theme of ["dark", "light"] as const) {
         ["friends-suggestions", "/friends?tab=suggestions"],
         ["settings-privacy", "/settings/privacy"],
         ["onboarding-friends", "/onboarding/friends"],
+        ["circles", "/circles"],
       ] as const) {
         await page.goto(path);
         await page.waitForTimeout(3500);
         await snap(page, `${name}-${theme}-${w}`);
       }
+      await page.getByRole("link", { name: /KJ Somaiya crew/ }).click();
+      await page.waitForTimeout(3500);
+      await snap(page, `circle-${theme}-${w}`);
     });
   }
 }

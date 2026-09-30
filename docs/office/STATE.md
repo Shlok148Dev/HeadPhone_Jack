@@ -1,9 +1,9 @@
 # STATE — Jingle
 
-_Last updated: 2026-09-30 — Sprint 5 complete_
+_Last updated: 2026-09-30 — Sprint 6 complete_
 
 ## Current sprint
-**Sprints 0–5 done.** Next: **Sprint 6 — circles** (see `BOARD.md`).
+**Sprints 0–6 done.** Now: **Sprint 7 — sends and mixtapes** (see `BOARD.md`). Founder directive: advance sprint to sprint through S11 after each readiness check.
 
 ## Done (on main)
 ### Sprint 0 — Setup
@@ -47,16 +47,24 @@ _Last updated: 2026-09-30 — Sprint 5 complete_
 - Web: Suggestions tab, Home shelf, onboarding taste picker and suggestions. Demo: 3 new personas (2 friends-of-friends, 1 taste twin).
 - Tests: suggestions 15 incl. Gherkin safety; E2E 11 green.
 
+### Sprint 6 — Circles
+- `circles` app: create (≤ 50 members under row lock, ≤ 20 per user), owner/admin/member, friend invites + 7-day hashed links, accept/decline, leave/remove/hand-over, settings (name, visibility, members-can-invite, battle schedule stored), circle feed, `/feed?circle=`; `share_circle` real; realtime watch list includes co-members.
+- Suggested circles: Leiden weekly (Sun 04:00) on friend graph weighted by taste; 3–12 people, cohesive, not near an existing circle; creates only for the chooser, invites the rest (BR-08).
+- Web: Circles list (create dialog, invitations, suggestions), circle page (ambient header, Live shelf, members with role actions, invite sheet with link, settings, leave/hand-over), `/circles/join/{token}`, Home circle chips. Demo: "KJ Somaiya crew", "Indie night".
+- Retro: E2E caught a sticky `?invite=1` and demo-state drift (seed now resets the demo login's sandbox state). Home is at its 180 kB budget — S7 inbox must not add to Home's bundle.
+- Tests: circles 10 incl. Gherkin (Full circle, never auto-join); E2E 14 green; review `docs/office/reviews/S6-CIRCLES-review.md`.
+
 ## Working mode
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
-1. Sprint 6 — circles: create (≤ 50 members, ≤ 20 per user), invites + 7-day links, owner/admin/member roles, leave/remove, circle feed + circle filter chips on Home, circle page with ambient header, suggested circles via Leiden (never auto-join), share_circle in policy (JNG-04-01…08, JNG-05-03).
-2. Sprint 7 — sends and mixtapes with delivery tracking, inbox.
+1. Sprint 7 — sends (track + 280-char note, to friends or a circle), mixtapes (5–8), open on the recipient's platform, Sent/Delivered/Viewed/Played, inbox, reactions/replies, discovery credit (JNG-06-01…07).
+2. Sprint 8 — Blends and live sessions.
 
 ## Open risks
 - R-A: Host runs another project ("axis") on 5432/6379/6333/8025; Jingle publishes only 8080.
 - R-B: Heavy ML wheels (leidenalg) resolved in lock; LightFM decision deferred to S8.
+- R-D: Home first-load JS at 180 kB budget; new Home features lazy-load.
 - R-C: Spotify redirect must use 127.0.0.1; callbacks state-bound (ADR-0016).
 - R-D: Docker Desktop on this host stops intermittently; restart it before `docker compose up`.
 - R-F: Home route JS is at the 180 kB budget; new Home features must lazy-load.
