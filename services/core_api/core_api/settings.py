@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "core_api",
     "accounts",
     "sources",
+    "social",
     "feed",
 ]
 

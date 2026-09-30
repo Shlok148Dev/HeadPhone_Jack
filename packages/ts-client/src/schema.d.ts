@@ -92,6 +92,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/blocks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["blocks_list"];
+        put?: never;
+        post: operations["blocks_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/blocks/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["blocks_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/connections": {
         parameters: {
             query?: never;
@@ -143,6 +175,89 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-02-02: my accepted friends. */
+        get: operations["friends_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description JNG-02-03: remove a friend. */
+        delete: operations["friends_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["friends_requests_list"];
+        put?: never;
+        post: operations["friends_requests_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Cancel my own pending request. */
+        delete: operations["friends_requests_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/friends/requests/{request_id}/{action}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["friends_requests_respond"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/imports/{job_id}": {
         parameters: {
             query?: never;
@@ -170,6 +285,24 @@ export interface paths {
         put?: never;
         /** @description JNG-01-06: upload a Google Takeout watch history (≤ 50 MB) → 202 + job id. */
         post: operations["imports_youtube_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/invites/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public preview (first name only) and accept, which sends a request to the owner. */
+        get: operations["invites_retrieve"];
+        put?: never;
+        /** @description Public preview (first name only) and accept, which sends a request to the owner. */
+        post: operations["invites_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -263,6 +396,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-02-07: my invite link and QR code. */
+        get: operations["me_invite_retrieve"];
+        put?: never;
+        /** @description JNG-02-07: my invite link and QR code. */
+        post: operations["me_invite_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/privacy": {
         parameters: {
             query?: never;
@@ -279,6 +430,23 @@ export interface paths {
         head?: never;
         /** @description JNG-02-05 hide precise last-active time; JNG-02-06 Private mode (1 h, 8 h, until off). */
         patch: operations["me_privacy_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description JNG-12-01: report a user (circles, notes and comments join as they ship). */
+        post: operations["reports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/sources/{platform}/connect": {
@@ -383,6 +551,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-02-01: by username (anyone) or display name (discoverable people only). Blocks hide both ways. */
+        get: operations["users_search_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -409,6 +594,10 @@ export interface components {
         AuthResponse: {
             access: string;
             user: components["schemas"]["Me"];
+        };
+        BlockUserRequest: {
+            /** Format: uuid */
+            user_id: string;
         };
         Capabilities: {
             live_on_web: boolean;
@@ -458,6 +647,19 @@ export interface components {
         ConsentUpdateRequest: {
             given: boolean;
         };
+        CreateReportRequest: {
+            target_type: components["schemas"]["TargetTypeEnum"];
+            /** Format: uuid */
+            target_id: string;
+            reason: components["schemas"]["ReasonEnum"];
+            details?: string;
+        };
+        /**
+         * @description * `incoming` - incoming
+         *     * `outgoing` - outgoing
+         * @enum {string}
+         */
+        DirectionEnum: "incoming" | "outgoing";
         ErrorBody: {
             code: string;
             message: string;
@@ -529,6 +731,15 @@ export interface components {
             found?: number;
             error?: string;
         };
+        Invite: {
+            code: string;
+            /** Format: uri */
+            url: string;
+            qr_svg: string;
+        };
+        InvitePreview: {
+            display_name: string;
+        };
         LinkLastfmRequest: {
             platform: components["schemas"]["MusicPlatformEnum"];
             username: string;
@@ -599,6 +810,14 @@ export interface components {
              */
             private_mode?: components["schemas"]["PrivateModeEnum"];
         };
+        Person: {
+            /** Format: uuid */
+            id: string;
+            username: string;
+            display_name: string;
+            avatar_url: string | null;
+            relationship: components["schemas"]["RelationshipEnum"];
+        };
         /** @description JNG-02-05 (precise last-active time), JNG-02-06 (Private mode). */
         Privacy: {
             readonly activity_visibility: components["schemas"]["ActivityVisibilityEnum"];
@@ -640,6 +859,16 @@ export interface components {
          * @enum {string}
          */
         PurposeEnum: "core_service" | "activity_sharing" | "suggestions_discoverability" | "contact_matching" | "push_notifications" | "email_digest" | "lastfm_link";
+        /**
+         * @description * `spam` - Spam
+         *     * `harassment` - Harassment
+         *     * `hate` - Hate
+         *     * `impersonation` - Impersonation
+         *     * `inappropriate` - Inappropriate
+         *     * `other` - Other
+         * @enum {string}
+         */
+        ReasonEnum: "spam" | "harassment" | "hate" | "impersonation" | "inappropriate" | "other";
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -647,6 +876,28 @@ export interface components {
             username: string;
             display_name?: string;
             birth_year: number;
+        };
+        /**
+         * @description * `self` - self
+         *     * `friends` - friends
+         *     * `outgoing` - outgoing
+         *     * `incoming` - incoming
+         *     * `none` - none
+         * @enum {string}
+         */
+        RelationshipEnum: "self" | "friends" | "outgoing" | "incoming" | "none";
+        Request: {
+            /** Format: uuid */
+            id: string;
+            direction: components["schemas"]["DirectionEnum"];
+            user: components["schemas"]["Person"];
+            /** Format: date-time */
+            created_at: string;
+        };
+        SendFriendRequestRequest: {
+            /** Format: uuid */
+            user_id?: string;
+            username?: string;
         };
         /**
          * @description * `LIVE` - LIVE
@@ -660,6 +911,11 @@ export interface components {
             /** Format: binary */
             file: string;
         };
+        /**
+         * @description * `user` - user
+         * @enum {string}
+         */
+        TargetTypeEnum: "user";
     };
     responses: never;
     parameters: never;
@@ -870,6 +1126,78 @@ export interface operations {
             };
         };
     };
+    blocks_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"][];
+                };
+            };
+        };
+    };
+    blocks_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BlockUserRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BlockUserRequest"];
+                "multipart/form-data": components["schemas"]["BlockUserRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    blocks_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     connections_list: {
         parameters: {
             query?: never;
@@ -933,6 +1261,182 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicFlags"];
+                };
+            };
+        };
+    };
+    friends_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"][];
+                };
+            };
+        };
+    };
+    friends_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    friends_requests_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Request"][];
+                };
+            };
+        };
+    };
+    friends_requests_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["SendFriendRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SendFriendRequestRequest"];
+                "multipart/form-data": components["schemas"]["SendFriendRequestRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    friends_requests_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    friends_requests_respond: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action: string;
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
                 };
             };
         };
@@ -1008,6 +1512,66 @@ export interface operations {
             };
             /** @description FILE_TOO_LARGE */
             413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    invites_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitePreview"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    invites_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1255,6 +1819,44 @@ export interface operations {
             };
         };
     };
+    me_invite_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invite"];
+                };
+            };
+        };
+    };
+    me_invite_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invite"];
+                };
+            };
+        };
+    };
     me_privacy_retrieve: {
         parameters: {
             query?: never;
@@ -1299,6 +1901,48 @@ export interface operations {
             };
             /** @description VALIDATION_ERROR */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    reports_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReportRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateReportRequest"];
+                "multipart/form-data": components["schemas"]["CreateReportRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description RATE_LIMITED */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1516,6 +2160,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    users_search_list: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Person"][];
+                };
             };
         };
     };

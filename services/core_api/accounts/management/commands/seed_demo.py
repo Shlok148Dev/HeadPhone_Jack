@@ -11,11 +11,37 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.utils import timezone
 from jingle_common.demo import DEMO_EMAIL, DEMO_PASSWORD_DEFAULT, PERSONAS, demo_token
 
 from accounts.models import ConsentPurpose, User
 from accounts.services import active_consent, create_account, give_consent
+from social.models import Friendship, FriendshipStatus
 from sources.models import ScrobbleToken
+
+# Demo friendships (Sprint 3): the demo login knows most personas; one request waits for it.
+FRIENDS_OF_DEMO = (
+    "aanya",
+    "kabir",
+    "meera",
+    "dev",
+    "riya",
+    "arjun",
+    "zoya",
+    "ishaan",
+    "tara",
+    "vikram",
+    "sana",
+)
+PENDING_TO_DEMO = ("neel",)
+PERSONA_PAIRS = (
+    ("aanya", "kabir"),
+    ("aanya", "dev"),
+    ("meera", "zoya"),
+    ("dev", "ishaan"),
+    ("riya", "tara"),
+    ("neel", "kabir"),
+)
 
 
 class Command(BaseCommand):
@@ -42,13 +68,36 @@ class Command(BaseCommand):
                     user.college, user.city, user.discoverable = p.college, p.city, True
                     user.save(update_fields=["college", "city", "discoverable"])
                     created += 1
-                for purpose in (ConsentPurpose.ACTIVITY_SHARING,
-                                ConsentPurpose.SUGGESTIONS_DISCOVERABILITY):
+                for purpose in (
+                    ConsentPurpose.ACTIVITY_SHARING,
+                    ConsentPurpose.SUGGESTIONS_DISCOVERABILITY,
+                ):
                     if active_consent(user, purpose) is None:
                         give_consent(user, purpose)
                 token = demo_token(p.username, settings.SERVICE_TOKEN)
                 ScrobbleToken.objects.get_or_create(
                     token_sha256=hashlib.sha256(token.encode()).hexdigest(),
                     defaults={"user": user, "label": "Demo simulator"},
+                )
+            users = {
+                u.username: u
+                for u in User.objects.filter(username__in=[p.username for p in PERSONAS])
+            }
+            pairs = [("demo", n, True) for n in FRIENDS_OF_DEMO] + [
+                (a, b, True) for a, b in PERSONA_PAIRS
+            ]
+            pairs += [(n, "demo", False) for n in PENDING_TO_DEMO]
+            for a, b, accepted in pairs:
+                low, high = Friendship.ordered(users[a].pk, users[b].pk)
+                Friendship.objects.get_or_create(
+                    user_low_id=low,
+                    user_high_id=high,
+                    defaults={
+                        "requested_by": users[a],
+                        "status": FriendshipStatus.ACCEPTED
+                        if accepted
+                        else FriendshipStatus.PENDING,
+                        "accepted_at": timezone.now() if accepted else None,
+                    },
                 )
         self.stdout.write(f"demo world ready ({created} new users; login {DEMO_EMAIL})")

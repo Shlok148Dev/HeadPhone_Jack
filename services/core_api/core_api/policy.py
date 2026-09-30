@@ -1,7 +1,6 @@
 """Object-level visibility policy shared by every endpoint (BR-06, BR-07).
 
-Friendships, blocks and circles arrive in Sprint 3; until then only the owner can see their own
-activity. Querysets and views must call these helpers rather than re-implementing the rules.
+Friendships and blocks are live (Sprint 3); circles arrive in Sprint 6.
 """
 
 from __future__ import annotations
@@ -17,14 +16,18 @@ def _id(user) -> str:
 
 def is_blocked_either_way(a, b) -> bool:
     """BR-07: a block in either direction overrides every relationship."""
-    # TODO(S3): query the blocks table (blocker_id, blocked_id) in both directions.
-    return False
+    from social.services import blocked_either_way
+
+    return blocked_either_way(_id(a), _id(b))
 
 
 def are_friends(a, b) -> bool:
     """BR-06: true only for an accepted friendship."""
-    # TODO(S3): query friendships (user_low_id, user_high_id, status='accepted').
-    return False
+    from social.models import FriendshipStatus
+    from social.services import pair
+
+    f = pair(_id(a), _id(b))
+    return f is not None and f.status == FriendshipStatus.ACCEPTED
 
 
 def share_circle(a, b) -> bool:
@@ -59,8 +62,7 @@ def can_view_activity(viewer, owner, now: datetime | None = None) -> bool:
     privacy = PrivacySettings.for_user(owner)
     if privacy.activity_visibility == ActivityVisibility.NOBODY:
         return False
-    if are_friends(viewer, owner):
-        return True
     if privacy.activity_visibility == ActivityVisibility.CIRCLES:
+        # "Only circles I choose": friendship alone isn't enough (JNG-02-05, UX_SPEC 5.3).
         return share_circle(viewer, owner)
-    return False
+    return are_friends(viewer, owner)

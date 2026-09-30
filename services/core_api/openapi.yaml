@@ -172,6 +172,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: RATE_LIMITED
+  /api/v1/blocks:
+    get:
+      operationId: blocks_list
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+          description: ''
+    post:
+      operationId: blocks_create
+      tags:
+      - social
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BlockUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BlockUserRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/blocks/{user_id}:
+    delete:
+      operationId: blocks_destroy
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/connections:
     get:
       operationId: connections_list
@@ -229,6 +289,153 @@ paths:
               schema:
                 $ref: '#/components/schemas/PublicFlags'
           description: ''
+  /api/v1/friends:
+    get:
+      operationId: friends_list
+      description: 'JNG-02-02: my accepted friends.'
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+          description: ''
+  /api/v1/friends/{user_id}:
+    delete:
+      operationId: friends_destroy
+      description: 'JNG-02-03: remove a friend.'
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/friends/requests:
+    get:
+      operationId: friends_requests_list
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Request'
+          description: ''
+    post:
+      operationId: friends_requests_create
+      tags:
+      - social
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendFriendRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SendFriendRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SendFriendRequestRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: RATE_LIMITED
+  /api/v1/friends/requests/{request_id}:
+    delete:
+      operationId: friends_requests_destroy
+      description: Cancel my own pending request.
+      parameters:
+      - in: path
+        name: request_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/friends/requests/{request_id}/{action}:
+    post:
+      operationId: friends_requests_respond
+      parameters:
+      - in: path
+        name: action
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: request_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/imports/{job_id}:
     get:
       operationId: imports_retrieve
@@ -295,6 +502,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: FILE_TOO_LARGE
+  /api/v1/invites/{code}:
+    get:
+      operationId: invites_retrieve
+      description: Public preview (first name only) and accept, which sends a request
+        to the owner.
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      tags:
+      - social
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitePreview'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+    post:
+      operationId: invites_create
+      description: Public preview (first name only) and accept, which sends a request
+        to the owner.
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/me:
     get:
       operationId: me_retrieve
@@ -499,6 +760,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: RATE_LIMITED
+  /api/v1/me/invite:
+    get:
+      operationId: me_invite_retrieve
+      description: 'JNG-02-07: my invite link and QR code.'
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invite'
+          description: ''
+    post:
+      operationId: me_invite_create
+      description: 'JNG-02-07: my invite link and QR code.'
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invite'
+          description: ''
   /api/v1/me/privacy:
     get:
       operationId: me_privacy_retrieve
@@ -547,6 +837,42 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+  /api/v1/reports:
+    post:
+      operationId: reports_create
+      description: 'JNG-12-01: report a user (circles, notes and comments join as
+        they ship).'
+      tags:
+      - social
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReportRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateReportRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateReportRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: RATE_LIMITED
   /api/v1/sources/{platform}/connect:
     post:
       operationId: sources_connect_create
@@ -726,6 +1052,29 @@ paths:
       responses:
         '302':
           description: No response body
+  /api/v1/users/search:
+    get:
+      operationId: users_search_list
+      description: 'JNG-02-01: by username (anyone) or display name (discoverable
+        people only). Blocks hide both ways.'
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+      tags:
+      - social
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+          description: ''
 components:
   schemas:
     ActionEnum:
@@ -763,6 +1112,14 @@ components:
       required:
       - access
       - user
+    BlockUserRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+      required:
+      - user_id
     Capabilities:
       type: object
       properties:
@@ -897,6 +1254,31 @@ components:
           type: boolean
       required:
       - given
+    CreateReportRequest:
+      type: object
+      properties:
+        target_type:
+          $ref: '#/components/schemas/TargetTypeEnum'
+        target_id:
+          type: string
+          format: uuid
+        reason:
+          $ref: '#/components/schemas/ReasonEnum'
+        details:
+          type: string
+          maxLength: 1000
+      required:
+      - reason
+      - target_id
+      - target_type
+    DirectionEnum:
+      enum:
+      - incoming
+      - outgoing
+      type: string
+      description: |-
+        * `incoming` - incoming
+        * `outgoing` - outgoing
     ErrorBody:
       type: object
       properties:
@@ -1048,6 +1430,27 @@ components:
       required:
       - imported
       - status
+    Invite:
+      type: object
+      properties:
+        code:
+          type: string
+        url:
+          type: string
+          format: uri
+        qr_svg:
+          type: string
+      required:
+      - code
+      - qr_svg
+      - url
+    InvitePreview:
+      type: object
+      properties:
+        display_name:
+          type: string
+      required:
+      - display_name
     LinkLastfmRequest:
       type: object
       properties:
@@ -1219,6 +1622,28 @@ components:
             * `8h` - 8 hours
             * `until_off` - Until I turn it off
             * `off` - Off
+    Person:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        display_name:
+          type: string
+        avatar_url:
+          type:
+          - string
+          - 'null'
+        relationship:
+          $ref: '#/components/schemas/RelationshipEnum'
+      required:
+      - avatar_url
+      - display_name
+      - id
+      - relationship
+      - username
     Privacy:
       type: object
       description: JNG-02-05 (precise last-active time), JNG-02-06 (Private mode).
@@ -1301,6 +1726,22 @@ components:
         * `push_notifications` - Push Notifications
         * `email_digest` - Email Digest
         * `lastfm_link` - Lastfm Link
+    ReasonEnum:
+      enum:
+      - spam
+      - harassment
+      - hate
+      - impersonation
+      - inappropriate
+      - other
+      type: string
+      description: |-
+        * `spam` - Spam
+        * `harassment` - Harassment
+        * `hate` - Hate
+        * `impersonation` - Impersonation
+        * `inappropriate` - Inappropriate
+        * `other` - Other
     RegisterRequest:
       type: object
       properties:
@@ -1330,6 +1771,47 @@ components:
       - email
       - password
       - username
+    RelationshipEnum:
+      enum:
+      - self
+      - friends
+      - outgoing
+      - incoming
+      - none
+      type: string
+      description: |-
+        * `self` - self
+        * `friends` - friends
+        * `outgoing` - outgoing
+        * `incoming` - incoming
+        * `none` - none
+    Request:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        direction:
+          $ref: '#/components/schemas/DirectionEnum'
+        user:
+          $ref: '#/components/schemas/Person'
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - direction
+      - id
+      - user
+    SendFriendRequestRequest:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          minLength: 1
     StateEnum:
       enum:
       - LIVE
@@ -1350,6 +1832,11 @@ components:
           format: binary
       required:
       - file
+    TargetTypeEnum:
+      enum:
+      - user
+      type: string
+      description: '* `user` - user'
   securitySchemes:
     jwtAuth:
       type: http

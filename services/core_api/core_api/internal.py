@@ -31,8 +31,9 @@ class UserFriendsView(InternalView):
     """Friend ids of a user, for the realtime gateway's rooms (CONTRACTS.md §9)."""
 
     def get(self, request, user_id):
-        # TODO(S3): return accepted friend ids from the friendships table.
-        return Response([])
+        from social.services import friend_ids
+
+        return Response([str(f) for f in friend_ids(user_id)])
 
 
 urlpatterns = [
