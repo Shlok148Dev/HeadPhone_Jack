@@ -23,7 +23,7 @@ export function ArtPanel() {
   const covers = q.data?.covers ?? [];
   const cols = [0, 1, 2].map((c) => Array.from({ length: 6 }, (_, i) => covers[(c * 6 + i * 2 + c) % Math.max(1, covers.length)]));
   return (
-    <div aria-hidden className="hidden h-full min-h-[560px] flex-col overflow-hidden rounded-[20px] bg-surface-1 lg:flex">
+    <div aria-hidden className="jg-enter-late hidden h-full min-h-[560px] flex-col overflow-hidden rounded-[20px] bg-surface-1 lg:flex">
       <div className="grid min-h-0 flex-1 grid-cols-3 gap-3 overflow-hidden p-3">
         {cols.map((col, c) => (
           <div key={c} className="jg-drift flex flex-col gap-3" style={{ animationDuration: `${46 + c * 8}s`, animationDirection: c % 2 ? "reverse" : "normal" }}>

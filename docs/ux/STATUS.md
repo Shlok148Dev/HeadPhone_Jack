@@ -13,11 +13,11 @@ _Last updated: 2026-10-01_
 | The Room | ✅ | Ambient field, orbit, spring queue |
 | Taste Constellation | ✅ | Friend profile |
 | Recap story, podium with covers | ✅ | `/rituals?story=1` |
-| Onboarding split-screen with live art | ⏭ next | |
-| Friend profile artwork-tinted header | ⏭ next | |
+| Onboarding split-screen with live art | ✅ | `FocusShell` + `ArtPanel`; staggered entrance (form, then art), static under reduced motion |
+| Friend profile artwork-tinted header | ✅ | Ambient from the current cover, Pulse at 96 px |
 | Concerts | ✖ | Not built (needs a Ticketmaster key; HA-9) |
 | Official platform badges | ⏸ | HA-UX-1; text badges meanwhile |
 | Blip as an animated state machine (Rive) | ⏸ | SVG poses plus CSS motion for now (no Rive dependency or asset pipeline yet) |
-| 90-second tour recording | ⏭ | Recorded with Playwright video once the remaining screens land |
+| 90-second tour recording | ✅ | `artifacts/ux/jingle-tour.webm` (70 s, not committed); regenerate: `UX_TOUR=1 npx playwright test e2e/ux-tour.spec.ts --output=../../artifacts/ux/tour` |
 
 Scores against Spotify: `review/SCORES.md`.

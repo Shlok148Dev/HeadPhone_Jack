@@ -19,7 +19,7 @@ export function FocusShell({ children, wide = false }: { children: ReactNode; wi
         className={`flex flex-1 items-start justify-center gap-8 px-4 pb-16 pt-4 md:items-center md:pt-0 ${wide ? "" : "lg:grid lg:grid-cols-2 lg:items-stretch lg:px-8 lg:pb-8"}`}
       >
         <div className={wide ? "w-full max-w-3xl" : "flex w-full items-center justify-center"}>
-          <div className={`w-full ${wide ? "" : "max-w-[480px]"} rounded-[20px] border border-border bg-surface-1 p-6 shadow-1 md:p-8`}>{children}</div>
+          <div className={`jg-enter w-full ${wide ? "" : "max-w-[480px]"} rounded-[20px] border border-border bg-surface-1 p-6 shadow-1 md:p-8`}>{children}</div>
         </div>
         {!wide && <ArtPanel />}
       </main>

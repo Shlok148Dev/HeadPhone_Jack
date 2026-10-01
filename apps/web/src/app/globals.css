@@ -261,6 +261,14 @@
     transform: none;
   }
 }
+/* Time-based entrance for focus screens (sign-in, onboarding): form first, then the art. */
+.jg-enter {
+  animation: jg-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.jg-enter-late {
+  animation: jg-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+}
+
 @supports (animation-timeline: view()) {
   .jg-reveal {
     animation: jg-rise linear;
@@ -308,6 +316,8 @@
   .jg-orbit,
   .jg-orbit-counter,
   .jg-reveal,
+  .jg-enter,
+  .jg-enter-late,
   .ds-shimmer::after {
     animation: none !important;
   }
