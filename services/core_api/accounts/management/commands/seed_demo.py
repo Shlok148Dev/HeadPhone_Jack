@@ -111,6 +111,11 @@ class Command(BaseCommand):
         self._seed_genres()
         self._seed_rituals(users)
         self._seed_trust(users, password)
+        # Real covers for every catalogue track and artist; the worker resolves the queue at the
+        # iTunes Search API's pace (docs/ux/DECISIONS.md D-ART-02).
+        from artwork.management.commands.resolve_artwork import queue_demo_catalogue
+
+        queue_demo_catalogue()
         # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
         from jingle_ml.tasks import schedule_all_later
 

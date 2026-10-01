@@ -176,7 +176,7 @@ def test_JNG_08_07_my_stats(mongo_db):
     body = client(a).get("/api/v1/me/stats").json()
     assert body["ready"] is True and body["plays_30d"] == 20
     assert body["minutes_30d"] == 60  # 20 × 3 min
-    assert body["top_artists"][0] == {"name": "Arijit Singh", "plays": 10}
+    assert {k: body["top_artists"][0][k] for k in ("name", "plays")} == {"name": "Arijit Singh", "plays": 10}
     assert body["genres"][0]["name"] == "bollywood"
     assert body["platforms"] == [{"platform": "YOUTUBE_MUSIC", "share": 1.0}]
     assert body["excluded_note"]

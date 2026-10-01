@@ -76,6 +76,12 @@ def _entry(e: QueueEntry) -> dict:
     }
 
 
+def _art(entries: list[dict]) -> list[dict]:
+    from artwork.services import enrich
+
+    return enrich(entries)
+
+
 def public_state(s: ListeningSession) -> dict:
     """What every participant sees: no per-viewer data, never who added an anonymous entry."""
     s.refresh_from_db()
@@ -88,8 +94,8 @@ def public_state(s: ListeningSession) -> dict:
         "title": s.title,
         "host": _person(s.host),
         "ended": s.ended_at is not None,
-        "now_playing": _entry(s.now_playing) if s.now_playing_id else None,
-        "queue": [_entry(e) for e in ordered_queue(s).select_related("added_by")[:MAX_QUEUE]],
+        "now_playing": _art([_entry(s.now_playing)])[0] if s.now_playing_id else None,
+        "queue": _art([_entry(e) for e in ordered_queue(s).select_related("added_by")[:MAX_QUEUE]]),
         "participants": [
             {**_person(p.user), "online": str(p.user_id) in online}
             for p in parts.order_by("joined_at")

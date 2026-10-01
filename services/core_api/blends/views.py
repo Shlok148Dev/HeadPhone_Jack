@@ -73,7 +73,9 @@ def blend_payload(b: Blend, viewer, with_tracks: bool = False) -> dict:
         "save": {"available": False, "message": SAVE_NOTE},
     }
     if with_tracks:
-        data["tracks"] = [track_payload(t) for t in b.tracks.all()]
+        from artwork.services import enrich
+
+        data["tracks"] = enrich([track_payload(t) for t in b.tracks.all()])
     return data
 
 

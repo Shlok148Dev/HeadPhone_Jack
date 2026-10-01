@@ -201,15 +201,20 @@ def _recording(signal: Signal) -> dict[str, Any]:
     ev = signal.event
     raw = ev.get("raw") or {}
     rid = ev.get("recording_id")
-    return {
+    rec = {
         "id": str(rid) if rid else None,
         "title": raw.get("title") or "",
         "artist": raw.get("artist") or "",
         "album": raw.get("album") or None,
+        # Spotify-direct cards keep Spotify's own image (attributed); others get real art from
+        # the Artwork service (docs/ux/DECISIONS.md D-ART-01).
         "artwork_url": ev.get("artwork_url") or None,
         "links": _links(rid),
         "search_links": _search_links(raw.get("title") or "", raw.get("artist") or ""),
     }
+    from artwork.services import enrich
+
+    return enrich([rec])[0]
 
 
 def _friend(owner) -> dict[str, Any]:

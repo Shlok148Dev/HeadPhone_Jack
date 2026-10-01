@@ -75,6 +75,12 @@ def song(it) -> dict:
     }
 
 
+def _with_art(songs: list[dict]) -> list[dict]:
+    from artwork.services import enrich
+
+    return enrich(songs)
+
+
 def received_payload(d: Delivery) -> dict:
     rec = d.rec
     return {
@@ -82,7 +88,7 @@ def received_payload(d: Delivery) -> dict:
         "kind": rec.kind,
         "sender": person(rec.sender, "friends"),
         "note": rec.note,
-        "items": [song(it) for it in rec.items.all()],
+        "items": _with_art([song(it) for it in rec.items.all()]),
         "circle": {"id": str(d.circle_id), "name": d.circle.name}
         if d.circle_id and d.circle
         else None,
@@ -185,7 +191,7 @@ class SentView(APIView):
                     "id": r.pk,
                     "kind": r.kind,
                     "note": r.note,
-                    "items": [song(it) for it in r.items.all()],
+                    "items": _with_art([song(it) for it in r.items.all()]),
                     "sent_at": r.created_at,
                     "recipients": [
                         {
@@ -265,14 +271,16 @@ class SongSearchView(APIView):
             qs = qs.filter(Q(title__icontains=w) | Q(artist_name__icontains=w))
         rows = qs.order_by("title")[:20]
         return Response(
-            [
-                {
-                    "recording_id": str(r.pk),
-                    "title": r.title,
-                    "artist": r.artist_name,
-                    "links": _links(str(r.pk)),
-                    "search_links": _search_links(r.title, r.artist_name),
-                }
-                for r in rows
-            ]
+            _with_art(
+                [
+                    {
+                        "recording_id": str(r.pk),
+                        "title": r.title,
+                        "artist": r.artist_name,
+                        "links": _links(str(r.pk)),
+                        "search_links": _search_links(r.title, r.artist_name),
+                    }
+                    for r in rows
+                ]
+            )
         )

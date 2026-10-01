@@ -72,6 +72,10 @@ def battle_payload(b: Battle, user, member: CircleMember | None = None) -> dict:
                     "search_links": _search_links(n.title, n.artist),
                 }
             )
+    from artwork.services import enrich
+
+    enrich(noms)
+    results = enrich([dict(r) for r in b.results]) if (p == "closed" and b.results) else None
     return {
         "id": b.pk,
         "circle": {"id": str(b.circle_id), "name": b.circle.name},
@@ -84,7 +88,7 @@ def battle_payload(b: Battle, user, member: CircleMember | None = None) -> dict:
         "nomination_count": b.nominations.count(),
         "nominations": noms,
         "votes_left": max(0, VOTES_PER_WEEK - len(my_votes)),
-        "results": b.results if p == "closed" else None,
+        "results": results,
         "can_skip": bool(
             member
             and member.role in (Role.OWNER, Role.ADMIN)
@@ -93,11 +97,21 @@ def battle_payload(b: Battle, user, member: CircleMember | None = None) -> dict:
     }
 
 
+def recap_data(data: dict) -> dict:
+    """Recaps store facts; real artwork is attached when they're shown."""
+    from artwork.services import enrich, enrich_artists
+
+    d = dict(data)
+    d["top_tracks"] = enrich([dict(t) for t in data.get("top_tracks", [])])
+    d["top_artists"] = enrich_artists([dict(a) for a in data.get("top_artists", [])])
+    return d
+
+
 def recap_payload(r: Recap) -> dict:
     return {
         "id": r.pk,
         "month": r.month,
-        "data": r.data,
+        "data": recap_data(r.data),
         "share_url": f"/recap/{r.share_token}" if r.share_token else None,
     }
 
@@ -274,4 +288,4 @@ class SharedRecapView(APIView):
         if r is None or not r.user.is_active or r.user.deleted_at is not None:
             raise ApiError("NOT_FOUND", "This recap isn't shared any more.", 404)
         name = (r.user.display_name or r.user.username).split(" ")[0]
-        return Response({"name": name, "month": r.month, "data": r.data})
+        return Response({"name": name, "month": r.month, "data": recap_data(r.data)})

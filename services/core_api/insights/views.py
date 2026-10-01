@@ -43,6 +43,8 @@ class CompatibilitySerializer(serializers.Serializer):
     notes = serializers.ListField(child=serializers.CharField())
     shared_artists = serializers.ListField(child=serializers.CharField())
     shared_genres = serializers.ListField(child=serializers.CharField())
+    shared_artist_art = serializers.ListField(child=serializers.DictField())
+    constellation = serializers.DictField(allow_null=True)
     audio_features_available = serializers.BooleanField()
 
 
@@ -96,6 +98,8 @@ def compatibility_payload(me: User, other: User) -> dict:
     notes = [compute.SOUND_UNAVAILABLE]
     if not c.ready:
         body = {
+            "shared_artist_art": [],
+            "constellation": None,
             "ready": False,
             "score": None,
             "calibrated": False,
@@ -118,7 +122,21 @@ def compatibility_payload(me: User, other: User) -> dict:
         }
         if not c.genres_available:
             notes.insert(0, "Genre comparison unavailable")
+        from artwork.services import enrich_artists
+
         body = {
+            "shared_artist_art": enrich_artists(
+                [{"name": a} for a in (c.shared_artists or [])[:8]]
+            ),
+            # Taste Constellation: each person's top artists, shared ones in the overlap.
+            "constellation": {
+                "mine": enrich_artists(
+                    [{"name": {**nu, **nv}.get(a, a)} for a, _ in cu.most_common(7)]
+                ),
+                "theirs": enrich_artists(
+                    [{"name": {**nu, **nv}.get(a, a)} for a, _ in cv.most_common(7)]
+                ),
+            },
             "ready": True,
             "score": score,
             "calibrated": calibrated,
@@ -165,7 +183,12 @@ class CompatibilityView(APIView):
 class MyStatsView(APIView):
     @extend_schema(tags=["insights"], responses={200: StatsSerializer})
     def get(self, request):
-        return Response(compute.my_stats(str(request.user.pk)))
+        from artwork.services import enrich_artists
+
+        stats = compute.my_stats(str(request.user.pk))
+        if stats.get("top_artists"):
+            stats["top_artists"] = enrich_artists(stats["top_artists"])
+        return Response(stats)
 
 
 class MyTimelineView(APIView):

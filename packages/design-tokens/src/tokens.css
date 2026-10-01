@@ -10,6 +10,9 @@
   --gradient-brand: linear-gradient(135deg, #8b6bff 0%, #3fe7d8 100%);
 
   /* Radii */
+  /* Artwork: 4 px small, 8 px large; cards 12 px; sheets 20 px (D-DS-03). */
+  --r-art-sm: 4px;
+  --r-art-lg: 8px;
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 20px;
@@ -66,34 +69,34 @@
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #08080b;
-  --surface-1: #121217;
-  --surface-2: #1a1a21;
-  --surface-3: #24242d;
-  --border: #2e2e38;
-  --border-strong: #6e6e80;
-  --text: #f4f4f7;
-  --text-muted: #a3a3b2;
-  --text-subtle: #8c8b9e;
+  --bg: #0a090c;
+  --surface-1: #131116;
+  --surface-2: #1b181f;
+  --surface-3: #252129;
+  --border: #2f2a33;
+  --border-strong: #776e7e;
+  --text: #f6f3ef;
+  --text-muted: #aca4ae;
+  --text-subtle: #968d99;
   --accent-text: #a68cff;
   --on-brand: #0b0b12;
   --live: #ff6b5e;
-  --live-soft: #331f21;
+  --live-soft: #34201f;
   --live-text: #ff6b5e;
   --on-live: #1a0705;
   --danger: #fb7185;
-  --danger-soft: #331f26;
+  --danger-soft: #341f25;
   --danger-bg: #fb7185;
   --on-danger: #1a0508;
   --warning: #f5b84a;
-  --warning-soft: #32291e;
+  --warning-soft: #33291d;
   --success: #4ade80;
-  --success-soft: #1a2f26;
+  --success-soft: #1b2e25;
   --focus-ring: #8b6bff;
   --focus-ring-2: #3fe7d8;
-  --skeleton: #1a1a21;
+  --skeleton: #1b181f;
 
-  --surface-glass: rgba(18, 18, 23, 0.72);
+  --surface-glass: rgba(19, 17, 22, 0.72);
   --scrim: rgba(0, 0, 0, 0.6);
   --skeleton-shine: rgba(255, 255, 255, 0.06);
 
@@ -103,15 +106,15 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f7f7fa;
-  --surface-1: #ffffff;
-  --surface-2: #f0f0f5;
-  --surface-3: #e6e6ee;
-  --border: #e0e0e8;
-  --border-strong: #7c7c90;
-  --text: #111118;
-  --text-muted: #55556a;
-  --text-subtle: #5f5e70;
+  --bg: #f6f2ec;
+  --surface-1: #fffdf9;
+  --surface-2: #efeae3;
+  --surface-3: #e5ded4;
+  --border: #ded5c9;
+  --border-strong: #7b7266;
+  --text: #17141a;
+  --text-muted: #574e5c;
+  --text-subtle: #62596a;
   --accent-text: #5b3fd9;
   --on-brand: #0b0b12;
   --live: #ff6b5e;
@@ -123,14 +126,14 @@
   --danger-bg: #be123c;
   --on-danger: #ffffff;
   --warning: #8a5300;
-  --warning-soft: #f3eee6;
+  --warning-soft: #f1eadf;
   --success: #15803d;
-  --success-soft: #f1f8f4;
+  --success-soft: #f3f8f3;
   --focus-ring: #5b3fd9;
   --focus-ring-2: #0e7c74;
-  --skeleton: #e6e6ee;
+  --skeleton: #e5ded4;
 
-  --surface-glass: rgba(255, 255, 255, 0.72);
+  --surface-glass: rgba(255, 253, 249, 0.74);
   --scrim: rgba(17, 17, 24, 0.4);
   --skeleton-shine: rgba(255, 255, 255, 0.7);
 

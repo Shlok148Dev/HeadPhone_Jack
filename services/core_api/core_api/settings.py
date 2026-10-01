@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "notifications",
     "rituals",
     "moderation",
+    "artwork",
     "feed",
 ]
 
@@ -196,6 +197,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "insights.tasks.recalibrate",
         "schedule": crontab(day_of_month=1, hour=5, minute=0),
     },
+    "artwork-drain": {"task": "artwork.tasks.drain", "schedule": 60.0},
     "sessions-sweep": {"task": "listening.tasks.sweep", "schedule": 30.0},
     "sends-played": {"task": "sends.tasks.check_played", "schedule": 60.0},
     "sends-credits-daily": {

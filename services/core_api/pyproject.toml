@@ -26,6 +26,7 @@ dependencies = [
   "better-profanity>=0.7",
   "qrcode>=7.4",
   "pywebpush>=2.0",
+  "pillow>=11",
 ]
 
 [project.optional-dependencies]
