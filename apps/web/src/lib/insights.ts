@@ -21,6 +21,7 @@ export interface Compatibility {
   shared_artists: string[];
   shared_genres: string[];
   audio_features_available: boolean;
+  constellation?: { mine: { name: string; image_url?: string | null }[]; theirs: { name: string; image_url?: string | null }[] } | null;
 }
 
 export interface Stats {
@@ -29,7 +30,7 @@ export interface Stats {
   ready_in_days: number;
   plays_30d?: number;
   minutes_30d?: number;
-  top_artists?: { name: string; plays: number }[];
+  top_artists?: { name: string; plays: number; image_url?: string | null }[];
   genres?: { name: string; share: number }[];
   platforms?: { platform: string; share: number }[];
   excluded_note?: string | null;

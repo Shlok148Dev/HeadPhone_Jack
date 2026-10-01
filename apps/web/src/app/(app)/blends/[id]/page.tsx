@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { AvatarStack, Button, EmptyState, ErrorState, GenerativeCover, Icons, Skeleton, seedGradient, useToast } from "@/components/ds";
+import { AvatarStack, Button, EmptyState, ErrorState, Icons, Skeleton, seedGradient, useToast, Artwork } from "@/components/ds";
 import { OpenLink } from "@/components/app/OpenLink";
 import { useBlend, useBlendActions } from "@/lib/live";
 
@@ -73,7 +73,7 @@ export default function BlendPage() {
             <li key={t.id} className="flex min-h-16 items-center gap-3 border-b border-border py-2 last:border-0">
               <span className="w-6 shrink-0 text-right font-mono text-xs text-text-muted">{i + 1}</span>
               <div className="h-11 w-11 shrink-0 overflow-hidden rounded-sm">
-                <GenerativeCover seed={`${t.artist}|${t.title}`.toLowerCase()} rounded="none" />
+                <Artwork url={t.artwork_small ?? t.artwork_url ?? null} seed={`${t.artist}|${t.title}`.toLowerCase()} alt="" rounded="none" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{t.title}</p>

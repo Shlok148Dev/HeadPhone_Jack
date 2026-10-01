@@ -42,11 +42,13 @@ export function generateCover(seed: string): CoverSpec {
   const rand = prng(h);
   const hue = Math.floor(rand() * 360);
   const [o1, o2] = HARMONIES[Math.floor(rand() * HARMONIES.length)]!;
-  const sat = 62 + Math.floor(rand() * 25);
+  // Night Studio (D-DS-04): muted, vinyl-dark fallbacks, so a missing cover reads as a quiet
+  // design rather than a neon placeholder competing with real artwork.
+  const sat = 40 + Math.floor(rand() * 16);
   const colors: [string, string, string] = [
-    `hsl(${safeHue(hue)} ${sat}% ${30 + Math.floor(rand() * 16)}%)`,
-    `hsl(${safeHue(hue + o1)} ${sat}% ${50 + Math.floor(rand() * 14)}%)`,
-    `hsl(${safeHue(hue + o2)} ${Math.min(95, sat + 10)}% ${62 + Math.floor(rand() * 14)}%)`,
+    `hsl(${safeHue(hue)} ${sat}% ${12 + Math.floor(rand() * 10)}%)`,
+    `hsl(${safeHue(hue + o1)} ${sat + 6}% ${32 + Math.floor(rand() * 12)}%)`,
+    `hsl(${safeHue(hue + o2)} ${Math.min(70, sat + 14)}% ${52 + Math.floor(rand() * 12)}%)`,
   ];
   const pattern = PATTERNS[Math.floor(rand() * PATTERNS.length)]!;
   const angle = Math.floor(rand() * 360);

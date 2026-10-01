@@ -1,26 +1,28 @@
 "use client";
 
+import { motion } from "motion/react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AvatarStack, Blip, Button, EmptyState, ErrorState, GenerativeCover, IconButton, Skeleton, cn, useToast } from "@/components/ds";
+import { Blip, Button, EmptyState, ErrorState, IconButton, Skeleton, cn, useToast, Artwork, Pulse } from "@/components/ds";
 import { TextField } from "@/components/app/forms";
 import { OpenLink } from "@/components/app/OpenLink";
+import { ambientStyle } from "@/lib/ambient";
 import { useAuth } from "@/lib/auth";
 import { useSession, useSessionActions, type QueueEntry, type SessionState } from "@/lib/live";
 import { useRealtimeStatus } from "@/lib/realtime";
 import { useSongSearch } from "@/lib/sends";
 
-function Cover({ e, size }: { e: { title: string; artist: string }; size: number }) {
+function Cover({ e, size }: { e: { title: string; artist: string; artwork_url?: string | null; artwork_small?: string | null }; size: number }) {
   return (
     <div className="shrink-0 overflow-hidden rounded-md" style={{ width: size, height: size }}>
-      <GenerativeCover seed={`${e.artist}|${e.title}`.toLowerCase()} rounded="none" />
+      <Artwork url={e.artwork_small ?? e.artwork_url ?? null} seed={`${e.artist}|${e.title}`.toLowerCase()} alt="" rounded="none" />
     </div>
   );
 }
 
 function QueueRow({ e, mine, onVote }: { e: QueueEntry; mine: number; onVote: (v: 1 | -1 | 0) => void }) {
   return (
-    <li className="flex min-h-16 items-center gap-3 border-b border-border py-2 last:border-0">
+    <motion.li layout="position" transition={{ type: "spring", stiffness: 420, damping: 34 }} className="flex min-h-16 items-center gap-3 border-b border-border py-2 last:border-0">
       <Cover e={e} size={44} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{e.title}</p>
@@ -38,7 +40,7 @@ function QueueRow({ e, mine, onVote }: { e: QueueEntry; mine: number; onVote: (v
         </IconButton>
       </div>
       <OpenLink song={{ recording_id: e.recording_id, title: e.title, artist: e.artist }} compact />
-    </li>
+    </motion.li>
   );
 }
 
@@ -165,46 +167,73 @@ export default function SessionPage() {
       {status === "reconnecting" && (
         <p role="status" className="rounded-md border border-border bg-surface-2 px-4 py-2 text-sm">Reconnecting… your votes are saved.</p>
       )}
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="font-mono text-xs uppercase tracking-wide text-text-muted">Live session</p>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">{s.title}</h1>
-          <div className="flex items-center gap-2 text-sm text-text-muted">
-            <span>Hosted by {isHost ? "you" : s.host.display_name}</span>
-            <AvatarStack size={24} max={5} people={s.participants.map((p) => ({ id: p.id, name: p.display_name }))} />
-            <span className="font-mono text-xs">{s.participants.filter((p) => p.online).length || s.participants.length} here</span>
+      {/* The Room (D-SIG-02): the track's real cover as the hero, its colours as the room light,
+          everyone here orbiting gently. Nothing is drawn on the artwork itself. */}
+      <section
+        aria-labelledby="now-h"
+        className={cn("relative overflow-hidden rounded-[20px] p-5 md:p-8", status === "reconnecting" && "opacity-70")}
+        style={ambientStyle(np?.artwork_colors ?? s.queue[0]?.artwork_colors, typeof document !== "undefined" && document.documentElement.dataset.theme === "light" ? "light" : "dark")}
+      >
+        <div className="grid items-center gap-8 md:grid-cols-[auto_1fr]">
+          <div className="relative mx-auto h-[300px] w-[300px]" aria-hidden>
+            <div className="jg-orbit absolute inset-0">
+              {s.participants.slice(0, 8).map((p, i, all) => {
+                const a = (i / all.length) * Math.PI * 2 - Math.PI / 2;
+                return (
+                  <div key={p.id} className="absolute" style={{ left: 150 + Math.cos(a) * 138 - 22, top: 150 + Math.sin(a) * 138 - 22 }}>
+                    <div className="jg-orbit-counter">
+                      <Pulse state={p.online ? "live" : "recent"} name={p.display_name} seed={p.id} size={34} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="jg-art-glow absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[8px]" style={np?.artwork_colors ? ({ ["--art" as string]: np.artwork_colors.accent }) : undefined}>
+              {np ? (
+                <Artwork url={np.artwork_url ?? null} seed={`${np.artist}|${np.title}`.toLowerCase()} alt="" rounded="none" />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-surface-2">
+                  <Blip pose="idle" size={88} decorative />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="flex min-w-0 flex-col gap-3">
+            <p className="font-mono text-xs uppercase tracking-wider text-text-muted">Live session · {s.title}</p>
+            <h1 className="sr-only">{s.title}</h1>
+            <h2 id="now-h" className="sr-only">Now playing</h2>
+            {np && npSong ? (
+              <div className="min-w-0">
+                <p className="font-mono text-xs uppercase text-text-muted">Now</p>
+                <p className="font-display text-4xl font-semibold leading-tight tracking-tight md:text-5xl">{np.title}</p>
+                <p className="text-lg text-text-muted">{np.artist}</p>
+                <OpenLink song={npSong} className="mt-3" />
+              </div>
+            ) : (
+              <p className="font-display text-3xl font-semibold leading-tight">
+                {isHost ? "Add songs, then tap Play next to start." : "Waiting for the host to start the first song."}
+              </p>
+            )}
+            <div className="flex flex-wrap items-center gap-2 text-sm text-text-muted">
+              <span>Hosted by {isHost ? "you" : s.host.display_name}</span>
+              <span aria-hidden>·</span>
+              <span className="font-mono text-xs">{s.participants.filter((p) => p.online).length || s.participants.length} here</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {isHost && (
+                <Button onClick={() => actions.next.mutate()} disabled={!s.queue.length}>Play next</Button>
+              )}
+              {isHost ? (
+                <Button variant="secondary" onClick={() => actions.end.mutate()}>End session</Button>
+              ) : null}
+              <Button variant="secondary" onClick={() => actions.leave.mutate(undefined, { onSuccess: () => router.push("/blends") })}>Leave</Button>
+            </div>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {isHost && (
-            <Button onClick={() => actions.next.mutate()} disabled={!s.queue.length}>Play next</Button>
-          )}
-          {isHost ? (
-            <Button variant="secondary" onClick={() => actions.end.mutate()}>End session</Button>
-          ) : null}
-          <Button variant="secondary" onClick={() => actions.leave.mutate(undefined, { onSuccess: () => router.push("/blends") })}>Leave</Button>
-        </div>
-      </header>
+      </section>
 
       <div className="grid gap-6 lg:grid-cols-12">
         <div className={cn("flex flex-col gap-6 lg:col-span-8", status === "reconnecting" && "opacity-70")}>
-          <section aria-labelledby="now-h" className="flex items-center gap-4 rounded-lg border border-border bg-surface-1 p-4">
-            <h2 id="now-h" className="sr-only">Now playing</h2>
-            {np && npSong ? (
-              <>
-                <Cover e={np} size={96} />
-                <div className="min-w-0 flex-1">
-                  <p className="font-mono text-xs uppercase text-text-muted">Now</p>
-                  <p className="truncate font-display text-xl font-semibold">{np.title}</p>
-                  <p className="truncate text-sm text-text-muted">{np.artist}</p>
-                  <OpenLink song={npSong} className="mt-2" />
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-text-muted">{isHost ? "Add songs, then tap Play next to start." : "Waiting for the host to start the first song."}</p>
-            )}
-          </section>
-
           <section aria-labelledby="queue-h" className="flex flex-col gap-2">
             <h2 id="queue-h" className="font-display text-lg font-semibold">Up next</h2>
             {s.queue.length ? (

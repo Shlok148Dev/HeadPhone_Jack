@@ -2,6 +2,7 @@
 
 | Symptom | Check | Fix |
 | --- | --- | --- |
+| Qdrant exits at start: `Failed to load local shard … EOF while parsing` | `docker compose logs qdrant` (unclean Docker stop corrupted a collection) | Vectors are derived data: remove the named collection (`docker run --rm -v jingle_qdrantdata:/s alpine rm -rf /s/collections/<name>`), `docker compose up -d`; the next suggestions run rebuilds it |
 | Whole app down locally | `docker compose ps`; "cannot connect to the Docker API" | Start Docker Desktop, wait for "running", then `docker compose up -d` (R-D: it stops on this host from time to time) |
 | Cards show "Reconnecting…" | `docker compose logs realtime` | Restart realtime. Cards keep their last honest state, and polling covers in the meantime (ADR-0018) |
 | Nobody goes Live | Redis up? `docker compose exec redis redis-cli ping`; ingest logs for push 4xx | Restart ingest-ml. Live needs a signal under 90 s old, so this resolves on the next play (BR-01) |

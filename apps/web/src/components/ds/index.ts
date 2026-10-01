@@ -10,6 +10,8 @@ export type { PlatformBadgeProps, LiveBadgeProps, EqualiserBarsProps } from "./B
 export { GenerativeCover, Artwork, generateCover } from "./GenerativeCover";
 export type { GenerativeCoverProps, ArtworkProps, CoverSpec, CoverPattern } from "./GenerativeCover";
 export { Avatar, AvatarStack } from "./Avatar";
+export { Pulse } from "./Pulse";
+export type { PulseProps, PulseState } from "./Pulse";
 export type { AvatarProps, AvatarStackProps } from "./Avatar";
 export { Blip } from "./Blip";
 export type { BlipPose, BlipProps } from "./Blip";

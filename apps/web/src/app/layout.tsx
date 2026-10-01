@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Inter, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, JetBrains_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { ThemeProvider, themeInitScript } from "@/lib/theme";
 import { Providers } from "./providers";
 import "./globals.css";
 
 const display = Bricolage_Grotesque({ subsets: ["latin"], variable: "--font-bricolage", display: "swap" });
-const ui = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+// UI text: Geist over Inter (ADR-0024): tighter and more distinctive at 13–15 px in dense lists.
+const ui = Geist({ subsets: ["latin"], variable: "--font-ui", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", display: "swap" });
 
 export const metadata: Metadata = {

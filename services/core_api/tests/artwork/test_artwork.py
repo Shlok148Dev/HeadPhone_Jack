@@ -123,3 +123,18 @@ def test_wall_is_public_and_only_real_covers():
     Artwork.objects.create(kind="track", key="c|d", status="missing", source="itunes")
     covers = APIClient().get("/api/v1/artwork/wall").json()["covers"]
     assert [c["url"] for c in covers] == ["https://x/600x600bb.jpg"]
+
+
+def test_prefers_the_original_over_lofi_and_remixes():
+    lofi = {"trackName": "Kesariya (Lofi Flip)", "artistName": "Arijit Singh"}
+    remix = {"trackName": "Kesariya Remix", "artistName": "Arijit Singh"}
+    original = {"trackName": 'Kesariya (From "Brahmastra")', "artistName": "Pritam, Arijit Singh"}
+    scores = {
+        k: services._score(r, "Kesariya", "Arijit Singh")
+        for k, r in {"lofi": lofi, "remix": remix, "original": original}.items()
+    }
+    assert max(scores, key=scores.get) == "original"
+    # …unless a variant is what was asked for.
+    assert services._score(remix, "Kesariya Remix", "Arijit Singh") > services._score(
+        original, "Kesariya Remix", "Arijit Singh"
+    )

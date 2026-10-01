@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { useMotionSafe } from "@/lib/motion";
 import { Avatar } from "./Avatar";
 import { DelayedTag, LiveBadge } from "./Badges";
 import { buttonClasses, IconButton } from "./Button";
 import { Artwork } from "./GenerativeCover";
 import { Lock, Open, Send } from "./icons";
+import { Pulse } from "./Pulse";
 import { PLATFORM_NAMES, type FeedCardData, type FeedRecording, type Platform } from "./types";
 import { cn } from "./utils";
 
@@ -116,6 +117,11 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
         : "Open in my app";
   const tops = isTop ? [rec, ...(topRecordings ?? [])].slice(0, 4) : [];
 
+  // Destination app shown as text next to the icon: "Apple Music", "Spotify"…; the full
+  // sentence ("Search in Apple Music") is the link's accessible name.
+  const dest = spotifyData ? "Spotify" : (searchOn ?? (myPlatform && myPlatform !== "UNKNOWN" ? PLATFORM_NAMES[myPlatform] : platformName ?? "my app"));
+  const artColor = rec.artwork_colors?.accent;
+
   return (
     <motion.article
       {...m.enter(index)}
@@ -128,31 +134,33 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
         {`${name}: ${rec.title} by ${rec.artist}. ${card.freshness_label}${card.degraded ? ", delayed" : ""}`}
       </span>
 
+      {/* Artwork stays untouched (no text, badges or controls on it): Live shows on the person. */}
       <motion.div layoutId={sharedLayout ? `card-${card.friend.id}` : undefined} className="relative">
         {isTop && tops.length > 1 ? (
-          <div className="grid aspect-square w-full grid-cols-2 gap-0.5 overflow-hidden rounded-md">
+          <div className="grid aspect-square w-full grid-cols-2 gap-0.5 overflow-hidden rounded-[8px]">
             {Array.from({ length: 4 }, (_, i) => tops[i] ?? tops[0]!).map((r, i) => (
-              <Artwork key={i} url={r.artwork_url} seed={seedFor(r, card.friend.id) + (tops[i] ? "" : `#${i}`)} alt="" rounded="none" />
+              <Artwork key={i} url={r.artwork_small ?? r.artwork_url} seed={seedFor(r, card.friend.id) + (tops[i] ? "" : `#${i}`)} alt="" rounded="none" />
             ))}
           </div>
         ) : (
-          <div className={cn("rounded-md", isLive && "ring-2 ring-live ring-offset-2 ring-offset-bg")}>
-            <div className="overflow-hidden rounded-md">
-              <Artwork
-                url={rec.artwork_url}
-                seed={seedFor(rec, card.friend.id)}
-                alt=""
-                className="motion-safe:transition-transform motion-safe:duration-300 group-hover:scale-[1.03]"
-              />
+          <div
+            className={cn(
+              "jg-art-glow rounded-[8px] motion-safe:transition-transform motion-safe:duration-200 group-hover:-translate-y-0.5",
+              isLive && "ring-2 ring-live ring-offset-2 ring-offset-bg",
+            )}
+            style={artColor ? ({ "--art": artColor } as CSSProperties) : undefined}
+          >
+            <div className="overflow-hidden rounded-[8px]">
+              <Artwork url={rec.artwork_url} seed={seedFor(rec, card.friend.id)} alt="" rounded="none" />
             </div>
           </div>
         )}
-        {isLive && <LiveBadge className="absolute left-2 top-2" seed={card.friend.id} />}
       </motion.div>
 
-      <div className="flex min-w-0 items-center gap-2 pt-1">
-        <Avatar name={name} url={card.friend.avatar_url} seed={card.friend.id} size={20} decorative />
-        <span className="truncate text-[13px] font-semibold text-text">{name}</span>
+      <div className="flex min-w-0 items-center gap-2 pt-1.5">
+        <Pulse state={isLive ? "live" : card.state === "RECENT" ? "recent" : "none"} name={name} url={card.friend.avatar_url} seed={card.friend.id} size={20} />
+        <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-text">{name}</span>
+        {isLive && <LiveBadge seed={card.friend.id} />}
       </div>
 
       {isTop ? (
@@ -168,7 +176,7 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
         </div>
       ) : (
         <div className="flex min-w-0 flex-col gap-0.5">
-          <p className="truncate text-[15px] font-semibold text-text">{rec.title}</p>
+          <p className="truncate text-[15px] font-semibold leading-tight text-text">{rec.title}</p>
           <p className="truncate text-[13px] text-text-muted">{rec.artist}</p>
           <div className="mt-1">{label}</div>
         </div>
@@ -176,14 +184,21 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
 
       <div className="flex items-center gap-1">
         {link ? (
-          <a href={link} target="_blank" rel="noopener noreferrer" className={buttonClasses("secondary", "md", "flex-1 px-3 text-[13px]")}>
-            <Open size={16} />
-            <span className="truncate">{openLabel}</span>
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${openLabel}: ${rec.title}`}
+            title={openLabel}
+            className={buttonClasses("secondary", "md", "min-w-0 flex-1 justify-start gap-1.5 px-3 text-[13px]")}
+          >
+            <Open size={15} />
+            <span className="truncate">{dest}</span>
           </a>
         ) : (
-          <span aria-disabled="true" className={buttonClasses("secondary", "md", "flex-1 px-3 text-[13px]")}>
-            <Open size={16} />
-            <span className="truncate">{openLabel}</span>
+          <span aria-disabled="true" aria-label={openLabel} className={buttonClasses("secondary", "md", "min-w-0 flex-1 justify-start gap-1.5 px-3 text-[13px]")}>
+            <Open size={15} />
+            <span className="truncate">{dest}</span>
           </span>
         )}
         <IconButton label={`Send ${rec.title}`} variant="ghost" onClick={() => onSend?.(card)}>

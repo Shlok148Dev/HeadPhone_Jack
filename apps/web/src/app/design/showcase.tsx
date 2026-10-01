@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { brandContrastPairs, contrastPairs, contrastRatio, radius, themes, type ThemeColors } from "@jingle/design-tokens";
 import {
   Avatar,
+  Pulse,
   AvatarStack,
   Blip,
   Button,
@@ -184,7 +185,7 @@ function SpacingRadius() {
 }
 
 const PLATFORMS: Platform[] = ["SPOTIFY", "APPLE_MUSIC", "YOUTUBE_MUSIC", "AMAZON_MUSIC"];
-const POSES: BlipPose[] = ["idle", "wave", "cheer", "sleepy"];
+const POSES: BlipPose[] = ["idle", "wave", "cheer", "sleepy", "listening", "thinking", "oops"];
 
 function Showcase() {
   const { toast } = useToast();
@@ -352,6 +353,8 @@ function Showcase() {
           ))}
         </div>
         <div className="flex items-center gap-4">
+          <Pulse state="live" name="Aanya Sharma" seed="u-aanya" size={48} decorative={false} />
+          <Pulse state="recent" name="Meera Iyer" seed="u-meera" size={48} decorative={false} />
           <Avatar name="Aanya Sharma" seed="u-aanya" size={48} />
           <Avatar name="Kabir Mehta" seed="u-kabir" size={48} />
           <AvatarStack

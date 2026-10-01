@@ -2,8 +2,13 @@
 
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Avatar, Blip, CompatibilityMeter, ErrorState, PLATFORM_NAMES, Skeleton, seedGradient, type Platform } from "@/components/ds";
+import { Artwork, Blip, CompatibilityMeter, ErrorState, PLATFORM_NAMES, Pulse, Skeleton, type FeedCardData, type Platform } from "@/components/ds";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { ambientStyle } from "@/lib/ambient";
+import { useMyCard } from "@/lib/queries";
 import { RelationshipButton } from "@/components/app/PersonRow";
+import { TasteConstellation } from "@/components/app/TasteConstellation";
 import { monthLabel, useCompatibility, useMyStats, useProfile, useTimeline, type Month } from "@/lib/insights";
 
 /** One-hue horizontal bars with direct labels (single series: no legend needed). */
@@ -136,6 +141,9 @@ function FriendCompat({ userId, name }: { userId: string; name: string }) {
   return (
     <section aria-labelledby="compat-h" className="flex flex-col gap-4 rounded-lg border border-border bg-surface-1 p-5">
       <h2 id="compat-h" className="font-display text-xl font-semibold">You and {name}</h2>
+      {c.ready && c.constellation && (
+        <TasteConstellation mine={c.constellation.mine} theirs={c.constellation.theirs} theirName={name} />
+      )}
       <CompatibilityMeter
         score={c.score ?? 0}
         breakdown={c.ready ? c.breakdown.map((f) => ({ label: f.label, value: f.value, detail: f.detail })) : []}
@@ -155,7 +163,12 @@ function FriendCompat({ userId, name }: { userId: string; name: string }) {
 export default function ProfilePage() {
   const { username } = useParams<{ username: string }>();
   const profile = useProfile(username);
-  const [from, to] = useMemo(() => seedGradient(username, "deep"), [username]);
+  const isMe = profile.data?.is_me ?? false;
+  const friendId = profile.data && !profile.data.is_me && profile.data.compatibility_available ? profile.data.person.id : undefined;
+  const mine = useMyCard(isMe);
+  const theirs = useQuery({ queryKey: ["feed", "card", friendId], queryFn: () => api<FeedCardData>(`/feed/${friendId}`), enabled: !!friendId });
+  const card = isMe ? mine.data : theirs.data;
+  const rec = card && card.state !== "HIDDEN" ? card.recording : null;
 
   if (profile.isLoading) return <Skeleton className="h-48" rounded="lg" />;
   if (profile.isError || !profile.data) return <ErrorState title="We couldn't find that person." message="They may have changed their username." />;
@@ -163,12 +176,27 @@ export default function ProfilePage() {
   const name = p.person.display_name;
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-wrap items-end gap-5 rounded-xl px-5 pb-6 pt-10 md:px-8" style={{ background: `linear-gradient(160deg, ${from}, ${to})` }}>
-        <Avatar name={name} seed={p.person.id} size={96} />
+      {/* Artwork-tinted header: the colour of what they're playing (D-PROF-01). */}
+      <header
+        className="flex flex-wrap items-end gap-5 rounded-[20px] px-5 pb-6 pt-10 md:px-8"
+        style={ambientStyle(rec?.artwork_colors, typeof document !== "undefined" && document.documentElement.dataset.theme === "light" ? "light" : "dark")}
+      >
+        <Pulse state={card?.state === "LIVE" && !card.degraded ? "live" : card?.state === "RECENT" ? "recent" : "none"} name={name} seed={p.person.id} size={96} decorative={false} />
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="font-mono text-xs uppercase tracking-wide text-white/80">{p.is_me ? "You" : "Profile"}</p>
-          <h1 className="truncate font-display text-3xl font-semibold tracking-tight text-white md:text-5xl">{name}</h1>
-          <p className="font-mono text-xs text-white/80">@{p.person.username}{p.college ? ` · ${p.college}` : ""}{p.city ? ` · ${p.city}` : ""}</p>
+          <p className="font-mono text-xs uppercase tracking-wide text-text-muted">{p.is_me ? "You" : "Profile"}</p>
+          <h1 className="truncate font-display text-4xl font-semibold tracking-tight md:text-6xl">{name}</h1>
+          <p className="font-mono text-xs text-text-muted">@{p.person.username}{p.college ? ` · ${p.college}` : ""}{p.city ? ` · ${p.city}` : ""}</p>
+          {rec && card && (
+            <p className="mt-2 flex items-center gap-3 text-sm">
+              <span className="jg-art-glow h-12 w-12 shrink-0 overflow-hidden rounded-[4px]" style={rec.artwork_colors ? ({ ["--art" as string]: rec.artwork_colors.accent }) : undefined}>
+                <Artwork url={rec.artwork_small ?? rec.artwork_url} seed={rec.id ?? rec.title} alt="" rounded="none" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{rec.title} · {rec.artist}</span>
+                <span className={`block font-mono text-xs ${card.state === "LIVE" && !card.degraded ? "text-live-text" : "text-text-muted"}`}>{card.freshness_label}</span>
+              </span>
+            </p>
+          )}
         </div>
         {!p.is_me && (
           <div className="rounded-full bg-surface-1">

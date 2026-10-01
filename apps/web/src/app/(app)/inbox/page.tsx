@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Avatar, Button, Dialog, EmptyState, ErrorState, GenerativeCover, Icons, Skeleton, Tabs, cn } from "@/components/ds";
+import { Avatar, Button, Dialog, EmptyState, ErrorState, Icons, Skeleton, Tabs, cn, Artwork } from "@/components/ds";
 import { OpenLink } from "@/components/app/OpenLink";
 import { useOpenSend } from "@/lib/send";
 import { REACTIONS, STATUSES, useInbox, useSendActions, useSent, type Received, type SendStatus, type Sent, type Song } from "@/lib/sends";
@@ -22,7 +22,7 @@ function ago(iso: string, now = Date.now()): string {
 function Cover({ song, size = 56 }: { song: Song; size?: number }) {
   return (
     <div className="shrink-0 overflow-hidden rounded-md" style={{ width: size, height: size }}>
-      <GenerativeCover seed={`${song.artist}|${song.title}`.toLowerCase()} rounded="none" />
+      <Artwork url={song.artwork_small ?? song.artwork_url ?? null} seed={`${song.artist}|${song.title}`.toLowerCase()} alt="" rounded="none" />
     </div>
   );
 }

@@ -59,6 +59,12 @@ def ordered_queue(s: ListeningSession):
     return s.queue.filter(played_at__isnull=True).order_by("-score", "created_at")
 
 
+def _first_name(u: User) -> str:
+    """First word of the display name; the username when that isn't a name (e.g. "You (demo)")."""
+    first = (u.display_name or "").split(" ")[0]
+    return u.username if not first or first.lower() == "you" else first
+
+
 def _person(u: User | None) -> dict | None:
     if u is None:
         return None
@@ -167,7 +173,7 @@ def start(host, title: str = "", user_ids=(), circle_id=None) -> ListeningSessio
     name = (title or "").strip()[:80] or (
         f"{circle.name} session"
         if circle
-        else f"{(host.display_name or host.username).split(' ')[0]}'s session"
+        else f"{_first_name(host)}'s session"
     )
     s = ListeningSession.objects.create(title=name, host=host, circle=circle)
     now = timezone.now()

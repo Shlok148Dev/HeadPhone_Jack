@@ -23,6 +23,8 @@ import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
 
 // Below the fold: loads after first paint so Home stays inside its JS budget (R-D).
+const HomeHero = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeHero })));
+const HomeShelves = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeShelves })));
 const SuggestionsShelf = lazy(() => import("@/components/app/Suggestions").then((m) => ({ default: m.SuggestionsShelf })));
 
 function greeting(now = new Date()): string {
@@ -65,18 +67,24 @@ export default function HomePage() {
     return connections.data?.find((c) => c.status === "CONNECTED")?.platform;
   }, [mine.data, connections.data]);
 
-  const cards = feed.data?.results ?? [];
+  // Spotify Web API content lives in its own attributed module, never mixed (docs/ux D-BR-01).
+  const allCards = feed.data?.results ?? [];
+  const spotifyCards = allCards.filter((c) => c.attribution === "SPOTIFY");
+  const cards = allCards.filter((c) => c.attribution !== "SPOTIFY");
   const live = cards.filter((c) => isFreshLive(c, now));
   const liveIds = new Set(live.map((c) => c.friend.id));
   // "All": Live friends sit in the shelf above, so the grid is everyone else (UX_SPEC §5.4).
   const shown = filter === "live" ? live : cards.filter((c) => !liveIds.has(c.friend.id));
-  const hasFriends = cards.length > 0 || !!circleId;
+  const hasFriends = allCards.length > 0 || !!circleId;
 
   return (
     <div className="flex flex-col gap-8">
       <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
         {greeting()}, {me?.display_name || me?.username}
       </h1>
+      <Suspense fallback={<div className="min-h-[220px] rounded-[20px] bg-surface-1" aria-hidden />}>
+        <HomeHero />
+      </Suspense>
 
       {feed.isLoading ? (
         <div className="flex flex-col gap-4" aria-busy="true">
@@ -154,6 +162,23 @@ export default function HomePage() {
           </section>
         </>
       )}
+
+      {spotifyCards.length > 0 && (
+        <section aria-labelledby="spotify-h" className="flex flex-col gap-3 rounded-[12px] border border-border p-3">
+          <h2 id="spotify-h" className="font-display text-xl font-semibold">From Spotify</h2>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(184px,1fr))]">
+            {spotifyCards.map((c, i) => (
+              <li key={c.friend.id}>
+                <FeedCard card={c} myPlatform={myPlatform} index={i} sharedLayout={false} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <Suspense fallback={null}>
+        <HomeShelves />
+      </Suspense>
 
       <Suspense fallback={null}>
         <SuggestionsShelf />

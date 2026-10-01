@@ -23,6 +23,7 @@ export interface Blend {
   left_out: Person[];
   generated_at: string | null;
   track_count: number;
+  covers: string[];
   tracks?: BlendTrack[];
   save: { available: boolean; message: string };
 }
@@ -72,6 +73,9 @@ export interface QueueEntry {
   artist: string;
   added_by: SessionPerson | null;
   score: number;
+  artwork_url?: string | null;
+  artwork_small?: string | null;
+  artwork_colors?: import("@/components/ds").ArtworkColors | null;
 }
 
 export interface SessionState {

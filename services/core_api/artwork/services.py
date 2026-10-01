@@ -31,7 +31,10 @@ _PUNCT = re.compile(r"[^\w\s]", re.U)
 
 
 def norm(s: str) -> str:
-    s = _FEAT.sub("", s or "")
+    import unicodedata
+
+    s = "".join(c for c in unicodedata.normalize("NFKD", s or "") if not unicodedata.combining(c))
+    s = _FEAT.sub("", s)
     s = s.replace("&", " and ")
     return " ".join(_PUNCT.sub(" ", s.lower()).split())
 
@@ -150,15 +153,42 @@ def extract_colors(image_bytes: bytes) -> dict:
 # ---- write side (worker, network) ----------------------------------------------------------
 
 
+_VARIANTS = {
+    "lofi",
+    "lo",
+    "fi",
+    "flip",
+    "remix",
+    "mix",
+    "sped",
+    "slowed",
+    "reverb",
+    "karaoke",
+    "instrumental",
+    "cover",
+    "acoustic",
+    "live",
+    "version",
+    "edit",
+    "unplugged",
+    "mashup",
+    "reprise",
+}
+
+
 def _score(result: dict, title: str, artist: str) -> float:
-    rt, ra = (
-        norm(result.get("trackName") or result.get("collectionName") or ""),
-        norm(result.get("artistName") or ""),
-    )
+    """Prefer the original: title and artist overlap, minus words that mark a variant
+    (lo-fi flips, remixes, sped-up, karaoke…) unless the wanted title has them too."""
+    rt = norm(result.get("trackName") or result.get("collectionName") or "")
+    ra = norm(result.get("artistName") or "")
     t, a = norm(title), norm(artist)
-    ts = len(set(t.split()) & set(rt.split())) / max(1, len(set(t.split())))
+    tw, rw = set(t.split()), set(rt.split())
+    ts = len(tw & rw) / max(1, len(tw))
     as_ = len(set(a.split()) & set(ra.split())) / max(1, len(set(a.split())))
-    return ts * 0.6 + as_ * 0.4 + (0.05 if "remix" not in rt and "remix" not in t else 0)
+    extra = rw - tw
+    variant = len((extra & _VARIANTS) - tw)
+    exact = 0.1 if rt == t else 0.0
+    return ts * 0.6 + as_ * 0.4 + exact - 0.25 * variant - 0.02 * len(extra)
 
 
 def _itunes(term: str, entity: str, client: httpx.Client) -> list[dict]:
@@ -197,6 +227,25 @@ def resolve(kind: str, title: str, artist: str, client: httpx.Client | None = No
             # no third-party artist-photo source needed — D-ART-03).
             best = next((r for r in results if norm(r.get("artistName", "")) == a), None)
             ok = best is not None
+            if not ok:
+                # Fall back to the cover of one of their own songs we already resolved.
+                own = Artwork.objects.filter(
+                    kind=Kind.TRACK, status="found", key__startswith=f"{a}|"
+                ).first()
+                if own is not None:
+                    obj, _ = Artwork.objects.update_or_create(
+                        kind=kind,
+                        key=key,
+                        defaults={
+                            "status": "found",
+                            "source": own.source,
+                            "url": own.url,
+                            "url_small": own.url_small,
+                            "colors": own.colors,
+                            "source_id": own.source_id,
+                        },
+                    )
+                    return obj
         if not ok:
             obj, _ = Artwork.objects.update_or_create(
                 kind=kind, key=key, defaults={"status": "missing", "source": "itunes"}

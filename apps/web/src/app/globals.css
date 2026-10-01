@@ -51,7 +51,7 @@
   --color-scrim: var(--scrim);
 
   --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --radius-sm: var(--r-sm);
@@ -78,7 +78,8 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -87,6 +88,31 @@
   }
   .font-mono {
     font-variant-numeric: tabular-nums;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  .font-display {
+    letter-spacing: -0.025em;
+  }
+  /* Night Studio film grain (D-DS-02): one fixed layer, no repaint on scroll, ~3 % strength. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  [data-theme="light"] body::before {
+    opacity: 0.045;
+    mix-blend-mode: multiply;
   }
 }
 
@@ -150,6 +176,11 @@
   animation: ds-bob 1.6s ease-in-out infinite alternate;
 }
 
+/* Blip "listening": a quicker bob, as if nodding to the beat. */
+.ds-blip-beat {
+  animation-duration: 0.46s;
+}
+
 /* skeleton.shimmer */
 @keyframes ds-shimmer {
   from {
@@ -176,6 +207,89 @@
   animation: ds-spin 0.8s linear infinite;
 }
 
+/* The Pulse (D-SIG-01): Live rings breathe like a recording light; Recent rings stay still. */
+@keyframes jg-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.85;
+  }
+}
+@keyframes jg-halo {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+.jg-pulse-ring {
+  animation: jg-breathe 2.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+}
+.jg-pulse-halo {
+  animation: jg-halo 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Landing cover wall: columns drift slowly (transform only), paused on hover; static when reduced. */
+@keyframes jg-drift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+.jg-drift {
+  animation: jg-drift 40s linear infinite;
+}
+
+/* Scroll-driven reveals (D-LAND-02): visible by default; where supported, content rises in as it
+   scrolls into view. fill-mode none means nothing is ever stuck invisible (no JS, no crawlers). */
+@keyframes jg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@supports (animation-timeline: view()) {
+  .jg-reveal {
+    animation: jg-rise linear;
+    animation-fill-mode: none;
+    animation-timeline: view();
+    animation-range: entry var(--r0, 0%) entry var(--r1, 45%);
+  }
+}
+
+/* The Room: everyone orbits the cover slowly; avatars counter-rotate to stay upright. */
+@keyframes jg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.jg-orbit {
+  animation: jg-spin 90s linear infinite;
+}
+.jg-orbit-counter {
+  animation: jg-spin 90s linear infinite reverse;
+}
+
+/* Artwork lit like vinyl: a soft shadow in the cover's own colour, around (never on) the art. */
+.jg-art-glow {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.35),
+    0 12px 32px -12px color-mix(in srgb, var(--art, #000) 70%, transparent);
+}
+
 /* Reduced motion: everything becomes static / instant. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -188,6 +302,12 @@
   }
   .ds-eq-bar,
   .ds-blip-bob,
+  .jg-pulse-ring,
+  .jg-pulse-halo,
+  .jg-drift,
+  .jg-orbit,
+  .jg-orbit-counter,
+  .jg-reveal,
   .ds-shimmer::after {
     animation: none !important;
   }

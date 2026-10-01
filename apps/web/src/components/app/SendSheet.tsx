@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Chip, Dialog, GenerativeCover, IconButton, Icons, useToast } from "@/components/ds";
+import { Button, Chip, Dialog, IconButton, Icons, useToast, Artwork } from "@/components/ds";
 import { TextField } from "@/components/app/forms";
 import { useCircles } from "@/lib/circles";
 import type { SendRequest } from "@/lib/send";
@@ -14,7 +14,7 @@ function SongRow({ song, action }: { song: Song; action?: React.ReactNode }) {
   return (
     <li className="flex min-h-14 items-center gap-3">
       <div className="h-11 w-11 shrink-0 overflow-hidden rounded-sm">
-        <GenerativeCover seed={keyOf(song)} rounded="none" />
+        <Artwork url={song.artwork_small ?? song.artwork_url ?? null} seed={keyOf(song)} alt="" rounded="none" />
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{song.title}</p>

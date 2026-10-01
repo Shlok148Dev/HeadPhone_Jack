@@ -1,79 +1,155 @@
 ---
 name: jingle-design-system
-description: Jingle's design system — tokens, components, motion, card states (Live, Recent, Top, Hidden, Degraded), dark and light theme rules, Blip mascot usage, with do and don't examples. Use this whenever you build or change ANY screen, component, style, animation or copy in apps/web or the companion extension popup, even a small tweak, and whenever you review UI screenshots. Also use it when choosing colours, fonts, spacing, icons or artwork for Jingle.
+description: Jingle's design system ("Night Studio") — tokens, components, motion, artwork rules, card states (Live, Recent, Top, Hidden, Degraded), the Pulse, dark and light theme rules, Blip mascot usage, Spotify content separation, with do and don't examples. Use this whenever you build or change ANY screen, component, style, animation or copy in apps/web or the companion extension popup, even a small tweak, and whenever you review UI screenshots. Also use it when choosing colours, fonts, spacing, icons or artwork for Jingle.
 ---
 
-# Jingle design system
+# Jingle design system: Night Studio
 
-The reference implementation is the `/design` route (`apps/web/src/app/design/page.tsx`). Tokens live in `packages/design-tokens/` and are exposed as CSS variables in `apps/web/src/app/globals.css`. Primitives live in `apps/web/src/components/ds/`. Feature screens compose these; they don't invent new colours, radii or shadows. That keeps both themes and the brand coherent, and lets one token change restyle everything.
+The intimacy of a dim studio at 2 a.m.:
 
-## Identity
+- warm-black surfaces;
+- real artwork glowing like lit vinyl;
+- coral used as a recording light, for Live only;
+- violet → cyan as the brand's light, used sparingly.
 
-| Token | Value | Use |
+It is not a neon dashboard, purple SaaS, glass everywhere, or a Spotify clone.
+
+The reference implementation is the `/design` route. The source files are:
+
+- **Tokens:** `packages/design-tokens/src/{index.ts,tokens.css}`, kept in sync and contrast-checked by tests.
+- **Primitives:** `apps/web/src/components/ds/`.
+- **Decisions:** `docs/ux/DECISIONS.md`, one line each.
+
+Feature screens compose these and never invent colours, radii or shadows.
+
+## Colour
+
+| Token | Dark / Light | Rule |
 | --- | --- | --- |
-| `--brand-violet` | #8B6BFF | Start of the brand gradient |
-| `--brand-cyan` | #3FE7D8 | End of the brand gradient |
-| `--gradient-brand` | 135deg violet → cyan | Primary buttons, focus accents, logo mark, selected chips |
-| `--live` | #FF6B5E (coral) | **Only** Live: Live badge, equaliser bars, Live shelf title dot. Nothing else is coral, so coral always means "playing right now". |
-| `--bg` | dark #08080B / light #F7F7FA | Page |
-| `--surface-1..3` | stepped elevations | Cards, sheets, popovers |
-| `--text`, `--text-muted` | ≥ 4.5:1 on their surfaces in both themes | |
+| `--bg`, `--surface-1..3` | #0A090C → #252129 / #F6F2EC → #E5DED4 | Warm steps, never pure grey. Light is a designed paper theme, not an inversion |
+| `--gradient-brand` | violet #8B6BFF → cyan #3FE7D8 | **At most 3 brand moments per screen**: the primary action, the active nav marker, one hero accent |
+| `--live` | coral #FF6B5E | **Only** Live: the Pulse ring, equaliser bars, the Live chip, the Live shelf dot. Nothing else is coral |
+| Ambient | `artwork_colors.ambient_dark/light` from the Artwork service | Hero and detail backgrounds take colour from the real cover. Already contrast-checked to 4.5:1 for `--text`; use `ambientStyle()` (`lib/ambient.ts`) |
 
-Fonts: Bricolage Grotesque (display: page titles, hero, numbers on recap), Inter (all UI text), JetBrains Mono (data labels: timestamps, scores, counts, freshness labels). Loaded through `next/font/google`.
+## Type
 
-Spacing on a 4 px grid; radius scale `--r-sm 8`, `--r-md 12`, `--r-lg 20`, `--r-pill 999`. Touch targets ≥ 44×44 px.
+- **Bricolage Grotesque** for display (tracking −0.025em, big confident sizes on hero and detail headers).
+- **Geist** for UI text (ADR-0024, chosen over Inter for dense lists).
+- **JetBrains Mono** for data: times, counts, scores, freshness labels, with tabular numerals.
+- Headings use `text-wrap: balance` and body text uses `pretty`.
+
+## Shape and depth
+
+- 4 px grid.
+- Radii:
+  - **artwork 4 px small / 8 px large** (all providers);
+  - cards 12 px;
+  - sheets and modals 20 px;
+  - pills full.
+- Depth comes from layered surfaces, plus `.jg-art-glow` (a soft shadow in the cover's own colour, set via `--art`).
+- Film grain sits on `body::before` (≈3 %).
+- Frosted glass is used only for the top bar, sheets and the now-playing bar.
+
+## Artwork (hard rules)
+
+- **Real covers only**, from the Artwork service (`/api/v1/artwork`; iTunes Search API now, MusicKit once a token exists). Payloads carry `artwork_url`, `artwork_small` and `artwork_colors`.
+- When no confident match exists, use `<GenerativeCover>`: muted, clearly a design, never a fake photo, never grey.
+- **Never put text, badges, controls or logos on artwork. Never crop, distort, recolour or animate it.** Motion and Live signals live *around* it (container, shadow, the person's Pulse).
+- Store URLs and colours only; never commit image files.
+
+## The Pulse (presence without words)
+
+`<Pulse state="live|recent|none">` wraps an avatar:
+
+- **live:** a breathing coral ring plus halo.
+- **recent:** a still neutral ring.
+
+The difference must read at a glance. Live comes only from the server (`state === "LIVE"`, under 90 s, not degraded); the client never computes it.
 
 ## Card states (FeedCard)
 
-| State | Visual | Label example (JetBrains Mono) |
+| State | Visual | Label (mono, verbatim from server) |
 | --- | --- | --- |
-| LIVE | Coral ring on artwork, animated equaliser bars, coral "Live" pill | `Live on Spotify` |
-| RECENT | Normal card, muted timestamp | `20 min ago on Apple Music` |
-| TOP | Card with "Top this month" chip, stacked mini-artworks | `Top this month` |
-| HIDDEN | Avatar + name only, soft lock glyph, no track | `Hidden` |
-| Degraded | Last known state, true timestamp, small amber "delayed" tag | `2 h ago on YouTube Music · delayed` |
+| LIVE | coral ring around (not on) the art, Live Pulse, coral `Live` chip beside the name | `Live on Spotify` |
+| RECENT | still Pulse ring, muted time | `20 min ago on Apple Music` |
+| TOP | 2×2 cover stack, "Top" pill | `Top this month` |
+| HIDDEN | avatar, lock glyph, no track | `No plays yet` / `Hidden` |
+| Degraded | last known state, true time, amber "delayed" | `2 h ago on YouTube Music · delayed` |
 
-Labels come from the server (`freshness_label`); the client never builds them, so the no-false-Live rule lives in one place.
+The open action shows the destination app's name ("Apple Music"). The full sentence ("Search in Apple Music: Kasoor") is its accessible name.
 
-## Honesty rules that are visual rules
+## Spotify content separation (Spotify Developer Terms)
 
-- Never show route words (ListenBrainz, Last.fm, scrobble, extension, bridge, Companion, route) on cards, profiles or notifications. Credits live only on Settings → Connections. (ADR-0002, BR-14.)
-- Never render Live styling unless `state === "LIVE"`.
-- Never ship grey placeholder squares: `<Artwork>` falls back to `<GenerativeCover seed=…>` (deterministic gradient + shapes from the recording id).
-- Platform names are text badges (`<PlatformBadge platform="APPLE_MUSIC" />` → "Apple Music"). No platform logos, wordmarks, icons, brand fonts or brand colours for badges; badges use neutral surface colours.
+- Data from the Spotify Web API (`attribution === "SPOTIFY"`, allowlisted testers only) appears **only** in its own attributed module ("From Spotify" plus "Data from Spotify"). It is never interleaved in mixed shelves.
+- Listening that reaches Jingle any other way is Jingle's data. It appears in mixed shelves with the platform named as text ("Live on Spotify").
+
+## Platform marks
+
+Official logos are pending (HUMAN_ACTIONS HA-UX-1). Until then, platforms are **text badges** (`<PlatformBadge>`), which the brand guidelines permit. Never put a logo in a sentence.
 
 ## Motion
 
-Library: `motion` (`motion/react`). Presets in `apps/web/src/lib/motion.ts`:
+Uses `motion/react` plus `lib/motion.ts` presets.
 
-- `spring.soft` (stiffness 260, damping 30) for card entry, staggered 40 ms.
-- `spring.snappy` (400, 32) for presses and chips.
-- Shared element: `layoutId={"card-" + id}` from card to detail.
-- Equaliser: 3–4 bars, 0.9–1.3 s loops, only on Live.
-- Podium reveal (battles) and flip-card (recap) are in `components/ds/`.
+**Timings:**
 
-Everything reads `useReducedMotion()`; when true, animations become instant opacity changes. Only animate `transform` and `opacity` (60 fps, no layout shift). Skeletons match the real content's shape.
+| Kind | Duration |
+| --- | --- |
+| Hover and press | 120–180 ms |
+| Small UI changes | 180–260 ms |
+| Page and shared-element transitions | 300–450 ms |
+
+**Rules:**
+
+- Use springs for anything the user drags or votes on: the session queue uses `layout` spring re-ordering.
+- Never ease-in for entering UI; never bounce or elastic.
+- Cards cascade with 30–40 ms staggers.
+
+**Landing page:**
+
+- Scroll reveals are CSS scroll-driven (`.jg-reveal`, visible by default).
+- The cover wall drifts (`.jg-drift`, paused on hover).
+
+**Signature moments:**
+
+- **The Room:** cover hero on an ambient field, avatars orbiting (`.jg-orbit`).
+- **Podium:** rises 3, 2, 1.
+- **Recap:** a full-screen story with progress bars (`RecapStory`).
+- **Taste Constellation:** overlapping fields of real artist images.
+
+**Discipline:** only animate `transform` and `opacity`. Under reduced motion everything is static or instant.
 
 ## States every screen needs
 
-default · loading (skeleton) · empty (`<Blip pose="wave|sleepy" />` + one clear action) · error (plain words + retry) · degraded (cached, honest time). Both themes. 360–1920 px. Keyboard operable with visible focus ring (`--focus-ring` = 2 px gradient outline).
+Every screen needs all five:
 
-## Blip
+- default;
+- loading (skeleton shaped like the content);
+- empty (Blip plus one clear action);
+- error (plain words plus retry);
+- degraded (cached data, honest time).
 
-`<Blip pose="idle|wave|cheer|sleepy" size={…} />` — an original SVG character (rounded note-blob with eyes). Use: empty states (wave, sleepy), success (cheer), loading long jobs (idle). Never as decoration on busy screens.
+Every screen also works in both themes, at 360–1920 px, and with the keyboard (visible focus, 44×44 px targets).
+
+## Shell
+
+- **Left rail:** nav with a gradient active marker; "Live now" list at 1024–1439 px.
+- **Top bar:** search pill that opens the ⌘K/Ctrl+K command palette; inbox; bell; theme; avatar.
+- **Bottom now-playing bar.**
+- **Right "Friend activity" panel** at ≥ 1440 px.
 
 ## Do / don't
 
-- Do: gradient only on the primary action per view. Don't: gradient text blocks or multiple gradient buttons.
-- Do: coral only for Live. Don't: coral for errors (errors use `--danger`).
-- Do: ambient background from artwork (`useArtworkColor`) on profile/circle/Blend headers, with a translucent blurred header. Don't: full-saturation artwork colour behind body text.
-- Do: shelves scroll horizontally with snap and arrow buttons for mouse users. Don't: hide overflow without a keyboard path.
+- Do: one gradient primary per view. Don't: gradient text blocks or several gradient buttons.
+- Do: real covers with their own colour glow. Don't: neon placeholders, blurred copies of artwork as backgrounds, or text on covers.
+- Do: coral for Live only. Don't: coral for errors (use `--danger`).
+- Do: honest copy ("Sound comparison unavailable"). Don't: fake numbers or invented Live.
 
-## Review checklist (paste into the design review)
+## Review checklist
 
-- [ ] Dark and light, 1440 px and 390 px screenshots
-- [ ] Contrast ≥ 4.5:1 for text; focus visible on every control
-- [ ] All five states present where applicable
-- [ ] No route words; no platform brand assets; no grey placeholders
-- [ ] Coral used only for Live; gradient only for the primary action
-- [ ] Reduced-motion respected
+- [ ] Dark and light; 1440 px and 390 px; real covers visible
+- [ ] Nothing on artwork; artwork radii 4/8 px
+- [ ] Contrast ≥ 4.5:1 (including over ambient fields); focus visible
+- [ ] All five states; no route words; Spotify API content separated and attributed
+- [ ] Coral only for Live; ≤ 3 brand-gradient moments
+- [ ] Reduced motion respected; Home first-load JS ≤ 180 kB

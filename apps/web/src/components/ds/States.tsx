@@ -52,7 +52,7 @@ export function FeedCardSkeleton({ className }: { className?: string }) {
 export interface EmptyStateProps {
   title: string;
   description?: string;
-  pose?: Extract<BlipPose, "wave" | "sleepy" | "idle">;
+  pose?: Extract<BlipPose, "wave" | "sleepy" | "idle" | "thinking" | "listening">;
   /** One clear action. */
   action?: { label: string; onClick: () => void };
   className?: string;
@@ -85,9 +85,7 @@ export interface ErrorStateProps {
 export function ErrorState({ title = "Something went wrong", message, onRetry, retrying, className }: ErrorStateProps) {
   return (
     <div role="alert" className={cn("flex flex-col items-center gap-3 px-6 py-10 text-center", className)}>
-      <span aria-hidden="true" className="inline-flex h-12 w-12 items-center justify-center rounded-pill bg-danger-soft text-danger">
-        <Refresh size={22} />
-      </span>
+      <Blip pose="oops" size={72} decorative />
       <h3 className="font-display text-xl font-semibold text-text">{title}</h3>
       <p className="max-w-sm text-sm text-text-muted">{message}</p>
       {onRetry && (

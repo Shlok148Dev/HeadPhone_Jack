@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from artwork.services import enrich as _enrich
 from core_api.errors import ApiError
 from core_api.ratelimit import ratelimit
 from core_api.schema import err
@@ -40,6 +41,7 @@ class BlendSerializer(serializers.Serializer):
     left_out = PersonSerializer(many=True)
     generated_at = serializers.DateTimeField(allow_null=True)
     track_count = serializers.IntegerField()
+    covers = serializers.ListField(child=serializers.CharField())
     tracks = BlendTrackSerializer(many=True, required=False)
     save = serializers.DictField()
 
@@ -70,6 +72,11 @@ def blend_payload(b: Blend, viewer, with_tracks: bool = False) -> dict:
         "left_out": [person(u, "friends") for u in people if str(u.pk) not in allowed],
         "generated_at": b.generated_at,
         "track_count": b.tracks.count(),
+        "covers": [
+            t["artwork_small"]
+            for t in _enrich([{"title": t.title, "artist": t.artist} for t in b.tracks.all()[:8]])
+            if t["artwork_small"]
+        ][:4],
         "save": {"available": False, "message": SAVE_NOTE},
     }
     if with_tracks:

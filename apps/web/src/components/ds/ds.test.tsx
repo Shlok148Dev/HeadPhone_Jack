@@ -123,7 +123,7 @@ describe("GenerativeCover", () => {
     for (let i = 0; i < 200; i++) {
       for (const c of generateCover(`s${i}`).colors) {
         const [, hue, sat] = /hsl\((\d+) (\d+)%/.exec(c)!.map(Number);
-        expect(sat).toBeGreaterThanOrEqual(50);
+        expect(sat).toBeGreaterThanOrEqual(35); // muted (D-DS-04) but never grey
         expect(hue! > 20).toBe(true);
       }
     }

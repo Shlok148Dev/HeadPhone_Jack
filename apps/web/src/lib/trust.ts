@@ -16,6 +16,8 @@ export interface ResultRow {
   artist: string;
   recording_id: string | null;
   user: { id: string; username: string; display_name: string };
+  artwork_url?: string | null;
+  artwork_small?: string | null;
 }
 
 export interface BattleNomination extends Song {
@@ -44,8 +46,8 @@ export interface RecapData {
   month: string;
   minutes: number;
   plays: number;
-  top_artists: { name: string; plays: number }[];
-  top_tracks: { title: string; artist: string; plays: number }[];
+  top_artists: { name: string; plays: number; image_url?: string | null }[];
+  top_tracks: { title: string; artist: string; plays: number; artwork_url?: string | null; artwork_small?: string | null; artwork_colors?: import("@/components/ds").ArtworkColors | null }[];
   top_genre: string | null;
   sends: number;
   received: number;

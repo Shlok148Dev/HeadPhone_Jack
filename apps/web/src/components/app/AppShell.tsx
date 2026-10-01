@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ComponentType, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type ComponentType, type ReactNode } from "react";
 import {
   Avatar,
   IconButton,
@@ -19,6 +19,10 @@ import { SendProvider, songFromCard, useOpenSend } from "@/lib/send";
 import { useUnread } from "@/lib/sends";
 import { useNotifications } from "@/lib/trust";
 import { Logo } from "./Logo";
+import { ActivityPanel, SidebarLive } from "./Presence";
+
+// Loaded on first ⌘K / tap so the shell stays inside Home's JS budget.
+const CommandPalette = lazy(() => import("./CommandPalette").then((m) => ({ default: m.CommandPalette })));
 
 interface NavItem {
   href: string;
@@ -45,6 +49,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const card = useMyCard(status === "signed-in" && !me?.needs_onboarding);
+  const [palette, setPalette] = useState(false);
+
+  // ⌘K / Ctrl+K opens search and commands anywhere (D-SHELL-03).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPalette((p) => !p);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     if (status === "signed-out")
@@ -100,16 +117,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex min-h-11 flex-col items-center justify-center gap-1 rounded-md px-2 py-2 text-[11px] font-medium text-text-muted transition-colors hover:bg-surface-2 hover:text-text lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm",
+                    "relative flex min-h-11 flex-col items-center justify-center gap-1 rounded-md px-2 py-2 text-[11px] font-medium text-text-muted transition-colors duration-150 hover:bg-surface-2 hover:text-text lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm",
                     active && "bg-surface-2 text-text",
                   )}
                 >
+                  {active && <span aria-hidden className="bg-gradient-brand absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-pill" />}
                   <Icon size={22} />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
           </nav>
+          <SidebarLive />
           <div className="mt-auto flex flex-col gap-1">
             <Link
               href="/settings/connections"
@@ -127,12 +146,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <div className="md:pl-[72px] lg:pl-60 xl:pl-[280px]">
+        <ActivityPanel />
+        <div className="md:pl-[72px] lg:pl-60 xl:pl-[280px] xl:pr-[320px]">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-transparent bg-[var(--surface-glass)] px-4 backdrop-blur-xl md:h-16 md:px-6">
             <div className="md:hidden">
               <Logo href="/home" className="text-lg" />
             </div>
-            <div className="flex-1" />
+            <div className="flex flex-1 justify-center">
+              <SearchButton onOpen={() => setPalette(true)} />
+            </div>
             <InboxButton active={isActive(pathname, "/inbox")} />
             <BellButton active={isActive(pathname, "/notifications")} />
             {me.is_staff && (
@@ -166,6 +188,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           </main>
         </div>
 
+        {palette && (
+          <Suspense fallback={null}>
+            <CommandPalette onClose={() => setPalette(false)} />
+          </Suspense>
+        )}
         <MySendBar
           card={card.data}
           className="bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-0 md:left-[72px] lg:left-60 xl:left-[280px]"
@@ -200,6 +227,23 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       </SendProvider>
     </RealtimeProvider>
+  );
+}
+
+/** Top bar search: opens the command palette (⌘K). */
+function SearchButton({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label="Search people, songs and circles"
+      aria-keyshortcuts="Control+K Meta+K"
+      className="flex h-10 w-11 items-center justify-center gap-2 rounded-pill border border-border bg-surface-2 text-sm text-text-muted transition-colors duration-150 hover:border-border-strong hover:text-text focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] sm:w-full sm:max-w-[420px] sm:justify-start sm:px-4"
+    >
+      <Icons.Sparkle size={16} />
+      <span className="hidden flex-1 text-left sm:inline">Search people, songs, circles</span>
+      <kbd className="hidden rounded-sm border border-border px-1.5 font-mono text-[11px] lg:inline">Ctrl K</kbd>
+    </button>
   );
 }
 

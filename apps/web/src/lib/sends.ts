@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PLATFORM_NAMES, type Platform } from "@/components/ds";
+import { PLATFORM_NAMES, type ArtworkColors, type Platform } from "@/components/ds";
 import { api, json } from "./api";
 import type { Person } from "./social";
 
@@ -18,6 +18,10 @@ export interface Song {
   artist: string;
   links?: Partial<Record<Platform, string | null>>;
   search_links?: Partial<Record<Platform, string>>;
+  /** Real artwork (Artwork service); null when no confident match exists. */
+  artwork_url?: string | null;
+  artwork_small?: string | null;
+  artwork_colors?: ArtworkColors | null;
 }
 
 export interface Received {

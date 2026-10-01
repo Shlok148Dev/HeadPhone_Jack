@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useState } from "react";
-import { Blip, Button, EmptyState, ErrorState, GenerativeCover, Skeleton, cn, useToast } from "@/components/ds";
+import { useSearchParams } from "next/navigation";
+import { lazy, Suspense, useState } from "react";
+import { Blip, Button, EmptyState, ErrorState, Skeleton, cn, useToast, Artwork } from "@/components/ds";
 import { TextField } from "@/components/app/forms";
 import { OpenLink } from "@/components/app/OpenLink";
 import { DownloadRecap, RecapCard, monthName } from "@/components/app/RecapCard";
@@ -41,7 +42,7 @@ function Podium({ rows }: { rows: ResultRow[] }) {
             transition={{ ...m.spring.bouncy, delay: m.reduced ? 0 : (3 - r.rank) * 0.25 }}
           >
             <div className="h-16 w-16 overflow-hidden rounded-md">
-              <GenerativeCover seed={`${r.artist}|${r.title}`.toLowerCase()} rounded="none" />
+              <Artwork url={r.artwork_small ?? r.artwork_url ?? null} seed={`${r.artist}|${r.title}`.toLowerCase()} alt="" rounded="none" />
             </div>
             <p className="w-full truncate text-center text-xs font-medium">{r.user.display_name}</p>
             <div className={cn("flex w-full items-start justify-center rounded-t-md pt-2 font-display text-xl font-semibold", height[r.rank] ?? "h-12", r.rank === 1 ? "bg-[var(--brand-violet)] text-white" : "bg-surface-3")}>
@@ -108,7 +109,7 @@ function Vote({ battle }: { battle: Battle }) {
       {battle.nominations.map((n) => (
         <li key={n.id} className="flex min-h-14 flex-wrap items-center gap-3 border-b border-border py-2 last:border-0">
           <div className="h-10 w-10 shrink-0 overflow-hidden rounded-sm">
-            <GenerativeCover seed={`${n.artist}|${n.title}`.toLowerCase()} rounded="none" />
+            <Artwork url={n.artwork_small ?? n.artwork_url ?? null} seed={`${n.artist}|${n.title}`.toLowerCase()} alt="" rounded="none" />
           </div>
           <span className="min-w-0 flex-1 truncate text-sm">{n.title} · <span className="text-text-muted">{n.artist}</span></span>
           <OpenLink song={n} compact />
@@ -175,9 +176,13 @@ function BattleCard({ battle }: { battle: Battle }) {
   );
 }
 
+const RecapStory = lazy(() => import("@/components/app/RecapStory").then((m) => ({ default: m.RecapStory })));
+
 function RecapSection({ recap }: { recap: Recap }) {
   const { share } = useBattleActions();
   const toast = useToast();
+  const params = useSearchParams();
+  const [story, setStory] = useState(params.get("story") === "1");
   const link = recap.share_url ? `${window.location.origin}${recap.share_url}` : null;
   return (
     <section id="recap" aria-labelledby="recap-h" className="flex flex-col gap-4">
@@ -185,6 +190,7 @@ function RecapSection({ recap }: { recap: Recap }) {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
         <RecapCard data={recap.data} />
         <div className="flex flex-col gap-3">
+          <Button onClick={() => setStory(true)} leadingIcon={<span aria-hidden>▶</span>}>Play your recap</Button>
           <p className="text-sm text-text-muted">Sharing is off until you turn it on. Anyone with the link sees this card and your first name.</p>
           {link ? (
             <>
@@ -198,6 +204,11 @@ function RecapSection({ recap }: { recap: Recap }) {
             <Button onClick={() => share.mutate({ id: recap.id, on: true })}>Share a link</Button>
           )}
           <DownloadRecap data={recap.data} />
+          {story && (
+            <Suspense fallback={null}>
+              <RecapStory data={recap.data} onClose={() => setStory(false)} />
+            </Suspense>
+          )}
         </div>
       </div>
     </section>

@@ -103,7 +103,7 @@ test.describe("EP-07 Blends and live sessions", () => {
     await expect(g.getByText("Hosted by you")).toBeVisible({ timeout: 10_000 });
     await expect(g.getByRole("button", { name: "Play next" })).toBeVisible();
     await g.getByRole("button", { name: "Play next" }).click();
-    await expect(g.getByRole("region").or(g.locator("section")).filter({ hasText: "Now" }).first()).toContainText("Excuses");
+    await expect(g.getByRole("region", { name: "Now playing" })).toContainText("Excuses");
     await ctx.close();
   });
 

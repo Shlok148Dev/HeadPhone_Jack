@@ -135,6 +135,12 @@ class Command(BaseCommand):
             status=FriendshipStatus.PENDING,
         ).delete()
         SuggestionFeedback.objects.filter(user=demo).delete()
+        # Leftovers from interrupted E2E runs must not show up in the demo world.
+        from blends.models import Blend
+        from circles.models import Circle
+
+        Circle.objects.filter(name__startswith="E2E crew").delete()
+        Blend.objects.filter(members__user=demo).exclude(name="Demo + Aanya + Kabir").delete()
 
     def _seed_sends(self, users):
         """A song and a mixtape in demo's inbox, and one send out, so EP-06 isn't empty."""

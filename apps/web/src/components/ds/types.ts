@@ -23,9 +23,20 @@ export interface FeedRecording {
   artist: string;
   album?: string | null;
   artwork_url: string | null;
+  /** Real artwork from the Artwork service: a small URL for lists, and colours from the cover. */
+  artwork_small?: string | null;
+  artwork_colors?: ArtworkColors | null;
   links: Partial<Record<Platform, string | null>>;
   /** Search on each platform when no verified link exists (JNG-06-03). */
   search_links?: Partial<Record<Platform, string>>;
+}
+
+export interface ArtworkColors {
+  dominant: string;
+  accent: string;
+  /** Pre-checked: --text reads at ≥ 4.5:1 on these in each theme. */
+  ambient_dark: string;
+  ambient_light: string;
 }
 
 export interface FeedCardData {
