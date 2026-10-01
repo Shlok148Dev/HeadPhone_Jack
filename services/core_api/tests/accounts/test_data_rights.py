@@ -40,14 +40,27 @@ class TestDeleteAccount:
         put_signal(fake_redis, "np", user.pk, observed_at=1)
         put_signal(fake_redis, "last", user.pk, observed_at=1)
         uid = str(user.pk)
-        mongo_db.listens.insert_many([
-            {"user_id": uid, "via": "DIRECT", "platform": "SPOTIFY", "played_at": datetime.now(UTC)},
-            {"user_id": uid, "via": "COMPANION", "platform": "SPOTIFY",
-             "played_at": datetime.now(UTC)},
-        ])
+        mongo_db.listens.insert_many(
+            [
+                {
+                    "user_id": uid,
+                    "via": "DIRECT",
+                    "platform": "SPOTIFY",
+                    "played_at": datetime.now(UTC),
+                },
+                {
+                    "user_id": uid,
+                    "via": "COMPANION",
+                    "platform": "SPOTIFY",
+                    "played_at": datetime.now(UTC),
+                },
+            ]
+        )
         _login(api, "del@example.test")
-        with mock.patch.object(tasks.purge_user, "apply_async") as enqueue, \
-                django_capture_on_commit_callbacks(execute=True):
+        with (
+            mock.patch.object(tasks.purge_user, "apply_async") as enqueue,
+            django_capture_on_commit_callbacks(execute=True),
+        ):
             r = api.delete("/api/v1/me", {"password": PASSWORD}, format="json")
         assert r.status_code == 202, r.content
         assert r.json()["purge_within_days"] == 30
@@ -64,8 +77,11 @@ class TestDeleteAccount:
         assert not user.has_usable_password()
         assert not Consent.objects.filter(user=user, withdrawn_at__isnull=True).exists()
         # tokens revoked
-        assert OutstandingToken.objects.filter(user=user).count() == \
-            BlacklistedToken.objects.filter(token__user=user).count() > 0
+        assert (
+            OutstandingToken.objects.filter(user=user).count()
+            == BlacklistedToken.objects.filter(token__user=user).count()
+            > 0
+        )
         # Spotify-direct data removed immediately (BR-03); other routes wait for the purge
         assert not LinkedSource.objects.filter(user=user, kind="SPOTIFY").exists()
         assert LinkedSource.objects.filter(user=user, kind="LISTENBRAINZ").exists()
@@ -76,9 +92,16 @@ class TestDeleteAccount:
         # access token no longer works (user inactive)
         assert api.get("/api/v1/me").status_code == 401
         # refresh no longer works
-        assert APIClient().post("/api/v1/auth/login",
-                                {"email": "del@example.test", "password": PASSWORD},
-                                format="json").status_code == 401
+        assert (
+            APIClient()
+            .post(
+                "/api/v1/auth/login",
+                {"email": "del@example.test", "password": PASSWORD},
+                format="json",
+            )
+            .status_code
+            == 401
+        )
 
     def test_requires_password(self, auth_api):
         r = auth_api.delete("/api/v1/me", {}, format="json")
@@ -105,8 +128,10 @@ class TestDeleteAccount:
         assert api.delete("/api/v1/me").status_code == 401
 
     def test_enqueue_failure_is_tolerated(self, auth_api, django_capture_on_commit_callbacks):
-        with mock.patch.object(tasks.purge_user, "apply_async", side_effect=RuntimeError), \
-                django_capture_on_commit_callbacks(execute=True):
+        with (
+            mock.patch.object(tasks.purge_user, "apply_async", side_effect=RuntimeError),
+            django_capture_on_commit_callbacks(execute=True),
+        ):
             r = auth_api.delete("/api/v1/me", {"password": PASSWORD}, format="json")
         assert r.status_code == 202
 
@@ -118,9 +143,7 @@ class TestPurge:
         mongo_db.listens.insert_one({"meta": {"user_id": str(user.pk)}, "played_at": 1})
         mongo_db.listens.insert_one({"user_id": "someone-else", "played_at": 1})
         services.soft_delete_account(user)
-        User.objects.filter(pk=user.pk).update(
-            deleted_at=timezone.now() - timedelta(days=days_ago)
-        )
+        User.objects.filter(pk=user.pk).update(deleted_at=timezone.now() - timedelta(days=days_ago))
         return user
 
     def test_purge_user_after_30_days(self, mongo_db):
@@ -158,9 +181,11 @@ class TestPurge:
 
     def test_purge_retries_on_error(self, mongo_db):
         user = self._deleted_user(mongo_db)
-        with mock.patch("accounts.services.purge_account", side_effect=RuntimeError), \
-                mock.patch.object(tasks.purge_user, "retry", side_effect=RuntimeError("retry")), \
-                pytest.raises(RuntimeError, match="retry"):
+        with (
+            mock.patch("accounts.services.purge_account", side_effect=RuntimeError),
+            mock.patch.object(tasks.purge_user, "retry", side_effect=RuntimeError("retry")),
+            pytest.raises(RuntimeError, match="retry"),
+        ):
             tasks.purge_user.run(str(user.pk))
 
 

@@ -211,14 +211,14 @@ class BlockDetailView(APIView):
 
 
 class ReportsView(APIView):
-    """JNG-12-01: report a user (circles, notes and comments join as they ship)."""
+    """JNG-12-01: report a user, a circle you're in, or the note on a song sent to you."""
 
     @extend_schema(
         tags=["social"],
         request=inline_serializer(
             "CreateReport",
             {
-                "target_type": serializers.ChoiceField(choices=["user"]),
+                "target_type": serializers.ChoiceField(choices=["user", "circle", "send"]),
                 "target_id": serializers.UUIDField(),
                 "reason": serializers.ChoiceField(choices=ReportReason.choices),
                 "details": serializers.CharField(required=False, allow_blank=True, max_length=1000),
@@ -229,13 +229,19 @@ class ReportsView(APIView):
     @ratelimit(key="user", rate="20/d", scope="social.report")
     def post(self, request):
         reason = request.data.get("reason")
-        if reason not in ReportReason.values or request.data.get("target_type", "user") != "user":
+        kind = request.data.get("target_type", "user")
+        if reason not in ReportReason.values or kind not in ("user", "circle", "send"):
             raise ApiError("VALIDATION_ERROR", "Choose a reason.", 400)
-        target = _active_user(request.data.get("target_id"))
+        if kind == "user":
+            target_id = _active_user(request.data.get("target_id")).pk
+        else:
+            from moderation.context import reportable
+
+            target_id = reportable(kind, request.data.get("target_id"), request.user)
         Report.objects.create(
             reporter=request.user,
-            target_type="user",
-            target_id=target.pk,
+            target_type=kind,
+            target_id=target_id,
             reason=reason,
             details=str(request.data.get("details", ""))[:1000],
         )

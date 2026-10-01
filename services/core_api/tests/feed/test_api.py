@@ -9,8 +9,17 @@ from tests.factories import put_signal
 
 pytestmark = pytest.mark.django_db
 
-ROUTE_WORDS = ("LISTENBRAINZ", "LASTFM", "COMPANION", "DIRECT", "EXPORT", "via", "ListenBrainz",
-               "Last.fm", "Companion")
+ROUTE_WORDS = (
+    "LISTENBRAINZ",
+    "LASTFM",
+    "COMPANION",
+    "DIRECT",
+    "EXPORT",
+    "via",
+    "ListenBrainz",
+    "Last.fm",
+    "Companion",
+)
 
 
 class TestMyCard:
@@ -21,8 +30,16 @@ class TestMyCard:
         body = r.json()
         assert body["state"] == "LIVE"
         assert body["friend"]["id"] == str(user.pk)
-        assert set(body) == {"friend", "state", "platform", "recording", "observed_at",
-                             "freshness_label", "degraded", "attribution"}
+        assert set(body) == {
+            "friend",
+            "state",
+            "platform",
+            "recording",
+            "observed_at",
+            "freshness_label",
+            "degraded",
+            "attribution",
+        }
         assert "via" not in r.content.decode()
         assert r["Cache-Control"] == "private, no-store"
 
@@ -31,14 +48,15 @@ class TestMyCard:
 
 
 class TestConnections:
-    def test_lists_platforms_with_honest_capabilities(self, auth_api, user,
-                                                      django_assert_max_num_queries):
+    def test_lists_platforms_with_honest_capabilities(
+        self, auth_api, user, django_assert_max_num_queries
+    ):
         PlatformConnection.objects.create(user=user, platform="SPOTIFY", status="CONNECTED")
         PlatformConnection.objects.create(user=user, platform="YOUTUBE_MUSIC", status="CONNECTED")
-        PlatformConnection.objects.create(user=user, platform="APPLE_MUSIC",
-                                          status="PENDING_FIRST_PLAY")
-        PlatformConnection.objects.create(user=user, platform="AMAZON_MUSIC",
-                                          status="NEEDS_REAUTH")
+        PlatformConnection.objects.create(
+            user=user, platform="APPLE_MUSIC", status="PENDING_FIRST_PLAY"
+        )
+        PlatformConnection.objects.create(user=user, platform="AMAZON_MUSIC", status="NEEDS_REAUTH")
         LinkedSource.objects.create(user=user, kind="LISTENBRAINZ")
         ScrobbleToken.objects.create(user=user, token_sha256="b" * 64)
         with django_assert_max_num_queries(8):
@@ -46,13 +64,22 @@ class TestConnections:
         assert r.status_code == 200
         rows = {c["platform"]: c for c in r.json()}
         assert rows["SPOTIFY"]["capabilities"] == {
-            "live_on_web": True, "live_on_phone": True, "history": True}
+            "live_on_web": True,
+            "live_on_phone": True,
+            "history": True,
+        }
         assert rows["YOUTUBE_MUSIC"]["capabilities"] == {
-            "live_on_web": True, "live_on_phone": False, "history": True}
+            "live_on_web": True,
+            "live_on_phone": False,
+            "history": True,
+        }
         assert "isn't shared yet" in rows["YOUTUBE_MUSIC"]["note"]
         assert rows["APPLE_MUSIC"]["capabilities"]["live_on_phone"] is False
         assert rows["AMAZON_MUSIC"]["capabilities"] == {
-            "live_on_web": False, "live_on_phone": False, "history": False}
+            "live_on_web": False,
+            "live_on_phone": False,
+            "history": False,
+        }
         text = r.content.decode()
         assert not any(word in text for word in ROUTE_WORDS)
 

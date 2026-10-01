@@ -31,7 +31,11 @@ def _circle(circle_id) -> Circle:
     return c
 
 
-def _clean_name(value) -> str:
+def _clean_name(value, user=None) -> str:
+    if user is not None:
+        from moderation.services import require_not_muted
+
+        require_not_muted(user)
     name = str(value or "").strip()
     if not 1 <= len(name) <= 60:
         raise ApiError("VALIDATION_ERROR", "Give your circle a name (up to 60 characters).", 400)
@@ -102,7 +106,9 @@ class CirclesView(APIView):
         vis = request.data.get("visibility", Visibility.PRIVATE)
         if vis not in Visibility.values:
             raise ApiError("VALIDATION_ERROR", "Choose private or discoverable.", 400)
-        c = services.create_circle(request.user, _clean_name(request.data.get("name")), vis)
+        c = services.create_circle(
+            request.user, _clean_name(request.data.get("name"), request.user), vis
+        )
         return Response(circle_payload(c, request.user, with_members=True), status=201)
 
 
@@ -132,7 +138,7 @@ class CircleDetailView(APIView):
         services.require_admin(c, request.user)
         d = request.data
         if "name" in d:
-            c.name = _clean_name(d["name"])
+            c.name = _clean_name(d["name"], request.user)
         if "visibility" in d:
             if d["visibility"] not in Visibility.values:
                 raise ApiError("VALIDATION_ERROR", "Choose private or discoverable.", 400)

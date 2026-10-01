@@ -4,6 +4,55 @@
  */
 
 export interface paths {
+    "/api/v1/admin/allowlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_allowlist_retrieve"];
+        put?: never;
+        post: operations["admin_allowlist_add"];
+        delete: operations["admin_allowlist_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-12-04: per-source budgets and live usage, read from ingest-ml. */
+        get: operations["admin_budgets_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["admin_flags_retrieve"];
+        put: operations["admin_flags_set"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/google": {
         parameters: {
             query?: never;
@@ -87,6 +136,38 @@ export interface paths {
         /** @description JNG-01-01: sign up with email. Rejects under-18 birth years (NFR-PRIV-02). */
         post: operations["auth_register_create"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/battles/{battle_id}/votes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["battles_votes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/battles/{battle_id}/votes/{nomination_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["battles_unvote"];
         options?: never;
         head?: never;
         patch?: never;
@@ -222,6 +303,54 @@ export interface paths {
         patch: operations["circles_partial_update"];
         trace?: never;
     };
+    "/api/v1/circles/{circle_id}/battle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["circles_battle_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/battle/nominate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["circles_battle_nominate_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/battle/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["circles_battle_skip_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/circles/{circle_id}/feed": {
         parameters: {
             query?: never;
@@ -286,6 +415,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["circles_members_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/circles/{circle_id}/season": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["circles_season_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/circles/{circle_id}/transfer": {
@@ -381,6 +526,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["circles_suggested_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/compatibility/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["compatibility_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -791,6 +952,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/moderation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["me_moderation_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/moderation/{action_id}/appeal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["me_moderation_appeal_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/notification-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notification_settings_get"];
+        put: operations["notification_settings_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me/privacy": {
         parameters: {
             query?: never;
@@ -807,6 +1016,39 @@ export interface paths {
         head?: never;
         /** @description JNG-02-05 hide precise last-active time; JNG-02-06 Private mode (1 h, 8 h, until off). */
         patch: operations["me_privacy_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/me/push-subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description JNG-11-02: stored only after the person allowed push in their browser. */
+        post: operations["me_push_subscription_create"];
+        delete: operations["push_unsubscribe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["me_stats_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/me/taste": {
@@ -827,6 +1069,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/me/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["me_timeline_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mod/appeals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mod_appeals_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mod/appeals/{appeal_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mod_appeals_decide_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mod/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mod_audit_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mod/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["mod_reports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mod/reports/{report_id}/action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["mod_reports_action_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notifications_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/push-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["notifications_push_key_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["notifications_read_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/queue/{entry_id}/vote": {
         parameters: {
             query?: never;
@@ -837,6 +1223,55 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["queue_vote_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recaps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recaps_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recaps/{recap_id}/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recaps_share"];
+        delete: operations["recaps_unshare"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/recaps/shared/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Public, by explicit share only (JNG-09-06). Shows the recap card and a first name. */
+        get: operations["recaps_shared_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -868,8 +1303,24 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** @description JNG-12-01: report a user (circles, notes and comments join as they ship). */
+        /** @description JNG-12-01: report a user, a circle you're in, or the note on a song sent to you. */
         post: operations["reports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/rituals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["rituals_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1140,6 +1591,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{username}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["users_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/search": {
         parameters: {
             query?: never;
@@ -1175,14 +1642,74 @@ export interface components {
          * @enum {string}
          */
         ActivityVisibilityEnum: "friends" | "circles" | "nobody";
+        AdminFlags: {
+            results: {
+                [key: string]: unknown;
+            }[];
+        };
+        Allowlist: {
+            emails: string[];
+            max: number;
+            from_env: string[];
+        };
+        AllowlistAddRequest: {
+            /** Format: email */
+            email: string;
+        };
+        AppealDecisionRequest: {
+            overturn: boolean;
+            note?: string;
+        };
+        AppealQueue: {
+            results: {
+                [key: string]: unknown;
+            }[];
+        };
         /**
          * @description * `SPOTIFY` - SPOTIFY
          * @enum {string}
          */
         AttributionEnum: "SPOTIFY";
+        AuditLog: {
+            results: {
+                [key: string]: unknown;
+            }[];
+        };
         AuthResponse: {
             access: string;
             user: components["schemas"]["Me"];
+        };
+        Battle: {
+            /** Format: uuid */
+            id: string;
+            circle: {
+                [key: string]: unknown;
+            };
+            /** Format: date */
+            week: string;
+            phase: components["schemas"]["PhaseEnum"];
+            /** Format: date-time */
+            nominate_opens: string;
+            /** Format: date-time */
+            vote_opens: string;
+            /** Format: date-time */
+            closes_at: string;
+            my_nomination: {
+                [key: string]: unknown;
+            } | null;
+            nomination_count: number;
+            nominations: {
+                [key: string]: unknown;
+            }[];
+            votes_left: number;
+            results: {
+                [key: string]: unknown;
+            }[] | null;
+            can_skip: boolean;
+        };
+        BattleVoteRequest: {
+            /** Format: uuid */
+            nomination_id: string;
         };
         /** @enum {unknown} */
         BlankEnum: "";
@@ -1221,6 +1748,12 @@ export interface components {
         BlockUserRequest: {
             /** Format: uuid */
             user_id: string;
+        };
+        Budgets: {
+            sources: {
+                [key: string]: unknown;
+            }[];
+            available: boolean;
         };
         Capabilities: {
             live_on_web: boolean;
@@ -1282,6 +1815,16 @@ export interface components {
         CompanionToken: {
             token: string;
         };
+        Compatibility: {
+            ready: boolean;
+            score: number | null;
+            calibrated: boolean;
+            breakdown: components["schemas"]["Factor"][];
+            notes: string[];
+            shared_artists: string[];
+            shared_genres: string[];
+            audio_features_available: boolean;
+        };
         ConnectPlan: {
             action: components["schemas"]["ActionEnum"];
             /** Format: uri */
@@ -1311,6 +1854,9 @@ export interface components {
         };
         ConsentUpdateRequest: {
             given: boolean;
+        };
+        CreateAppealRequest: {
+            text: string;
         };
         CreateBlendRequest: {
             user_ids?: string[];
@@ -1369,6 +1915,14 @@ export interface components {
         /** @description CONTRACTS.md §8 error envelope. */
         ErrorEnvelope: {
             error: components["schemas"]["ErrorBody"];
+        };
+        Factor: {
+            key: string;
+            label: string;
+            value: number;
+            /** Format: double */
+            weight: number;
+            detail: string;
         };
         /** @description CONTRACTS.md §7. Never carries the ingestion route (BR-14). */
         FeedCard: {
@@ -1459,12 +2013,6 @@ export interface components {
             title?: string;
             artist?: string;
         };
-        /**
-         * @description * `track` - Track
-         *     * `mixtape` - Mixtape
-         * @enum {string}
-         */
-        KindEnum: "track" | "mixtape";
         LinkLastfmRequest: {
             platform: components["schemas"]["MusicPlatformEnum"];
             username: string;
@@ -1488,6 +2036,9 @@ export interface components {
             email: string;
             password: string;
         };
+        MarkReadRequest: {
+            ids?: string[];
+        };
         /** @description The signed-in user's own profile (JNG-01-01, JNG-01-12). */
         Me: {
             /** Format: uuid */
@@ -1503,10 +2054,35 @@ export interface components {
             readonly private_mode: components["schemas"]["PrivateModeState"];
             /** Format: date-time */
             readonly created_at: string;
+            /**
+             * Staff status
+             * @description Designates whether the user can log into this admin site.
+             */
+            readonly is_staff: boolean;
         };
         Member: {
             user: components["schemas"]["Person"];
             role: components["schemas"]["CircleRoleEnum"];
+        };
+        /**
+         * @description * `dismiss` - dismiss
+         *     * `warn` - warn
+         *     * `mute` - mute
+         *     * `suspend` - suspend
+         *     * `ban` - ban
+         * @enum {string}
+         */
+        ModerationDecisionKindEnum: "dismiss" | "warn" | "mute" | "suspend" | "ban";
+        ModerationDecisionRequest: {
+            kind: components["schemas"]["ModerationDecisionKindEnum"];
+            reason?: string;
+            days?: number;
+        };
+        Month: {
+            month: string;
+            plays: number;
+            top_artist: string | null;
+            genres: components["schemas"]["NamedShare"][];
         };
         /**
          * @description * `SPOTIFY` - SPOTIFY
@@ -1516,6 +2092,40 @@ export interface components {
          * @enum {string}
          */
         MusicPlatformEnum: "SPOTIFY" | "APPLE_MUSIC" | "YOUTUBE_MUSIC" | "AMAZON_MUSIC";
+        MyModeration: {
+            actions: {
+                [key: string]: unknown;
+            }[];
+        };
+        NamedCount: {
+            name: string;
+            plays: number;
+        };
+        NamedShare: {
+            name: string;
+            /** Format: double */
+            share: number;
+        };
+        NominateRequest: {
+            /** Format: uuid */
+            recording_id?: string | null;
+            title?: string;
+            artist?: string;
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            type: string;
+            title: string;
+            url: string;
+            /** Format: date-time */
+            created_at: string;
+            read: boolean;
+        };
+        NotificationList: {
+            unread: number;
+            results: components["schemas"]["Notification"][];
+        };
         NullEnum: null;
         Participant: {
             /** Format: uuid */
@@ -1565,6 +2175,20 @@ export interface components {
             avatar_url: string | null;
             relationship: components["schemas"]["RelationshipEnum"];
         };
+        /**
+         * @description * `upcoming` - upcoming
+         *     * `nominating` - nominating
+         *     * `voting` - voting
+         *     * `closed` - closed
+         *     * `skipped` - skipped
+         * @enum {string}
+         */
+        PhaseEnum: "upcoming" | "nominating" | "voting" | "closed" | "skipped";
+        PlatformShare: {
+            platform: string;
+            /** Format: double */
+            share: number;
+        };
         /** @description JNG-02-05 (precise last-active time), JNG-02-06 (Private mode). */
         Privacy: {
             readonly activity_visibility: components["schemas"]["ActivityVisibilityEnum"];
@@ -1588,6 +2212,13 @@ export interface components {
              */
             until: string | null;
         };
+        Profile: {
+            person: components["schemas"]["Person"];
+            is_me: boolean;
+            compatibility_available: boolean;
+            college: string;
+            city: string;
+        };
         PublicFlags: {
             flags: {
                 [key: string]: boolean;
@@ -1606,6 +2237,19 @@ export interface components {
          * @enum {string}
          */
         PurposeEnum: "core_service" | "activity_sharing" | "suggestions_discoverability" | "contact_matching" | "push_notifications" | "email_digest" | "lastfm_link";
+        PushKey: {
+            available: boolean;
+            public_key: string;
+        };
+        PushKeysRequest: {
+            p256dh: string;
+            auth: string;
+        };
+        PushSubscribeRequest: {
+            /** Format: uri */
+            endpoint: string;
+            keys: components["schemas"]["PushKeysRequest"];
+        };
         QueueAddRequest: {
             /** Format: uuid */
             recording_id?: string | null;
@@ -1641,10 +2285,19 @@ export interface components {
          * @enum {string}
          */
         ReasonEnum: "spam" | "harassment" | "hate" | "impersonation" | "inappropriate" | "other";
+        Recap: {
+            /** Format: uuid */
+            id: string;
+            month: string;
+            data: {
+                [key: string]: unknown;
+            };
+            share_url: string | null;
+        };
         Received: {
             /** Format: uuid */
             id: string;
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["SendKindEnum"];
             sender: components["schemas"]["Person"];
             note: string;
             items: components["schemas"]["Song"][];
@@ -1680,6 +2333,11 @@ export interface components {
          * @enum {string}
          */
         RelationshipEnum: "self" | "friends" | "outgoing" | "incoming" | "none";
+        ReportQueue: {
+            results: {
+                [key: string]: unknown;
+            }[];
+        };
         Request: {
             /** Format: uuid */
             id: string;
@@ -1688,15 +2346,32 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        Rituals: {
+            recap: components["schemas"]["Recap"];
+            battles: components["schemas"]["Battle"][];
+        };
+        Season: {
+            weeks: number;
+            of: number;
+            table: {
+                [key: string]: unknown;
+            }[];
+        };
         SendFriendRequestRequest: {
             /** Format: uuid */
             user_id?: string;
             username?: string;
         };
+        /**
+         * @description * `track` - Track
+         *     * `mixtape` - Mixtape
+         * @enum {string}
+         */
+        SendKindEnum: "track" | "mixtape";
         Sent: {
             /** Format: uuid */
             id: string;
-            kind: components["schemas"]["KindEnum"];
+            kind: components["schemas"]["SendKindEnum"];
             note: string;
             items: components["schemas"]["Song"][];
             /** Format: date-time */
@@ -1738,6 +2413,40 @@ export interface components {
             joined: boolean;
             participant_count: number;
         };
+        SetFlagRequest: {
+            name: string;
+            enabled: boolean;
+        };
+        Settings: {
+            types: {
+                [key: string]: unknown;
+            };
+            readonly labels: {
+                [key: string]: unknown;
+            };
+            quiet_start: string;
+            quiet_end: string;
+            tz: string;
+            push_daily_cap: number;
+            readonly push_available: boolean;
+            readonly push_subscribed: boolean;
+        };
+        SettingsRequest: {
+            types: {
+                [key: string]: unknown;
+            };
+            quiet_start: string;
+            quiet_end: string;
+            tz: string;
+            push_daily_cap: number;
+        };
+        SharedRecap: {
+            name: string;
+            month: string;
+            data: {
+                [key: string]: unknown;
+            };
+        };
         Song: {
             /** Format: uuid */
             recording_id: string | null;
@@ -1764,6 +2473,17 @@ export interface components {
          * @enum {string}
          */
         StateEnum: "LIVE" | "RECENT" | "TOP" | "HIDDEN";
+        Stats: {
+            ready: boolean;
+            days_of_data: number;
+            ready_in_days: number;
+            plays_30d?: number;
+            minutes_30d?: number;
+            top_artists?: components["schemas"]["NamedCount"][];
+            genres?: components["schemas"]["NamedShare"][];
+            platforms?: components["schemas"]["PlatformShare"][];
+            excluded_note?: string | null;
+        };
         /**
          * @description * `sent` - sent
          *     * `delivered` - delivered
@@ -1795,9 +2515,11 @@ export interface components {
         };
         /**
          * @description * `user` - user
+         *     * `circle` - circle
+         *     * `send` - send
          * @enum {string}
          */
-        TargetTypeEnum: "user";
+        TargetTypeEnum: "user" | "circle" | "send";
         Taste: {
             artists: string[];
             genres: string[];
@@ -1837,6 +2559,147 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    admin_allowlist_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Allowlist"];
+                };
+            };
+        };
+    };
+    admin_allowlist_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AllowlistAddRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AllowlistAddRequest"];
+                "multipart/form-data": components["schemas"]["AllowlistAddRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description ALLOWLIST_FULL */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    admin_allowlist_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    admin_budgets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Budgets"];
+                };
+            };
+        };
+    };
+    admin_flags_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFlags"];
+                };
+            };
+        };
+    };
+    admin_flags_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetFlagRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SetFlagRequest"];
+                "multipart/form-data": components["schemas"]["SetFlagRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     auth_google_create: {
         parameters: {
             query?: never;
@@ -2034,6 +2897,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    battles_votes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                battle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BattleVoteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["BattleVoteRequest"];
+                "multipart/form-data": components["schemas"]["BattleVoteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Battle"];
+                };
+            };
+            /** @description OWN_NOMINATION */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description VOTING_CLOSED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    battles_unvote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                battle_id: string;
+                nomination_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Battle"];
                 };
             };
         };
@@ -2453,6 +3383,102 @@ export interface operations {
             };
         };
     };
+    circles_battle_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Battle"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_battle_nominate_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["NominateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["NominateRequest"];
+                "multipart/form-data": components["schemas"]["NominateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Battle"];
+                };
+            };
+            /** @description NOMINATIONS_CLOSED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_battle_skip_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Battle"];
+                };
+            };
+            /** @description FORBIDDEN */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     circles_feed_list: {
         parameters: {
             query?: never;
@@ -2593,6 +3619,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    circles_season_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                circle_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Season"];
                 };
             };
         };
@@ -2790,6 +3837,36 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    compatibility_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Compatibility"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
             };
         };
     };
@@ -3648,6 +4725,122 @@ export interface operations {
             };
         };
     };
+    me_moderation_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyModeration"];
+                };
+            };
+        };
+    };
+    me_moderation_appeal_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                action_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAppealRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CreateAppealRequest"];
+                "multipart/form-data": components["schemas"]["CreateAppealRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description ALREADY_APPEALED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    notification_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Settings"];
+                };
+            };
+        };
+    };
+    notification_settings_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["SettingsRequest"];
+                "multipart/form-data": components["schemas"]["SettingsRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Settings"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
     me_privacy_retrieve: {
         parameters: {
             query?: never;
@@ -3697,6 +4890,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    me_push_subscription_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscribeRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PushSubscribeRequest"];
+                "multipart/form-data": components["schemas"]["PushSubscribeRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    push_unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    me_stats_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Stats"];
                 };
             };
         };
@@ -3753,6 +5016,223 @@ export interface operations {
             };
         };
     };
+    me_timeline_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Month"][];
+                };
+            };
+        };
+    };
+    mod_appeals_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppealQueue"];
+                };
+            };
+        };
+    };
+    mod_appeals_decide_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appeal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppealDecisionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AppealDecisionRequest"];
+                "multipart/form-data": components["schemas"]["AppealDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    mod_audit_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLog"];
+                };
+            };
+        };
+    };
+    mod_reports_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportQueue"];
+                };
+            };
+        };
+    };
+    mod_reports_action_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModerationDecisionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ModerationDecisionRequest"];
+                "multipart/form-data": components["schemas"]["ModerationDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    notifications_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+        };
+    };
+    notifications_push_key_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushKey"];
+                };
+            };
+        };
+    };
+    notifications_read_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MarkReadRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MarkReadRequest"];
+                "multipart/form-data": components["schemas"]["MarkReadRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     queue_vote_create: {
         parameters: {
             query?: never;
@@ -3785,6 +5265,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    recaps_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recap"][];
+                };
+            };
+        };
+    };
+    recaps_share: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recap_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recap"];
+                };
+            };
+        };
+    };
+    recaps_unshare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recap_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Recap"];
+                };
+            };
+        };
+    };
+    recaps_shared_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SharedRecap"];
                 };
             };
             /** @description NOT_FOUND */
@@ -3879,6 +5450,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    rituals_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Rituals"];
                 };
             };
         };
@@ -4399,6 +5989,36 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description NOT_FOUND */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    users_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                username: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profile"];
+                };
             };
             /** @description NOT_FOUND */
             404: {

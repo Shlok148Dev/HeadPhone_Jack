@@ -1,9 +1,9 @@
 # STATE — Jingle
 
-_Last updated: 2026-09-30 — Sprint 7 complete_
+_Last updated: 2026-10-01 — Sprint 10 complete_
 
 ## Current sprint
-**Sprints 0–7 done.** Now: **Sprint 8 — Blends and live sessions** (see `BOARD.md`). Founder directive: advance sprint to sprint through S11 after each readiness check.
+**Sprints 0–10 done.** Now: **Sprint 11 — hardening, final docs** (see `BOARD.md`). Founder directive: advance sprint to sprint through S11 after each readiness check.
 
 ## Done (on main)
 ### Sprint 0 — Setup
@@ -60,12 +60,32 @@ _Last updated: 2026-09-30 — Sprint 7 complete_
 - Retro: optimistic close dropped `mutate` callbacks (use `mutateAsync` after unmount); `next/dynamic` cost 1 kB in the shared layout — `React.lazy` instead; Suggestions shelf now lazy, Home back to 180 kB.
 - Tests: sends 12 incl. Gherkin JNG-06-03 (93 % cov), web unit 99, E2E 17; review `docs/office/reviews/S7-SENDS-review.md`.
 
+### Sprint 8 — Blends and live sessions
+- Blends (ADR-0021): Tech Bible 6.2 engine (group utility, 40 % share cap, 2 per artist, artist stand-in for LightFM), privacy gate (a member's plays count only if all others may see them), deterministic reasons, pins kept on regenerate, honest "save not available"; demo Blend.
+- Live sessions: REST writes with idempotency keys, one ±1 vote each under a row lock, anonymous adds, versioned `queue.delta` broadcasts through realtime `session:{id}` rooms, presence + 30 s sweep for host hand-over, idle rooms end.
+- Web: Blends list (+ Live sessions, Listen together), Blend detail (reasons, pin, regenerate, copy list), session room (Now, queue with votes, add song/anonymous, people, reconnect banner, host toasts), circle page "Make a Blend" / "Listen together".
+- Retro: E2E proved live fan-out and 10 parallel votes on PostgreSQL; the privacy gate surfaced a real subtlety (a circle owner's default visibility hides their plays from non-friend members) — kept, and shown honestly.
+- Tests: blends 10 + sessions 10 incl. Gherkin (91 % cov), realtime 9, web unit 102, E2E 26; review `docs/office/reviews/S8-BLENDS-SESSIONS-review.md`.
+
+### Sprint 9 — Understand
+- `insights` (ADR-0022): Tech Bible 6.1 compatibility (artists weighted Jaccard + genre cosine; sound honestly unavailable), monthly F_pairs recalibration, never without breakdown (BR-09); my stats after 14 days; 12-month timeline; profiles `GET /users/{username}`; demo genre tags.
+- Web: `/u/[username]` (me: stats tiles, share bars, year timeline + sr table, building state; friend: CompatibilityMeter with notes and shared artists). Person names link to profiles.
+- Fix: `AUTH_LOGIN_RATE` configurable (default 10/m; local 120/m); full-suite E2E sign-ins were being throttled.
+- Retro: time-window code needs month-boundary-safe tests; Docker Desktop stopped mid-run again.
+- Tests: insights 10 incl. Gherkin (96 % cov), E2E +2; review `docs/office/reviews/S9-UNDERSTAND-review.md`.
+
+### Sprint 10 — Rituals, notifications, trust
+- Rituals (ADR-0023): weekly battle per circle (schedule, nominate, 3 votes, anonymous voting, close job with results in under 5 min, skip week, 8-week season); monthly recap on the 1st/2nd with opt-in share link and canvas image.
+- Notifications: one `notify()` for all events; in-app centre + bell; per-type controls; quiet hours; web push (VAPID, opt-in, 5/day cap) with a service worker.
+- Trust: reports for users/circles/notes; staff console (queue with context, warn/mute/suspend/ban, appeals, audit log, flags, live source budgets, Spotify tester allowlist); mute/suspend enforced; demo moderator `mod@jingle.local`.
+- Fixes: refresh/login rate limits configurable (refresh 120/m default); zero-width recap card; audit kwarg clash.
+- Tests: rituals 8 incl. Gherkin, notifications 8, moderation 9, ingest usage 1 (91 % cov); E2E +3; review `docs/office/reviews/S10-RITUALS-TRUST-review.md`.
+
 ## Working mode
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
-1. Sprint 8 — Blends (2–6 friends or a circle, one-line reasons, pin + regenerate, save where the API allows) and live sessions (shared queue, anonymous adds, votes re-order live, survives host leaving, rejoin) (JNG-07-01…09).
-2. Sprint 9 — compatibility, stats, taste timeline.
+1. Sprint 11 — hardening: security review, accessibility pass, k6 smoke (50 users) + 5,000-user scripts, performance budgets, runbooks, README quick start, pilot deployment guide, final STATE.
 
 ## Open risks
 - R-A: Host runs another project ("axis") on 5432/6379/6333/8025; Jingle publishes only 8080.
@@ -76,6 +96,15 @@ Founder directive: the Orchestrator does all work itself; subagents only when ex
 - R-E: Refresh-token rotation can race across two open tabs (second tab is signed out); acceptable for pilot, revisit with a grace window in S11.
 
 ## Retros
+### Sprint 10 (2026-10-01)
+- Went well: one notify() entry point made prefs, quiet hours and caps apply everywhere at once; tests caught two real bugs before the UI did.
+- Watch: shared-IP rate limits (pilot behind NAT); keep E2E self-healing when a run is interrupted.
+### Sprint 9 (2026-10-01)
+- Went well: honest-gap design (sound/genres unavailable) fell straight out of the formula.
+- Watch: date math at boundaries; Docker Desktop stability.
+### Sprint 8 (2026-09-30)
+- Went well: hints + versioned state kept realtime simple; two-browser E2E caught nothing new — the design held.
+- Watch: route JS for /blends 181 kB; review shared chunks in S11.
 ### Sprint 7 (2026-09-30)
 - Went well: honest statuses fell out of existing lineage flags; the E2E caught a duplicate accessible name and a dropped toast.
 - Watch: shared layout JS creeps (friends 182 kB); keep new chrome tiny.

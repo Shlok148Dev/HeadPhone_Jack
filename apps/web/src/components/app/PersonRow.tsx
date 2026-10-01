@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Avatar, Button, Dialog, useToast } from "@/components/ds";
 import { useSocialActions, type Person } from "@/lib/social";
@@ -18,7 +19,9 @@ export function PersonRow({ person, actions }: { person: Person; actions?: React
     <li className="flex min-h-16 items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2">
       <Avatar name={person.display_name} seed={person.id} size={44} decorative />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{person.display_name}</p>
+        <Link href={`/u/${person.username}`} className="block truncate font-medium hover:underline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+          {person.display_name}
+        </Link>
         <p className="truncate font-mono text-xs text-text-muted">@{person.username}</p>
       </div>
       <div className="flex shrink-0 items-center gap-1">{actions}</div>

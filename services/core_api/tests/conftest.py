@@ -50,7 +50,6 @@ def auth_api(user) -> APIClient:
     return client
 
 
-
 @pytest.fixture(autouse=True)
 def ingest_deletions(monkeypatch):
     """Record calls to ingest-ml's data-deletion endpoint instead of making HTTP requests."""

@@ -36,6 +36,7 @@ let onSignedOut: (() => void) | null = null;
 
 export interface Me {
   id: string;
+  is_staff?: boolean;
   email: string;
   username: string;
   display_name: string;

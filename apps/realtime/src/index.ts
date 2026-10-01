@@ -9,6 +9,8 @@ import {
   fetchFriendIds,
   friendsRoom,
   loadConfig,
+  mayJoinSession,
+  sessionRoom,
   routeEvent,
   userRoom,
   verifyAccess,
@@ -25,6 +27,15 @@ const streams = new Redis(redisUrl, { maxRetriesPerRequest: null });
 
 const PRESENCE_TTL = 120; // Technical Bible 3.4
 const HEARTBEAT_MS = 60_000;
+const SESSION_TTL = 60; // core-api hands the host role over when this lapses (JNG-07-08)
+const SESSION_BEAT_MS = 20_000;
+
+async function markSessions(userId: string, sessions: Set<string>): Promise<void> {
+  if (!sessions.size) return;
+  const pipe = redis.pipeline();
+  for (const sid of sessions) pipe.set(`sesspres:${sid}:${userId}`, "1", "EX", SESSION_TTL);
+  await pipe.exec();
+}
 
 const app = express();
 app.get("/healthz", (_req, res) => {
@@ -79,7 +90,36 @@ io.on("connection", async (socket) => {
   const beat = setInterval(() => {
     void markPresence(uid, (socket.data.friendIds as string[]) ?? []).catch(() => undefined);
   }, HEARTBEAT_MS);
-  socket.on("disconnect", () => clearInterval(beat));
+  const sessions = new Set<string>();
+  const sessionBeat = setInterval(() => void markSessions(uid, sessions).catch(() => undefined), SESSION_BEAT_MS);
+
+  // Live sessions (Tech Bible 4.3): join the room after core-api confirms membership. State and
+  // writes go over REST; the room only carries versioned `queue:delta` broadcasts.
+  socket.on("session:join", async (msg: { session_id?: unknown }, ack?: (r: { ok: boolean }) => void) => {
+    const sid = msg?.session_id;
+    let ok = false;
+    try {
+      ok = await mayJoinSession(sid, uid, cfg);
+    } catch (err) {
+      log.warn({ err: String(err) }, "session membership check failed");
+    }
+    if (ok && typeof sid === "string") {
+      await socket.join(sessionRoom(sid));
+      sessions.add(sid);
+      await markSessions(uid, new Set([sid])).catch(() => undefined);
+    }
+    if (typeof ack === "function") ack({ ok });
+  });
+  socket.on("session:leave", (msg: { session_id?: unknown }) => {
+    if (typeof msg?.session_id !== "string") return;
+    sessions.delete(msg.session_id);
+    void socket.leave(sessionRoom(msg.session_id));
+    void redis.del(`sesspres:${msg.session_id}:${uid}`).catch(() => undefined);
+  });
+  socket.on("disconnect", () => {
+    clearInterval(beat);
+    clearInterval(sessionBeat);
+  });
 });
 
 // Each pod consumes every entry and emits only to its own sockets (io.local), so the Redis

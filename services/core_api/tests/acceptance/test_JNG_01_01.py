@@ -25,8 +25,12 @@ def visitor(years):
 def sign_up(birth_year, ctx):
     ctx["resp"] = APIClient().post(
         "/api/v1/auth/register",
-        {"email": "teen@example.test", "password": "a-long-unique-passphrase-7",
-         "username": "teen_listener", "birth_year": birth_year},
+        {
+            "email": "teen@example.test",
+            "password": "a-long-unique-passphrase-7",
+            "username": "teen_listener",
+            "birth_year": birth_year,
+        },
         format="json",
     )
 
@@ -46,8 +50,9 @@ def no_account():
 def signed_in(ctx):
     UserFactory(email="member@example.test")
     client = APIClient()
-    r = client.post("/api/v1/auth/login", {"email": "member@example.test", "password": PASSWORD},
-                    format="json")
+    r = client.post(
+        "/api/v1/auth/login", {"email": "member@example.test", "password": PASSWORD}, format="json"
+    )
     assert r.status_code == 200
     ctx["old_refresh"] = r.cookies[COOKIE].value
     ctx["old_access"] = r.json()["access"]

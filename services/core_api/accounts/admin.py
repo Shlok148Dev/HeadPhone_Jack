@@ -19,16 +19,30 @@ class UserAdmin(BaseUserAdmin):
     inlines = [PrivacyInline]
     fieldsets = (
         (None, {"fields": ("id", "email", "username", "password")}),
-        ("Profile", {"fields": ("display_name", "birth_year", "college", "city", "discoverable",
-                                "private_until")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups",
-                                    "user_permissions")}),
-        ("Dates", {"fields": ("last_login", "date_joined", "created_at", "updated_at",
-                              "deleted_at")}),
+        (
+            "Profile",
+            {
+                "fields": (
+                    "display_name",
+                    "birth_year",
+                    "college",
+                    "city",
+                    "discoverable",
+                    "private_until",
+                )
+            },
+        ),
+        (
+            "Permissions",
+            {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")},
+        ),
+        (
+            "Dates",
+            {"fields": ("last_login", "date_joined", "created_at", "updated_at", "deleted_at")},
+        ),
     )
     add_fieldsets = (
-        (None, {"classes": ("wide",),
-                "fields": ("email", "username", "password1", "password2")}),
+        (None, {"classes": ("wide",), "fields": ("email", "username", "password1", "password2")}),
     )
 
 

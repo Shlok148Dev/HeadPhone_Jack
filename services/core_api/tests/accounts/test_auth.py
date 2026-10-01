@@ -127,8 +127,11 @@ class TestRegister:
 
     def test_rate_limited_5_per_minute_per_ip(self, api):
         for i in range(5):
-            api.post("/api/v1/auth/register", register_payload(username=f"u{i}x", email="x"),
-                     format="json")
+            api.post(
+                "/api/v1/auth/register",
+                register_payload(username=f"u{i}x", email="x"),
+                format="json",
+            )
         r = api.post("/api/v1/auth/register", register_payload(), format="json")
         assert r.status_code == 429
         assert r.json()["error"]["code"] == "RATE_LIMITED"
@@ -139,29 +142,41 @@ class TestRegister:
 class TestLogin:
     def test_happy_path(self, api):
         user = UserFactory(email="ravi@example.test")
-        r = api.post("/api/v1/auth/login", {"email": "RAVI@example.test", "password": PASSWORD},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "RAVI@example.test", "password": PASSWORD},
+            format="json",
+        )
         assert r.status_code == 200
         assert r.json()["user"]["id"] == str(user.pk)
         assert COOKIE in r.cookies
 
     def test_wrong_password(self, api):
         UserFactory(email="ravi@example.test")
-        r = api.post("/api/v1/auth/login", {"email": "ravi@example.test", "password": "nope-nope"},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "ravi@example.test", "password": "nope-nope"},
+            format="json",
+        )
         assert r.status_code == 401
         assert r.json()["error"]["code"] == "INVALID_CREDENTIALS"
 
     def test_unknown_email_same_error(self, api):
-        r = api.post("/api/v1/auth/login", {"email": "ghost@example.test", "password": "x" * 9},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "ghost@example.test", "password": "x" * 9},
+            format="json",
+        )
         assert r.status_code == 401
         assert r.json()["error"]["code"] == "INVALID_CREDENTIALS"
 
     def test_inactive_user_rejected(self, api):
         UserFactory(email="gone@example.test", is_active=False)
-        r = api.post("/api/v1/auth/login", {"email": "gone@example.test", "password": PASSWORD},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "gone@example.test", "password": PASSWORD},
+            format="json",
+        )
         assert r.status_code == 401
 
     def test_validation_error(self, api):
@@ -181,8 +196,11 @@ class TestLogin:
 class TestRefreshLogout:
     def _login(self, api):
         UserFactory(email="kabir@example.test")
-        r = api.post("/api/v1/auth/login", {"email": "kabir@example.test", "password": PASSWORD},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "kabir@example.test", "password": PASSWORD},
+            format="json",
+        )
         return r.cookies[COOKIE].value
 
     def test_refresh_rotates_and_blacklists_old(self, api):
@@ -207,8 +225,11 @@ class TestRefreshLogout:
 
     def test_refresh_rejects_access_token(self, api):
         UserFactory(email="kabir@example.test")
-        r = api.post("/api/v1/auth/login", {"email": "kabir@example.test", "password": PASSWORD},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "kabir@example.test", "password": PASSWORD},
+            format="json",
+        )
         api.cookies[COOKIE] = r.json()["access"]
         assert api.post("/api/v1/auth/refresh").status_code == 401
 
@@ -232,8 +253,11 @@ class TestRefreshLogout:
 
     def test_access_token_authenticates(self, api):
         UserFactory(email="kabir@example.test")
-        r = api.post("/api/v1/auth/login", {"email": "kabir@example.test", "password": PASSWORD},
-                     format="json")
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": "kabir@example.test", "password": PASSWORD},
+            format="json",
+        )
         api.credentials(HTTP_AUTHORIZATION=f"Bearer {r.json()['access']}")
         assert api.get("/api/v1/me").status_code == 200
 
@@ -301,7 +325,8 @@ class TestGoogle:
 
     def test_unverified_email_rejected(self, api, google_on, monkeypatch):
         monkeypatch.setattr(
-            auth_views, "verify_google_id_token",
+            auth_views,
+            "verify_google_id_token",
             lambda t: {**self.CLAIMS, "email_verified": False},
         )
         r = api.post("/api/v1/auth/google", {"id_token": "good"}, format="json")
@@ -321,7 +346,8 @@ class TestGoogle:
 
     def test_profane_name_not_used(self, api, google_on, monkeypatch):
         monkeypatch.setattr(
-            auth_views, "verify_google_id_token",
+            auth_views,
+            "verify_google_id_token",
             lambda t: {**self.CLAIMS, "name": "shit head", "email": "x!@gmail.test"},
         )
         r = api.post("/api/v1/auth/google", {"id_token": "good"}, format="json")

@@ -44,9 +44,22 @@ export async function fetchFriendIds(userId: string, cfg: Config, fetcher: Fetch
   return Array.isArray(ids) ? ids.filter((x): x is string => typeof x === "string") : [];
 }
 
-/** Rooms: `user:{id}` (me), `friends:{id}` (joined by each online friend of id). */
+/** Rooms: `user:{id}` (me), `friends:{id}` (joined by each online friend of id), `session:{id}`. */
 export const userRoom = (id: string) => `user:${id}`;
 export const friendsRoom = (id: string) => `friends:${id}`;
+export const sessionRoom = (id: string) => `session:${id}`;
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** core-api decides who may be in a live session room (membership + blocks, Tech Bible 4.3). */
+export async function mayJoinSession(sessionId: unknown, userId: string, cfg: Config, fetcher: Fetcher = fetch): Promise<boolean> {
+  if (typeof sessionId !== "string" || !UUID.test(sessionId)) return false;
+  const res = await fetcher(
+    `${cfg.coreApiUrl}/internal/sessions/${sessionId}/members/${encodeURIComponent(userId)}`,
+    { headers: { "X-Service-Token": cfg.serviceToken } },
+  );
+  return res.ok;
+}
 
 /** Collapse bursts: at most one emit per key per window (Technical Bible 7.3 back-pressure). */
 export class Coalescer {
@@ -111,6 +124,24 @@ export function routeEvent(
   if (type === "feed.invalidate" && typeof payload.user_id === "string") {
     emitter.toRoom(friendsRoom(payload.user_id), "feed:update", { user_id: payload.user_id });
     return "feed.invalidate";
+  }
+  if (type === "queue.delta" && typeof payload.session_id === "string") {
+    // The room's public state with a monotonically increasing version (JNG-07-07/09): clients
+    // keep the newest and refetch over REST if they notice a gap.
+    let state: unknown = payload.state;
+    if (typeof state === "string") {
+      try {
+        state = JSON.parse(state);
+      } catch {
+        return "ignored:bad-state";
+      }
+    }
+    emitter.toRoom(sessionRoom(payload.session_id), "queue:delta", {
+      session_id: payload.session_id,
+      version: payload.version,
+      state,
+    });
+    return "queue.delta";
   }
   if (type === "notify" && typeof payload.user_id === "string") {
     emitter.toRoom(userRoom(payload.user_id), "notify", { type: payload.type, id: payload.id });

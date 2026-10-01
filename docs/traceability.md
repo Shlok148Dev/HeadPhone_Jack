@@ -37,6 +37,36 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-06-05 | Discovery credit | `test_JNG_06_05_discovery_credit`, `test_no_credit_when_artist_was_already_known` | `sends/services.discovery_credits` (daily) | ✅ |
 | JNG-06-06 | React or reply with a track | `test_JNG_06_06_react_and_reply_with_a_song`; E2E react | `sends/services.react`, reply via `reply_to` | ✅ |
 | JNG-06-07 | Inbox of received sends | `test_JNG_06_04_statuses_and_JNG_06_07_inbox`; E2E inbox | `sends/views.InboxView`, `(app)/inbox` | ✅ |
+| JNG-07-01 | Blend with 2–6 friends or a circle | `tests/blends/test_blends.py` (engine + `test_JNG_07_01_02_…`, `test_blend_needs_friends_and_2_to_6_people`, `test_circle_blend_respects_circles_visibility`); E2E `ep07/JNG-07.spec.ts` | `blends/engine.py`, `blends/services.py`, `/blends` | ✅ |
+| JNG-07-02 | One-line reason per track | `test_group_utility_prefers_shared_tracks_and_explains_them`, `test_reason_names_a_fan_of_the_artist` | `blends/engine.reason_for` | ✅ |
+| JNG-07-03 | Regenerate keeps pins | `test_JNG_07_03_regenerate_keeps_pins`; E2E pin + regenerate | `blends/services.generate`, `/blends/[id]` | ✅ |
+| JNG-07-04 | Save to my platform where allowed | `test_JNG_07_01_02_…` (`save.available` false + message) | `blends/views.SAVE_NOTE` | 🟡 honest "not available" until a zero-approval write path exists (ADR-0021) |
+| JNG-07-05 | Start a session; invite friends or a circle | `test_JNG_07_05_start_and_invite_friends_or_circle`; E2E live room | `listening/services.start`, Blends "Listen together", circle page | ✅ |
+| JNG-07-06 | Add to queue, optionally anonymously | `test_JNG_07_06_anonymous_add_hides_the_adder_and_is_idempotent`; E2E | `listening/services.add` | ✅ |
+| JNG-07-07 | One vote per track; live re-order | Gherkin `features/ep07/JNG-07_live_queue.feature`; `test_JNG_07_07_…`; E2E 10 parallel votes (PostgreSQL) + live order | `listening/services.vote`, realtime `queue:delta`, `lib/live.applyDelta` | ✅ (p95 fan-out → k6 S11) |
+| JNG-07-08 | Survives the host leaving | `test_JNG_07_08_survives_the_host_leaving`; E2E hand-over | `listening/services._hand_over`, `sweep` | ✅ |
+| JNG-07-09 | Rejoin after a drop and see the current queue | Gherkin Reconnect; `apps/web/src/lib/live.test.ts` | `useSession` rejoin + refetch, versioned state | ✅ |
+| JNG-08-01 | 0-100 compatibility with breakdown (BR-09) | Gherkin `features/ep08/JNG-08_explained_score.feature`; `tests/insights/test_insights.py`; E2E `ep08/JNG-08.spec.ts` | `insights/compute.py`, `insights/views.CompatibilityView`, `CompatibilityMeter`, `/u/[username]` | ✅ |
+| JNG-08-02 | Shared artists, genres; sound only where available | Gherkin "Audio features unavailable" | `insights/compute.compatibility` | ✅ (sound unavailable in pilot, stated) |
+| JNG-08-03 | 12-month taste timeline | `test_JNG_08_03_timeline_has_12_months`; E2E | `insights/compute.timeline`, profile Timeline | ✅ |
+| JNG-08-06 | Analytics build over 2-4 weeks empty state | `test_JNG_08_06_new_member_sees_building_state` | `insights/compute.my_stats`, `MyInsights` | ✅ |
+| JNG-08-07 | My stats: minutes, artists, genres, platforms | `test_JNG_08_07_my_stats`; E2E | `insights/compute.my_stats`, `/u/[username]` | ✅ |
+| JNG-09-01/02 | Weekly battle: 1 nomination, 3 votes, not own; late vote refused | Gherkin `features/ep09/JNG-09_battle_integrity.feature`; `tests/rituals/test_rituals.py`; E2E `ep09/JNG-09-11-12.spec.ts` | `rituals/services.py`, `/rituals` | ✅ |
+| JNG-09-03 | Leaderboard within 5 min of close | `test_JNG_09_03_results_published_by_close_job_with_notifications` | `rituals.tasks.close_due` (every minute), Podium | ✅ |
+| JNG-09-04 | 8-week season table | `test_JNG_09_08_skip_week_and_JNG_09_04_season_ignores_it`; E2E | `rituals/services.season` | ✅ |
+| JNG-09-05/06 | Monthly recap within 48 h; share as link or image | `test_JNG_09_05_recap_and_JNG_09_06_explicit_share`; E2E share/revoke | `rituals/services.make_recaps`, `RecapCard`, `/recap/[token]` | ✅ |
+| JNG-09-08 | Skip a week without breaking the season | `test_JNG_09_08_…` | `rituals/services.skip_week` | ✅ |
+| JNG-11-01 | In-app notifications | `tests/notifications/test_notifications.py::test_JNG_11_01_…`; E2E bell | `notifications/services.notify`, `/notifications` | ✅ |
+| JNG-11-02 | Web push off until allowed | `test_JNG_11_02_push_only_after_opt_in`, `test_push_subscription_needs_vapid_and_https` | `public/sw.js`, `lib/trust.enablePush` | ✅ (real delivery manual) |
+| JNG-11-03 | Per-type controls | `test_JNG_11_03_per_type_controls`; E2E | `/settings/notifications` | ✅ |
+| JNG-11-04 | Quiet hours 23:00–08:00 local | `test_JNG_11_04_quiet_hours_span_midnight` | `notifications/services.in_quiet_hours` | ✅ |
+| JNG-11-07 | ≤ 5 pushes a day | `test_JNG_11_07_five_pushes_a_day` | `notifications/services._push_budget` | ✅ |
+| JNG-12-01 | Report a user, circle or note | `tests/moderation/test_moderation.py::test_JNG_12_01_…` | `social/views.ReportsView`, `moderation/context.py` | ✅ (comments: not built) |
+| JNG-12-02/03 | Queue with context; warn/mute/suspend/ban with audit | `test_JNG_12_02_…`, `test_JNG_12_03_…`, `test_suspend_…`; E2E | `moderation/*`, `/staff` | ✅ |
+| JNG-12-04 | Per-source budgets and live usage | `test_JNG_12_04_budgets_proxy_ingest`; ingest `test_ratelimit_usage.py` | ingest `/internal/budgets`, `/staff` Budgets | ✅ |
+| JNG-12-05 | Feature flags per source and feature | `test_JNG_12_05_flags_toggle_is_audited` | `/staff` Flags | ✅ |
+| JNG-12-06 | Spotify tester allowlist | `test_JNG_12_06_…` | `moderation.AllowlistEntry`, `sources/connect_views._allowlisted` | ✅ |
+| JNG-12-08 | Appeal a moderation action | `test_JNG_12_08_overturned_appeal_lifts_the_action`; E2E | `/settings/account`, `/staff` Appeals | ✅ |
 | JNG-05-04 | Open in my own app (search fallback) | `test_JNG_05_04_search_links_for_open_in_my_app` | `feed/resolver._search_links`, `FeedCard.pickLink` | ✅ |
 | JNG-05-07 | Source down → cached card, honest time, delayed | `test_JNG_05_07_needs_reconnect_marks_recent_as_delayed` | `feed/resolver._source_delayed`, Home degraded line | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |

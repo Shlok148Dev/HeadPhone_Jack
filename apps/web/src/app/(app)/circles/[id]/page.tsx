@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth";
 import { songFromCard, useOpenSend } from "@/lib/send";
 import { useCircle, useCircleActions, useCircleFeed, type Circle, type Role } from "@/lib/circles";
 import { isFreshLive } from "@/lib/feed";
+import { useBlendActions, useStartSession } from "@/lib/live";
 import { useFriends } from "@/lib/social";
 
 function InviteSheet({ circle, open, onClose }: { circle: Circle; open: boolean; onClose: () => void }) {
@@ -200,6 +201,8 @@ export default function CirclePage() {
   const circle = useCircle(id);
   const feed = useCircleFeed(id);
   const { leave } = useCircleActions();
+  const blendActions = useBlendActions();
+  const startSession = useStartSession();
   const toast = useToast();
   const [dialog, setDialog] = useState<null | "invite" | "settings" | "leave">(null);
   const [now, setNow] = useState(() => Date.now());
@@ -244,6 +247,22 @@ export default function CirclePage() {
           </p>
           <div className="flex flex-wrap gap-2">
             {canInvite && <Button onClick={() => setDialog("invite")}>Invite</Button>}
+            <Button
+              variant="secondary"
+              loading={blendActions.create.isPending}
+              loadingLabel="Mixing"
+              onClick={() => blendActions.create.mutate({ circle_id: c.id }, { onSuccess: (b) => router.push(`/blends/${b.id}`), onError: (e) => toast.toast({ title: e.message, tone: "danger" }) })}
+            >
+              Make a Blend
+            </Button>
+            <Button
+              variant="secondary"
+              loading={startSession.isPending}
+              loadingLabel="Starting"
+              onClick={() => startSession.mutate({ circle_id: c.id }, { onSuccess: (x) => router.push(`/sessions/${x.id}`), onError: (e) => toast.toast({ title: e.message, tone: "danger" }) })}
+            >
+              Listen together
+            </Button>
             {isAdmin && <Button variant="secondary" onClick={() => setDialog("settings")}>Settings</Button>}
             <Button variant="secondary" onClick={() => setDialog("leave")}>Leave</Button>
           </div>

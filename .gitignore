@@ -49,3 +49,6 @@ artifacts/screenshots/tmp/
 # run outputs (screenshots, ML run logs)
 /artifacts/
 services/core_api/artifacts/
+
+# local backups
+/backups/

@@ -17,6 +17,7 @@ import { toNowPlaying, useMyCard } from "@/lib/queries";
 import { RealtimeProvider, useRealtimeStatus } from "@/lib/realtime";
 import { SendProvider, songFromCard, useOpenSend } from "@/lib/send";
 import { useUnread } from "@/lib/sends";
+import { useNotifications } from "@/lib/trust";
 import { Logo } from "./Logo";
 
 interface NavItem {
@@ -133,6 +134,12 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <div className="flex-1" />
             <InboxButton active={isActive(pathname, "/inbox")} />
+            <BellButton active={isActive(pathname, "/notifications")} />
+            {me.is_staff && (
+              <Link href="/staff" className="hidden rounded-full px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text md:inline-flex">
+                Staff
+              </Link>
+            )}
             <ThemeToggle />
             <Link
               href="/settings/connections"
@@ -208,6 +215,26 @@ function InboxButton({ active }: { active: boolean }) {
       className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
     >
       <Icons.Inbox size={22} />
+      {unread > 0 && (
+        <span aria-hidden className="absolute right-1 top-1 min-w-[18px] rounded-full bg-text px-1 text-center font-mono text-[11px] leading-[18px] text-bg">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+/** TopBar bell: unread notifications (JNG-11-01). */
+function BellButton({ active }: { active: boolean }) {
+  const unread = useNotifications().data?.unread ?? 0;
+  return (
+    <Link
+      href="/notifications"
+      aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
+      aria-current={active ? "page" : undefined}
+      className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-text-muted hover:bg-surface-2 hover:text-text focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+    >
+      <Icons.Bell size={22} />
       {unread > 0 && (
         <span aria-hidden className="absolute right-1 top-1 min-w-[18px] rounded-full bg-text px-1 text-center font-mono text-[11px] leading-[18px] text-bg">
           {unread > 9 ? "9+" : unread}

@@ -63,6 +63,7 @@ class MeSerializer(serializers.ModelSerializer):
             "needs_onboarding",
             "private_mode",
             "created_at",
+            "is_staff",
         ]
         read_only_fields = fields
 
@@ -76,7 +77,9 @@ class MeUpdateSerializer(serializers.Serializer):
     college = CleanTextField(max_length=120, allow_blank=True, required=False)
     city = CleanTextField(max_length=80, allow_blank=True, required=False)
     birth_year = serializers.IntegerField(
-        min_value=1900, max_value=2100, required=False,
+        min_value=1900,
+        max_value=2100,
+        required=False,
         help_text="Accepted only while not yet set (Google sign-up onboarding).",
     )
 
@@ -153,8 +156,12 @@ class PrivacyUpdateSerializer(serializers.Serializer):
     show_last_active = serializers.BooleanField(required=False)
     concerts_visible = serializers.BooleanField(required=False)
     private_mode = serializers.ChoiceField(
-        choices=[("1h", "1 hour"), ("8h", "8 hours"), ("until_off", "Until I turn it off"),
-                 ("off", "Off")],
+        choices=[
+            ("1h", "1 hour"),
+            ("8h", "8 hours"),
+            ("until_off", "Until I turn it off"),
+            ("off", "Off"),
+        ],
         required=False,
         help_text="Turn Private mode on for a duration, or off.",
     )
@@ -176,7 +183,8 @@ class ConsentUpdateSerializer(serializers.Serializer):
 
 class DeleteAccountSerializer(serializers.Serializer):
     password = serializers.CharField(
-        required=False, write_only=True,
+        required=False,
+        write_only=True,
         help_text="Required for accounts with a password.",
     )
     confirm = serializers.CharField(

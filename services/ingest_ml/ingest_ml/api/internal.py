@@ -202,3 +202,31 @@ async def drain_identity_queue(
     """Periodic job hook (Celery beat in core-api): resolve queued unresolved recordings."""
     counts = await res.resolver.drain_pending(max(1, min(limit, 60)))
     return JSONResponse(counts)
+
+
+@router.get("/budgets")
+async def budgets(res: Resources = Depends(get_resources)) -> dict:  # noqa: B008
+    """Per-source rate budgets and live usage for the admin console (JNG-12-04)."""
+    import time
+
+    from ..ratelimit import usage_key
+
+    now = int(time.time() // 60)
+    out = []
+    for name, bucket in sorted(res.source_buckets.items()):
+        key = f"rl:src:{name}"
+        minutes = [usage_key(key, now - i) for i in range(60)]
+        rejected = [usage_key(key, now - i, "rejected") for i in range(60)]
+        used = [int(v or 0) for v in await res.redis.mget(minutes)]
+        rej = [int(v or 0) for v in await res.redis.mget(rejected)]
+        out.append(
+            {
+                "source": name,
+                "capacity": bucket.capacity,
+                "per_second": round(bucket.rate, 3),
+                "used_last_minute": used[0],
+                "used_last_hour": sum(used),
+                "rejected_last_hour": sum(rej),
+            }
+        )
+    return {"sources": out}

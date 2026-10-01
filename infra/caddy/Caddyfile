@@ -13,7 +13,11 @@
 		X-Frame-Options DENY
 		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 	}
-	@api path /api/* /admin/*
+	# Django admin is not exposed: staff use the in-app console (/staff); operators use
+	# `docker compose exec core-api python manage.py ...` (docs/runbooks/operations.md).
+	@djadmin path /admin /admin/*
+	respond @djadmin 404
+	@api path /api/*
 	request_body @api {
 		max_size 60MB
 	}

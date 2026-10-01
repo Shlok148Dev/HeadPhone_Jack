@@ -80,8 +80,10 @@ def _platform(value: str) -> str:
 
 
 def _allowlisted(user) -> bool:
+    from moderation.services import allowlist_emails
+
     allow = {e.strip().lower() for e in settings.SPOTIFY_ALLOWLIST.split(",") if e.strip()}
-    return user.email.lower() in allow
+    return user.email.lower() in allow | allowlist_emails()  # .env + admin console (JNG-12-06)
 
 
 def _flag_values() -> dict[str, bool]:

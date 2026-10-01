@@ -68,7 +68,9 @@ class MeView(APIView):
         if "birth_year" in data:
             if user.birth_year is not None:
                 raise ApiError(
-                    "BIRTH_YEAR_LOCKED", "Your birth year is already set.", 400,
+                    "BIRTH_YEAR_LOCKED",
+                    "Your birth year is already set.",
+                    400,
                     details={"birth_year": ["Your birth year is already set."]},
                 )
             if not is_old_enough(data["birth_year"]):
@@ -160,7 +162,9 @@ class ConsentDetailView(APIView):
         tags=["me"],
         parameters=[
             OpenApiParameter(
-                "purpose", OpenApiTypes.STR, OpenApiParameter.PATH,
+                "purpose",
+                OpenApiTypes.STR,
+                OpenApiParameter.PATH,
                 enum=[p.value for p in ConsentPurpose],
             )
         ],

@@ -2,18 +2,17 @@
 
 Owner: Orchestrator (founder directive: no agents unless necessary; advance sprint to sprint through S11). Story IDs from SRS v4.0.
 
-## Sprint 8 — Blends and live sessions
-Goal: a shared playlist that explains itself, and a live listening room whose queue the group steers together.
+## Sprint 11 — Hardening
+Goal: ship a pilot that is safe, accessible, measured and documented, runnable by Shlok from the README alone.
 
 ### To do
-- S8-01 Blend model + generator (Tech Bible 6.2) for 2–6 friends or a circle; trainable/analysable data only (JNG-07-01)
-- S8-02 One-line reason per track from facts members may see (JNG-07-02)
-- S8-03 Pin tracks; regenerate keeps pins (JNG-07-03)
-- S8-04 Save to my platform where its API allows; honest "not available" otherwise (JNG-07-04)
-- S8-05 Live session: host starts, invites friends or a circle; Redis queue `sess:{id}:queue` + version (JNG-07-05)
-- S8-06 Add to queue (optionally anonymous), one up/down vote per track, live re-order over `/rt` (`queue.delta`) (JNG-07-06, 07-07)
-- S8-07 Host leaves → next longest-present participant hosts; rejoin gets current versioned queue (JNG-07-08, 07-09)
-- S8-08 UI: Blends list + Blend page (reasons, pins, regenerate), Session room (queue, votes, presence), start/join flows; demo blend + session
+- S11-01 Security review: auth, tokens, CSP/headers, rate limits, IDOR sweep over every endpoint, secrets in logs, dependency audit (EP-13)
+- S11-02 Accessibility pass: axe on every route, keyboard walkthrough, focus order, reduced motion (JNG-13-07)
+- S11-03 k6: smoke at 50 users locally (run + results); 5,000-user scripts written and documented (JNG-13-01)
+- S11-04 Performance budgets: route JS table, API p95 from the smoke run
+- S11-05 Backups + tested restore runbook (JNG-13-03); data export check (JNG-13-04)
+- S11-06 Runbooks, pilot deployment guide (one small server), README 5-minute quick start, HUMAN_ACTIONS refresh
+- S11-07 Final STATE: complete / behind flags / known gaps / next phase
 
 ### Done
-- Sprint 0–7: see STATE.md
+- Sprint 0–10: see STATE.md

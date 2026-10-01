@@ -53,40 +53,54 @@ class PlatformConnection(TimeStamped):
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="connections")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="connections"
+    )
     platform = models.CharField(max_length=20, choices=Platform.choices)
-    status = models.CharField(max_length=24, choices=SourceStatus.choices, default=SourceStatus.PENDING_FIRST_PLAY)
+    status = models.CharField(
+        max_length=24, choices=SourceStatus.choices, default=SourceStatus.PENDING_FIRST_PLAY
+    )
     first_play_at = models.DateTimeField(null=True, blank=True)
     last_signal_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "platform_connections"
-        constraints = [models.UniqueConstraint(fields=["user", "platform"], name="platform_connection_unique")]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "platform"], name="platform_connection_unique")
+        ]
 
 
 class LinkedSource(TimeStamped):
     """A route (Via) behind a platform connection. Never shown to users (BR-14)."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="linked_sources")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="linked_sources"
+    )
     kind = models.CharField(max_length=20, choices=SourceKind.choices)
     external_user_id = models.CharField(max_length=200, blank=True)
     token_ciphertext = models.TextField(blank=True)
     token_key_id = models.CharField(max_length=40, blank=True)
-    status = models.CharField(max_length=24, choices=SourceStatus.choices, default=SourceStatus.CONNECTED)
+    status = models.CharField(
+        max_length=24, choices=SourceStatus.choices, default=SourceStatus.CONNECTED
+    )
     last_ok_at = models.DateTimeField(null=True, blank=True)
     meta = models.JSONField(default=dict, blank=True)
 
     class Meta:
         db_table = "linked_sources"
-        constraints = [models.UniqueConstraint(fields=["user", "kind"], name="linked_source_user_kind")]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "kind"], name="linked_source_user_kind")
+        ]
 
 
 class ScrobbleToken(TimeStamped):
     """Per-user token for the ListenBrainz-compatible push endpoint. Only the SHA-256 is stored."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="scrobble_tokens")
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="scrobble_tokens"
+    )
     token_sha256 = models.CharField(max_length=64, unique=True)
     label = models.CharField(max_length=60, default="Jingle Companion")
     last_used_at = models.DateTimeField(null=True, blank=True)
@@ -104,7 +118,9 @@ class Artist(TimeStamped):
     class Meta:
         db_table = "artists"
         constraints = [
-            models.UniqueConstraint(fields=["mbid"], condition=Q(mbid__isnull=False), name="artists_mbid")
+            models.UniqueConstraint(
+                fields=["mbid"], condition=Q(mbid__isnull=False), name="artists_mbid"
+            )
         ]
 
 
@@ -130,16 +146,24 @@ class Recording(TimeStamped):
     release_mbid = models.UUIDField(null=True, blank=True)
     duration_ms = models.PositiveIntegerField(null=True, blank=True)
     artwork_url = models.URLField(max_length=800, blank=True)
-    artist = models.ForeignKey(Artist, null=True, blank=True, on_delete=models.SET_NULL, related_name="recordings")
+    artist = models.ForeignKey(
+        Artist, null=True, blank=True, on_delete=models.SET_NULL, related_name="recordings"
+    )
     # normalised "artist|title" key used for fuzzy de-duplication before MusicBrainz resolution
     norm_key = models.CharField(max_length=600, db_index=True)
-    resolution = models.CharField(max_length=16, default="unresolved")  # isrc | mbid | fuzzy | unresolved
+    resolution = models.CharField(
+        max_length=16, default="unresolved"
+    )  # isrc | mbid | fuzzy | unresolved
 
     class Meta:
         db_table = "recordings"
         constraints = [
-            models.UniqueConstraint(fields=["isrc"], condition=Q(isrc__isnull=False), name="recordings_isrc"),
-            models.UniqueConstraint(fields=["mbid"], condition=Q(mbid__isnull=False), name="recordings_mbid"),
+            models.UniqueConstraint(
+                fields=["isrc"], condition=Q(isrc__isnull=False), name="recordings_isrc"
+            ),
+            models.UniqueConstraint(
+                fields=["mbid"], condition=Q(mbid__isnull=False), name="recordings_mbid"
+            ),
         ]
 
 
@@ -154,5 +178,7 @@ class RecordingLink(models.Model):
     class Meta:
         db_table = "recording_links"
         constraints = [
-            models.UniqueConstraint(fields=["recording", "platform"], name="recording_link_platform")
+            models.UniqueConstraint(
+                fields=["recording", "platform"], name="recording_link_platform"
+            )
         ]

@@ -121,12 +121,12 @@ def send(
     deliveries = Delivery.objects.bulk_create(
         Delivery(rec=rec, recipient_id=uid, circle_id=cid) for uid, cid in recipients
     )
+    from notifications.services import notify
+
+    who = sender.display_name or sender.username
+    what = clean[0]["title"] if len(clean) == 1 else f"a mixtape of {len(clean)} songs"
     for d in deliveries:
-        transaction.on_commit(
-            lambda d=d: events.publish_domain(
-                "notify", {"user_id": str(d.recipient_id), "type": "send", "id": str(d.pk)}
-            )
-        )
+        notify(d.recipient_id, "send", f"{who} sent you {what}", url="/inbox")
     return rec
 
 
@@ -174,8 +174,15 @@ def react(d: Delivery, reaction: str) -> Delivery:
     d.reacted_at = timezone.now() if reaction else None
     d.save(update_fields=["reaction", "reacted_at"])
     if reaction:
-        events.publish_domain(
-            "notify", {"user_id": str(d.rec.sender_id), "type": "send_reaction", "id": str(d.pk)}
+        from notifications.services import notify
+
+        first = d.rec.items.first()
+        name = d.recipient.display_name or d.recipient.username
+        notify(
+            d.rec.sender_id,
+            "send",
+            f"{name} reacted {reaction} to {first.title if first else 'your song'}",
+            url="/inbox?tab=sent",
         )
     return view(d)
 

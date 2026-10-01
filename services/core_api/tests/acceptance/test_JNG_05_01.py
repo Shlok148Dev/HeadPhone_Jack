@@ -36,24 +36,39 @@ def apple_only(kabir, fake_redis):
     PlatformConnection.objects.create(user=kabir, platform="APPLE_MUSIC", status="CONNECTED")
     LinkedSource.objects.create(user=kabir, kind="APPLE_MUSIC")
     # Even a brand-new Apple Music play (direct API) must not produce Live.
-    put_signal(fake_redis, "np", kabir.pk, observed_at=NOW_TS - 5, via="DIRECT",
-               platform="APPLE_MUSIC")
-    put_signal(fake_redis, "last", kabir.pk, observed_at=NOW_TS - 5, via="DIRECT",
-               platform="APPLE_MUSIC")
+    put_signal(
+        fake_redis, "np", kabir.pk, observed_at=NOW_TS - 5, via="DIRECT", platform="APPLE_MUSIC"
+    )
+    put_signal(
+        fake_redis, "last", kabir.pk, observed_at=NOW_TS - 5, via="DIRECT", platform="APPLE_MUSIC"
+    )
 
 
 @given("Kabir's last ListenBrainz playing-now signal is 120 seconds old")
 def stale_np(kabir, fake_redis):
-    put_signal(fake_redis, "np", kabir.pk, observed_at=NOW_TS - 120, via="LISTENBRAINZ",
-               platform="SPOTIFY")
-    put_signal(fake_redis, "last", kabir.pk, observed_at=NOW_TS - 120, via="LISTENBRAINZ",
-               platform="SPOTIFY")
+    put_signal(
+        fake_redis, "np", kabir.pk, observed_at=NOW_TS - 120, via="LISTENBRAINZ", platform="SPOTIFY"
+    )
+    put_signal(
+        fake_redis,
+        "last",
+        kabir.pk,
+        observed_at=NOW_TS - 120,
+        via="LISTENBRAINZ",
+        platform="SPOTIFY",
+    )
 
 
 @given("Kabir's Companion now-playing signal is 10 seconds old")
 def fresh_np(kabir, fake_redis):
-    put_signal(fake_redis, "np", kabir.pk, observed_at=NOW_TS - 10, via="COMPANION",
-               platform="YOUTUBE_MUSIC")
+    put_signal(
+        fake_redis,
+        "np",
+        kabir.pk,
+        observed_at=NOW_TS - 10,
+        via="COMPANION",
+        platform="YOUTUBE_MUSIC",
+    )
 
 
 @when("his card is rendered")

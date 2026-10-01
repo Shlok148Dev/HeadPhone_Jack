@@ -38,8 +38,13 @@ def stranger(db):
 class TestLive:
     @pytest.mark.parametrize(
         "via,platform",
-        [("COMPANION", "YOUTUBE_MUSIC"), ("LISTENBRAINZ", "APPLE_MUSIC"), ("LASTFM", "SPOTIFY"),
-         ("DIRECT", "SPOTIFY"), ("COMPANION", "AMAZON_MUSIC")],
+        [
+            ("COMPANION", "YOUTUBE_MUSIC"),
+            ("LISTENBRAINZ", "APPLE_MUSIC"),
+            ("LASTFM", "SPOTIFY"),
+            ("DIRECT", "SPOTIFY"),
+            ("COMPANION", "AMAZON_MUSIC"),
+        ],
     )
     def test_fresh_live_capable_signal_is_live(self, owner, fake_redis, via, platform):
         put_signal(fake_redis, "np", owner.pk, observed_at=T - 10, via=via, platform=platform)
@@ -51,8 +56,13 @@ class TestLive:
         assert not _has_key(card, "via")
 
     @pytest.mark.parametrize(
-        "via,platform", [("DIRECT", "APPLE_MUSIC"), ("DIRECT", "AMAZON_MUSIC"),
-                         ("EXPORT", "YOUTUBE_MUSIC"), ("BOGUS", "SPOTIFY")],
+        "via,platform",
+        [
+            ("DIRECT", "APPLE_MUSIC"),
+            ("DIRECT", "AMAZON_MUSIC"),
+            ("EXPORT", "YOUTUBE_MUSIC"),
+            ("BOGUS", "SPOTIFY"),
+        ],
     )
     def test_non_live_capable_never_live(self, owner, fake_redis, via, platform):
         put_signal(fake_redis, "np", owner.pk, observed_at=T - 5, via=via, platform=platform)
@@ -72,16 +82,25 @@ class TestLive:
         assert resolve_card(owner, owner, NOW)["state"] == "RECENT"
 
     def test_missing_observed_at_not_live(self, owner, fake_redis):
-        fake_redis.hset(f"np:{owner.pk}", mapping={"event": "{bad json", "via": "COMPANION",
-                                                    "platform": "SPOTIFY"})
+        fake_redis.hset(
+            f"np:{owner.pk}",
+            mapping={"event": "{bad json", "via": "COMPANION", "platform": "SPOTIFY"},
+        )
         card = resolve_card(owner, owner, NOW)
         assert card["state"] == "HIDDEN"
 
 
 class TestRecentTop:
     def test_recent_from_last(self, owner, fake_redis):
-        put_signal(fake_redis, "last", owner.pk, observed_at=T - 3 * 3600,
-                   platform="APPLE_MUSIC", via="LISTENBRAINZ", title="Espresso")
+        put_signal(
+            fake_redis,
+            "last",
+            owner.pk,
+            observed_at=T - 3 * 3600,
+            platform="APPLE_MUSIC",
+            via="LISTENBRAINZ",
+            title="Espresso",
+        )
         card = resolve_card(owner, owner, NOW)
         assert card["state"] == "RECENT"
         assert card["freshness_label"] == "3 h ago on Apple Music"
@@ -89,31 +108,55 @@ class TestRecentTop:
         assert card["attribution"] is None
 
     def test_newest_recent_wins(self, owner, fake_redis):
-        put_signal(fake_redis, "np", owner.pk, observed_at=T - 600, title="Newer",
-                   via="DIRECT", platform="APPLE_MUSIC")
+        put_signal(
+            fake_redis,
+            "np",
+            owner.pk,
+            observed_at=T - 600,
+            title="Newer",
+            via="DIRECT",
+            platform="APPLE_MUSIC",
+        )
         put_signal(fake_redis, "last", owner.pk, observed_at=T - 7200, title="Older")
         assert resolve_card(owner, owner, NOW)["recording"]["title"] == "Newer"
 
     def test_attribution_only_for_direct_spotify(self, owner, fake_redis):
-        put_signal(fake_redis, "last", owner.pk, observed_at=T - 60, via="DIRECT",
-                   platform="SPOTIFY")
+        put_signal(
+            fake_redis, "last", owner.pk, observed_at=T - 60, via="DIRECT", platform="SPOTIFY"
+        )
         assert resolve_card(owner, owner, NOW)["attribution"] == "SPOTIFY"
-        put_signal(fake_redis, "last", owner.pk, observed_at=T - 60, via="COMPANION",
-                   platform="SPOTIFY")
+        put_signal(
+            fake_redis, "last", owner.pk, observed_at=T - 60, via="COMPANION", platform="SPOTIFY"
+        )
         assert resolve_card(owner, owner, NOW)["attribution"] is None
 
     def test_top_from_mongo(self, owner, mongo_db):
         uid = str(owner.pk)
         docs = []
         for i in range(3):
-            docs.append({"user_id": uid, "played_at": NOW - timedelta(days=1, minutes=i),
-                         "raw": {"artist": "SZA", "title": "Snooze"}, "platform": "SPOTIFY",
-                         "via": "COMPANION"})
-        docs.append({"meta": {"user_id": uid, "platform": "APPLE_MUSIC", "via": "EXPORT"},
-                     "played_at": NOW - timedelta(days=2),
-                     "raw": {"artist": "Arijit", "title": "Kesariya"}})
-        docs.append({"user_id": uid, "played_at": NOW - timedelta(days=45),
-                     "raw": {"artist": "Old", "title": "Old"}} )
+            docs.append(
+                {
+                    "user_id": uid,
+                    "played_at": NOW - timedelta(days=1, minutes=i),
+                    "raw": {"artist": "SZA", "title": "Snooze"},
+                    "platform": "SPOTIFY",
+                    "via": "COMPANION",
+                }
+            )
+        docs.append(
+            {
+                "meta": {"user_id": uid, "platform": "APPLE_MUSIC", "via": "EXPORT"},
+                "played_at": NOW - timedelta(days=2),
+                "raw": {"artist": "Arijit", "title": "Kesariya"},
+            }
+        )
+        docs.append(
+            {
+                "user_id": uid,
+                "played_at": NOW - timedelta(days=45),
+                "raw": {"artist": "Old", "title": "Old"},
+            }
+        )
         docs[-1].update({"platform": "SPOTIFY"})
         for _ in range(5):
             mongo_db.listens.insert_one(dict(docs[-1]))
@@ -146,9 +189,15 @@ class TestRecentTop:
         broken = mock.Mock()
         broken.pipeline.side_effect = redis.ConnectionError("down")
         monkeypatch.setattr(resolver, "get_redis", lambda: broken)
-        mongo_db.listens.insert_one({"user_id": str(owner.pk), "platform": "SPOTIFY",
-                                     "via": "COMPANION", "raw": {"artist": "A", "title": "B"},
-                                     "played_at": datetime(2026, 9, 29, 10, 0)})
+        mongo_db.listens.insert_one(
+            {
+                "user_id": str(owner.pk),
+                "platform": "SPOTIFY",
+                "via": "COMPANION",
+                "raw": {"artist": "A", "title": "B"},
+                "played_at": datetime(2026, 9, 29, 10, 0),
+            }
+        )
         card = resolve_card(owner, owner, NOW)
         assert card["state"] == "RECENT"
         assert card["degraded"] is True
@@ -174,15 +223,20 @@ class TestRecentTop:
 
 class TestRecordingLinks:
     def test_links_from_recording(self, owner, fake_redis):
-        rec = Recording.objects.create(title="Kill Bill", artist_name="SZA", norm_key="sza|kill bill")
-        RecordingLink.objects.create(recording=rec, platform="SPOTIFY",
-                                     url="https://open.spotify.com/track/x")
+        rec = Recording.objects.create(
+            title="Kill Bill", artist_name="SZA", norm_key="sza|kill bill"
+        )
+        RecordingLink.objects.create(
+            recording=rec, platform="SPOTIFY", url="https://open.spotify.com/track/x"
+        )
         put_signal(fake_redis, "last", owner.pk, observed_at=T - 60, recording_id=rec.pk)
         card = resolve_card(owner, owner, NOW)
         assert card["recording"]["id"] == str(rec.pk)
         assert card["recording"]["links"] == {
-            "SPOTIFY": "https://open.spotify.com/track/x", "APPLE_MUSIC": None,
-            "AMAZON_MUSIC": None, "YOUTUBE_MUSIC": None,
+            "SPOTIFY": "https://open.spotify.com/track/x",
+            "APPLE_MUSIC": None,
+            "AMAZON_MUSIC": None,
+            "YOUTUBE_MUSIC": None,
         }
 
     def test_bad_recording_id(self):
@@ -210,8 +264,9 @@ class TestPrivacy:
         # the owner still sees precise time on their own card
         assert resolve_card(owner, owner, NOW)["observed_at"]
 
-    def test_private_mode_hides_from_friends_not_owner(self, owner, stranger, fake_redis,
-                                                        monkeypatch):
+    def test_private_mode_hides_from_friends_not_owner(
+        self, owner, stranger, fake_redis, monkeypatch
+    ):
         monkeypatch.setattr("core_api.policy.are_friends", lambda a, b: True)
         put_signal(fake_redis, "np", owner.pk, observed_at=T - 5)
         owner.private_until = NOW + timedelta(hours=1)

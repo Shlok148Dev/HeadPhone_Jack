@@ -138,9 +138,9 @@ def give_consent(user: User, purpose: str) -> Consent:
 
 
 def withdraw_consent(user: User, purpose: str) -> None:
-    updated = Consent.objects.filter(
-        user=user, purpose=purpose, withdrawn_at__isnull=True
-    ).update(withdrawn_at=timezone.now())
+    updated = Consent.objects.filter(user=user, purpose=purpose, withdrawn_at__isnull=True).update(
+        withdrawn_at=timezone.now()
+    )
     if updated:
         _apply_consent_side_effects(user, purpose, given=False)
 
@@ -231,8 +231,11 @@ def delete_spotify_direct_data(user_id) -> None:
                 {
                     "$or": [
                         {"user_id": str(user_id), "via": "DIRECT", "platform": "SPOTIFY"},
-                        {"meta.user_id": str(user_id), "meta.via": "DIRECT",
-                         "meta.platform": "SPOTIFY"},
+                        {
+                            "meta.user_id": str(user_id),
+                            "meta.via": "DIRECT",
+                            "meta.platform": "SPOTIFY",
+                        },
                     ]
                 }
             )
@@ -305,8 +308,9 @@ def purge_account(user_id) -> bool:
     db = get_db()
     if db is not None:
         try:
-            db.listens.delete_many({"$or": [{"user_id": str(user_id)},
-                                            {"meta.user_id": str(user_id)}]})
+            db.listens.delete_many(
+                {"$or": [{"user_id": str(user_id)}, {"meta.user_id": str(user_id)}]}
+            )
         except Exception:  # noqa: BLE001
             log.warning("mongo listens purge failed")
             raise

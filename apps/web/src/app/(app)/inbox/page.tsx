@@ -3,8 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Button, Dialog, EmptyState, ErrorState, GenerativeCover, Icons, Skeleton, Tabs, cn } from "@/components/ds";
-import { useOpenSend, useMyPlatform } from "@/lib/send";
-import { REACTIONS, STATUSES, openTarget, useInbox, useSendActions, useSent, type Received, type SendStatus, type Sent, type Song } from "@/lib/sends";
+import { OpenLink } from "@/components/app/OpenLink";
+import { useOpenSend } from "@/lib/send";
+import { REACTIONS, STATUSES, useInbox, useSendActions, useSent, type Received, type SendStatus, type Sent, type Song } from "@/lib/sends";
 
 const STATUS_LABEL: Record<SendStatus, string> = { sent: "Sent", delivered: "Delivered", viewed: "Viewed", played: "Played" };
 
@@ -46,26 +47,6 @@ function StatusChips({ status, name }: { status: SendStatus; name?: string }) {
         </li>
       ))}
     </ol>
-  );
-}
-
-function OpenLink({ song }: { song: Song }) {
-  const mine = useMyPlatform();
-  const t = openTarget(song, mine);
-  if (!t) return null;
-  return (
-    <span className="flex flex-col gap-1">
-      {t.notFound && <span className="font-mono text-xs text-text-muted">{t.notFound}</span>}
-      <a
-        href={t.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 text-sm font-medium hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
-      >
-        <Icons.Open size={16} />
-        {t.label}
-      </a>
-    </span>
   );
 }
 

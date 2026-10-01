@@ -33,14 +33,22 @@ class TestMe:
     def test_patch_profile(self, auth_api, user):
         r = auth_api.patch(
             "/api/v1/me",
-            {"display_name": "  Asha K ", "college": "IIT Delhi", "city": "Delhi",
-             "username": "Asha.New"},
+            {
+                "display_name": "  Asha K ",
+                "college": "IIT Delhi",
+                "city": "Delhi",
+                "username": "Asha.New",
+            },
             format="json",
         )
         assert r.status_code == 200, r.content
         user.refresh_from_db()
         assert (user.display_name, user.college, user.city, user.username) == (
-            "Asha K", "IIT Delhi", "Delhi", "asha.new")
+            "Asha K",
+            "IIT Delhi",
+            "Delhi",
+            "asha.new",
+        )
 
     def test_patch_username_taken_case_insensitive(self, auth_api):
         UserFactory(username="taken")
@@ -121,11 +129,15 @@ class TestPrivacy:
         with time_machine.travel("2026-09-29T10:00:00Z", tick=False):
             r = auth_api.patch("/api/v1/me/privacy", {"private_mode": choice}, format="json")
             assert r.json()["private_mode"]["active"] is True
-            assert r.json()["private_mode"]["until"] == f"2026-09-29T{10 + hours:02d}:00:00Z" or \
-                r.json()["private_mode"]["until"].startswith("2026-09-29")
+            assert r.json()["private_mode"][
+                "until"
+            ] == f"2026-09-29T{10 + hours:02d}:00:00Z" or r.json()["private_mode"][
+                "until"
+            ].startswith("2026-09-29")
         user.refresh_from_db()
         assert user.private_until == timezone.datetime(
-            2026, 9, 29, 10 + hours, tzinfo=timezone.get_fixed_timezone(0))
+            2026, 9, 29, 10 + hours, tzinfo=timezone.get_fixed_timezone(0)
+        )
         with time_machine.travel(f"2026-09-29T{10 + hours:02d}:00:01Z", tick=False):
             user.refresh_from_db()
             assert services.private_mode_state(user)["active"] is False
@@ -163,8 +175,13 @@ class TestConsents:
         assert r.status_code == 200
         items = {i["purpose"]: i for i in r.json()}
         assert set(items) == {
-            "core_service", "activity_sharing", "suggestions_discoverability",
-            "contact_matching", "push_notifications", "email_digest", "lastfm_link",
+            "core_service",
+            "activity_sharing",
+            "suggestions_discoverability",
+            "contact_matching",
+            "push_notifications",
+            "email_digest",
+            "lastfm_link",
         }
         assert items["core_service"]["given"] is True
         assert items["core_service"]["required"] is True
@@ -190,8 +207,7 @@ class TestConsents:
         api.post("/api/v1/me/consents/suggestions_discoverability", {"given": True}, format="json")
         user.refresh_from_db()
         assert user.discoverable is True
-        api.post("/api/v1/me/consents/suggestions_discoverability", {"given": False},
-                 format="json")
+        api.post("/api/v1/me/consents/suggestions_discoverability", {"given": False}, format="json")
         user.refresh_from_db()
         assert user.discoverable is False
 
@@ -215,8 +231,7 @@ class TestConsents:
         assert api.post("/api/v1/me/consents/email_digest", {"given": True}).status_code == 401
 
     def test_withdraw_when_never_given_is_noop(self, auth_api):
-        r = auth_api.post("/api/v1/me/consents/push_notifications", {"given": False},
-                          format="json")
+        r = auth_api.post("/api/v1/me/consents/push_notifications", {"given": False}, format="json")
         assert r.status_code == 200 and r.json()["given"] is False
 
 

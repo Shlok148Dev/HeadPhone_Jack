@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsOnboarded
 from core_api.schema import err
+from moderation.permissions import NotSuspended
 from sources.models import LinkedSource, PlatformConnection, ScrobbleToken, SourceKind, SourceStatus
 
 from .capabilities import NOTES, capabilities
@@ -80,7 +81,7 @@ class ConnectionSerializer(serializers.Serializer):
 class MyCardView(APIView):
     """JNG-05-01: my own card (Live / Recent / Top) with platform and freshness."""
 
-    permission_classes = [IsAuthenticated, IsOnboarded]
+    permission_classes = [IsAuthenticated, IsOnboarded, NotSuspended]
 
     @extend_schema(
         tags=["feed"],
@@ -170,7 +171,7 @@ def _circle_member_ids(viewer, circle_id: str) -> set:
 class FeedView(APIView):
     """Cards of my friends, ordered Live → Recent (newest) → Top → Hidden."""
 
-    permission_classes = [IsAuthenticated, IsOnboarded]
+    permission_classes = [IsAuthenticated, IsOnboarded, NotSuspended]
 
     @extend_schema(tags=["feed"], operation_id="feed_list", responses={200: FeedResponseSerializer})
     def get(self, request):
@@ -204,7 +205,7 @@ class FeedView(APIView):
 class FeedCardDetailView(APIView):
     """One friend's card, fetched after a realtime hint (ADR-0018). Hidden if not visible."""
 
-    permission_classes = [IsAuthenticated, IsOnboarded]
+    permission_classes = [IsAuthenticated, IsOnboarded, NotSuspended]
 
     @extend_schema(tags=["feed"], responses={200: FeedCardSerializer, 404: err("NOT_FOUND")})
     def get(self, request, user_id):

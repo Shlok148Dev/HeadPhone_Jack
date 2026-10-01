@@ -1,6 +1,6 @@
 import { SignJWT } from "jose";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Coalescer, fetchFriendIds, routeEvent, verifyAccess, type Emitter } from "../src/gateway.js";
+import { Coalescer, fetchFriendIds, mayJoinSession, routeEvent, verifyAccess, type Emitter } from "../src/gateway.js";
 
 const key = new TextEncoder().encode("test-only-jwt-signing-key-000000000000");
 const cfg = { jwtKey: key, coreApiUrl: "http://core", serviceToken: "svc", coalesceMs: 10 };
@@ -77,5 +77,39 @@ describe("friend lookup", () => {
   });
   it("throws when core-api refuses", async () => {
     await expect(fetchFriendIds("u1", cfg, async () => new Response("", { status: 401 }))).rejects.toThrow();
+  });
+});
+
+describe("live sessions (JNG-07-07, JNG-07-09)", () => {
+  const cfg = { jwtKey: new Uint8Array(), coreApiUrl: "http://core", serviceToken: "svc", coalesceMs: 1 };
+  const sid = "0e8400e2-9b1d-41d4-a716-446655440000";
+
+  it("broadcasts queue state with its version to the session room only", () => {
+    const sent: [string, string, unknown][] = [];
+    const e: Emitter = { toRoom: (r, ev, p) => void sent.push([r, ev, p]), resyncUser: async () => undefined };
+    const state = { queue: [{ id: "x", title: "Kesariya", score: 3, added_by: null }] };
+    const out = routeEvent(
+      "events:domain",
+      { type: "queue.delta", data: JSON.stringify({ session_id: sid, version: 7, state: JSON.stringify(state) }) },
+      e,
+      new Coalescer(1),
+    );
+    expect(out).toBe("queue.delta");
+    expect(sent).toEqual([[`session:${sid}`, "queue:delta", { session_id: sid, version: 7, state }]]);
+    expect(
+      routeEvent("events:domain", { type: "queue.delta", data: JSON.stringify({ session_id: sid, version: 8, state: "{bad" }) }, e, new Coalescer(1)),
+    ).toBe("ignored:bad-state");
+  });
+
+  it("asks core-api before joining a room and rejects malformed ids", async () => {
+    const calls: string[] = [];
+    const ok = async (url: string) => {
+      calls.push(url);
+      return new Response("{}", { status: 200 });
+    };
+    expect(await mayJoinSession(sid, "u1", cfg, ok)).toBe(true);
+    expect(calls[0]).toBe(`http://core/internal/sessions/${sid}/members/u1`);
+    expect(await mayJoinSession("../../users", "u1", cfg, ok)).toBe(false);
+    expect(await mayJoinSession(sid, "u1", cfg, async () => new Response("{}", { status: 404 }))).toBe(false);
   });
 });

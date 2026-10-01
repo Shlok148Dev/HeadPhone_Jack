@@ -80,8 +80,13 @@ def send_request(sender, target) -> Friendship:
         if f.status == FriendshipStatus.PENDING and str(f.requested_by_id) != str(sender.pk):
             return accept(sender, f)
         return f
-    events.publish_domain(
-        "notify", {"user_id": str(target.pk), "type": "friend_request", "id": str(f.pk)}
+    from notifications.services import notify
+
+    notify(
+        target.pk,
+        "friend_request",
+        f"{sender.display_name or sender.username} wants to be friends",
+        url="/friends?tab=requests",
     )
     return f
 

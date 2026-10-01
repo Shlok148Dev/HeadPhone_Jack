@@ -112,8 +112,13 @@ def invite_friend(circle: Circle, inviter, invitee) -> CircleInvite:
             "expires_at": timezone.now() + timedelta(days=INVITE_DAYS),
         },
     )
-    events.publish_domain(
-        "notify", {"user_id": str(invitee.pk), "type": "circle_invite", "id": str(inv.pk)}
+    from notifications.services import notify
+
+    notify(
+        invitee.pk,
+        "circle_invite",
+        f"{inviter.display_name or inviter.username} invited you to {circle.name}",
+        url="/circles",
     )
     return inv
 

@@ -36,6 +36,13 @@ for (const theme of ["dark", "light"] as const) {
         ["circles", "/circles"],
         ["inbox", "/inbox"],
         ["inbox-sent", "/inbox?tab=sent"],
+        ["blends", "/blends"],
+        ["profile-me", "/u/demo"],
+        ["profile-friend", "/u/aanya"],
+        ["rituals", "/rituals"],
+        ["notifications", "/notifications"],
+        ["settings-notifications", "/settings/notifications"],
+        ["settings-account", "/settings/account"],
       ] as const) {
         await page.goto(path);
         await page.waitForTimeout(3500);
@@ -48,6 +55,20 @@ for (const theme of ["dark", "light"] as const) {
       await page.getByRole("button", { name: /^Send / }).first().click();
       await page.waitForTimeout(1500);
       await snap(page, `send-sheet-${theme}-${w}`);
+      await page.keyboard.press("Escape");
+      await page.goto("/blends");
+      await page.getByRole("link", { name: /Demo \+ Aanya \+ Kabir/ }).click();
+      await page.waitForTimeout(2500);
+      await snap(page, `blend-${theme}-${w}`);
+      await page.goto("/blends");
+      await page.getByRole("button", { name: "Listen together" }).click();
+      await page.getByRole("dialog", { name: "Listen together" }).getByRole("button", { name: "Start session" }).click();
+      await page.waitForURL(/\/sessions\//);
+      await page.getByLabel("Find a song").fill("Kasoor");
+      await page.getByRole("list", { name: "Search results" }).getByRole("button", { name: "Add" }).first().click();
+      await page.waitForTimeout(2000);
+      await snap(page, `session-${theme}-${w}`);
+      await page.getByRole("button", { name: "Leave" }).click(); // last one out ends the room
     });
   }
 }

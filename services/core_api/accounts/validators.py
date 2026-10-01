@@ -12,10 +12,32 @@ from django.core.exceptions import ValidationError
 USERNAME_RE = re.compile(r"^[a-z0-9_.]{3,20}$")
 RESERVED_USERNAMES = frozenset(
     {
-        "admin", "administrator", "api", "jingle", "support", "help", "root", "system", "staff",
-        "moderator", "mod", "official", "security", "privacy", "settings", "me", "null",
+        "admin",
+        "administrator",
+        "api",
+        "jingle",
+        "support",
+        "help",
+        "root",
+        "system",
+        "staff",
+        "moderator",
+        "mod",
+        "official",
+        "security",
+        "privacy",
+        "settings",
+        "me",
+        "null",
         "undefined",
-        "deleted", "anonymous", "internal", "static", "login", "logout", "signup", "register",
+        "deleted",
+        "anonymous",
+        "internal",
+        "static",
+        "login",
+        "logout",
+        "signup",
+        "register",
     }
 )
 

@@ -14,6 +14,7 @@ export function middleware(request: NextRequest) {
     `script-src 'self' 'nonce-${nonce}'${google ? " https://accounts.google.com/gsi/client" : ""}${dev ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' 'unsafe-inline'${google ? " https://accounts.google.com/gsi/style" : ""}`,
     google ? "frame-src https://accounts.google.com" : "frame-src 'none'",
+    "worker-src 'self'",
     "img-src 'self' data: blob: https://coverartarchive.org https://*.archive.org https://i.scdn.co https://*.mzstatic.com",
     "font-src 'self' data:",
     `connect-src 'self'${google ? " https://accounts.google.com/gsi/" : ""}`,

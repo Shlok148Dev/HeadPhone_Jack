@@ -31,8 +31,17 @@ class UserFactory(factory.django.DjangoModelFactory):
             PrivacySettings.objects.get_or_create(user=obj, defaults=extracted or {})
 
 
-def listen_event(user_id, *, platform="SPOTIFY", via="COMPANION", kind="NOW_PLAYING",
-                 title="Kill Bill", artist="SZA", observed_at=None, recording_id=None):
+def listen_event(
+    user_id,
+    *,
+    platform="SPOTIFY",
+    via="COMPANION",
+    kind="NOW_PLAYING",
+    title="Kill Bill",
+    artist="SZA",
+    observed_at=None,
+    recording_id=None,
+):
     observed_at = observed_at if observed_at is not None else time.time()
     return {
         "event_id": str(uuid.uuid4()),
@@ -49,8 +58,9 @@ def listen_event(user_id, *, platform="SPOTIFY", via="COMPANION", kind="NOW_PLAY
     }
 
 
-def put_signal(redis, key_prefix, user_id, *, observed_at, platform="SPOTIFY", via="COMPANION",
-               **kwargs):
+def put_signal(
+    redis, key_prefix, user_id, *, observed_at, platform="SPOTIFY", via="COMPANION", **kwargs
+):
     """Write an ``np:``/``last:`` hash exactly as ingest-ml does (CONTRACTS.md §6)."""
     event = listen_event(user_id, platform=platform, via=via, observed_at=observed_at, **kwargs)
     redis.hset(

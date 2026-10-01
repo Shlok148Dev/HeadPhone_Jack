@@ -26,7 +26,7 @@ The browser talks to **one origin** (the edge). Refresh cookies are therefore fi
 - Django owns **all migrations** (one migration history).
 - core-api writes every business table.
 - ingest-ml writes only the ingestion-domain tables: `platform_connections`, `linked_sources`, `scrobble_tokens`, `recordings`, `recording_links`, `artists`, `artist_tags`. It uses SQLAlchemy Core against the Django-created tables. core-api reads them.
-- MongoDB `listens`, `provider_payloads`: written by ingest-ml. `notifications`: written by core-api.
+- MongoDB `listens`, `provider_payloads`: written by ingest-ml. Notifications live in PostgreSQL (`notifications`, ADR-0023), written by core-api.
 - realtime never writes PostgreSQL.
 
 ## 3. Auth
@@ -88,7 +88,7 @@ Published by ingest-ml to Redis Stream `events:listen` (field `data` = JSON) and
 | `sess:{id}:queue` / `sess:{id}:ver` | ZSET / counter | session life | core-api | Live queue |
 | `flags:cache` | Hash | 30 s | core-api | Feature flags for other services |
 
-Streams: `events:listen` (ingest → realtime, workers), `events:domain` (core-api → realtime: `feed.invalidate`, `notify`, `queue.delta`, `friendship.changed`, `block.created`). `notify.type` values: `friend_request`, `circle_invite`, `send`, `send_status`, `send_reaction` (ADR-0020).
+Streams: `events:listen` (ingest → realtime, workers), `events:domain` (core-api → realtime: `feed.invalidate`, `notify`, `queue.delta`, `friendship.changed`, `block.created`). `notify.type` values: `friend_request`, `circle_invite`, `send`, `send_status`, `session_invite`, `battle`, `recap`, `moderation` (ADR-0020, ADR-0023); `queue.delta` carries `{session_id, version, state}` (ADR-0021).
 
 ## 7. FeedCard (SRS 5.5, amended by ADR-0002)
 

@@ -176,11 +176,15 @@ def start(host, title: str = "", user_ids=(), circle_id=None) -> ListeningSessio
             for u in CircleMember.objects.filter(circle=circle).values_list("user_id", flat=True)
         }
     notify.discard(str(host.pk))
+    from notifications.services import notify as tell
+
+    host_name = host.display_name or host.username
     for uid in notify:
-        transaction.on_commit(
-            lambda uid=uid: events.publish_domain(
-                "notify", {"user_id": uid, "type": "session_invite", "id": str(s.pk)}
-            )
+        tell(
+            uid,
+            "session_invite",
+            f"{host_name} started a listening session",
+            url=f"/sessions/{s.pk}",
         )
     broadcast(s)
     return s

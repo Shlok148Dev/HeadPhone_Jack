@@ -177,7 +177,7 @@ def test_cursor_pagination_shape():
 def test_publish_writes_stream(fake_redis):
     entry = events.publish_domain("feed.invalidate", {"user_id": "u1"})
     assert entry
-    (_, fields), = fake_redis.xrange("events:domain")
+    ((_, fields),) = fake_redis.xrange("events:domain")
     assert fields["type"] == "feed.invalidate"
     assert json.loads(fields["data"]) == {"user_id": "u1"}
 
@@ -213,8 +213,12 @@ def test_mongo_client_error_returns_none(monkeypatch):
 class TestFlags:
     def test_seeded_defaults(self):
         assert flags.is_enabled("spotify_direct_enabled") is True
-        for name in ("apple_music_enabled", "amazon_music_enabled",
-                     "google_dataportability_enabled", "concerts_enabled"):
+        for name in (
+            "apple_music_enabled",
+            "amazon_music_enabled",
+            "google_dataportability_enabled",
+            "concerts_enabled",
+        ):
             assert flags.is_enabled(name) is False
         assert flags.is_enabled("does_not_exist") is False
         assert flags.is_enabled("does_not_exist", default=True) is True

@@ -133,6 +133,9 @@ class RecommendationsView(APIView):
     )
     @ratelimit(key="user", rate="200/d", scope="sends.create")
     def post(self, request):
+        from moderation.services import require_not_muted
+
+        require_not_muted(request.user)
         data = request.data
         items = data.get("items")
         if not isinstance(items, list) or not all(isinstance(i, dict) for i in items):

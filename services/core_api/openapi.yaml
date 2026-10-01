@@ -3,6 +3,112 @@ info:
   title: Jingle API
   version: 1.0.0
 paths:
+  /api/v1/admin/allowlist:
+    get:
+      operationId: admin_allowlist_retrieve
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Allowlist'
+          description: ''
+    post:
+      operationId: admin_allowlist_add
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllowlistAddRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AllowlistAddRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AllowlistAddRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: ALLOWLIST_FULL
+    delete:
+      operationId: admin_allowlist_remove
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/admin/budgets:
+    get:
+      operationId: admin_budgets_retrieve
+      description: 'JNG-12-04: per-source budgets and live usage, read from ingest-ml.'
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Budgets'
+          description: ''
+  /api/v1/admin/flags:
+    get:
+      operationId: admin_flags_retrieve
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminFlags'
+          description: ''
+    put:
+      operationId: admin_flags_set
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetFlagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetFlagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetFlagRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/auth/google:
     post:
       operationId: auth_google_create
@@ -172,6 +278,78 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: RATE_LIMITED
+  /api/v1/battles/{battle_id}/votes:
+    post:
+      operationId: battles_votes_create
+      parameters:
+      - in: path
+        name: battle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BattleVoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BattleVoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BattleVoteRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Battle'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: OWN_NOMINATION
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VOTING_CLOSED
+  /api/v1/battles/{battle_id}/votes/{nomination_id}:
+    delete:
+      operationId: battles_unvote
+      parameters:
+      - in: path
+        name: battle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: nomination_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Battle'
+          description: ''
   /api/v1/blends:
     get:
       operationId: blends_list
@@ -548,6 +726,98 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/v1/circles/{circle_id}/battle:
+    get:
+      operationId: circles_battle_retrieve
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Battle'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/circles/{circle_id}/battle/nominate:
+    post:
+      operationId: circles_battle_nominate_create
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NominateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NominateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NominateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Battle'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOMINATIONS_CLOSED
+  /api/v1/circles/{circle_id}/battle/skip:
+    post:
+      operationId: circles_battle_skip_create
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Battle'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: FORBIDDEN
   /api/v1/circles/{circle_id}/feed:
     get:
       operationId: circles_feed_list
@@ -702,6 +972,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: FORBIDDEN
+  /api/v1/circles/{circle_id}/season:
+    get:
+      operationId: circles_season_retrieve
+      parameters:
+      - in: path
+        name: circle_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Season'
+          description: ''
   /api/v1/circles/{circle_id}/transfer:
     post:
       operationId: circles_transfer_create
@@ -886,6 +1177,33 @@ paths:
           description: ''
         '204':
           description: No response body
+  /api/v1/compatibility/{user_id}:
+    get:
+      operationId: compatibility_retrieve
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - insights
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compatibility'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/connections:
     get:
       operationId: connections_list
@@ -1621,6 +1939,106 @@ paths:
               schema:
                 $ref: '#/components/schemas/Invite'
           description: ''
+  /api/v1/me/moderation:
+    get:
+      operationId: me_moderation_retrieve
+      tags:
+      - moderation
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyModeration'
+          description: ''
+  /api/v1/me/moderation/{action_id}/appeal:
+    post:
+      operationId: me_moderation_appeal_create
+      parameters:
+      - in: path
+        name: action_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - moderation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppealRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateAppealRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAppealRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: ALREADY_APPEALED
+  /api/v1/me/notification-settings:
+    get:
+      operationId: notification_settings_get
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+          description: ''
+    put:
+      operationId: notification_settings_update
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SettingsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SettingsRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
   /api/v1/me/privacy:
     get:
       operationId: me_privacy_retrieve
@@ -1669,6 +2087,59 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+  /api/v1/me/push-subscription:
+    post:
+      operationId: me_push_subscription_create
+      description: 'JNG-11-02: stored only after the person allowed push in their
+        browser.'
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscribeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PushSubscribeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PushSubscribeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+    delete:
+      operationId: push_unsubscribe
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/me/stats:
+    get:
+      operationId: me_stats_retrieve
+      tags:
+      - insights
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+          description: ''
   /api/v1/me/taste:
     get:
       operationId: me_taste_retrieve
@@ -1712,6 +2183,189 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+  /api/v1/me/timeline:
+    get:
+      operationId: me_timeline_list
+      tags:
+      - insights
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Month'
+          description: ''
+  /api/v1/mod/appeals:
+    get:
+      operationId: mod_appeals_retrieve
+      tags:
+      - moderation
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppealQueue'
+          description: ''
+  /api/v1/mod/appeals/{appeal_id}/decide:
+    post:
+      operationId: mod_appeals_decide_create
+      parameters:
+      - in: path
+        name: appeal_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - moderation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppealDecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppealDecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppealDecisionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/mod/audit:
+    get:
+      operationId: mod_audit_retrieve
+      tags:
+      - moderation
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLog'
+          description: ''
+  /api/v1/mod/reports:
+    get:
+      operationId: mod_reports_retrieve
+      tags:
+      - moderation
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportQueue'
+          description: ''
+  /api/v1/mod/reports/{report_id}/action:
+    post:
+      operationId: mod_reports_action_create
+      parameters:
+      - in: path
+        name: report_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - moderation
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModerationDecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ModerationDecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ModerationDecisionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/notifications:
+    get:
+      operationId: notifications_retrieve
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationList'
+          description: ''
+  /api/v1/notifications/push-key:
+    get:
+      operationId: notifications_push_key_retrieve
+      tags:
+      - notifications
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushKey'
+          description: ''
+  /api/v1/notifications/read:
+    post:
+      operationId: notifications_read_create
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkReadRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarkReadRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarkReadRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/queue/{entry_id}/vote:
     post:
       operationId: queue_vote_create
@@ -1751,6 +2405,91 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: VALIDATION_ERROR
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
+  /api/v1/recaps:
+    get:
+      operationId: recaps_list
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recap'
+          description: ''
+  /api/v1/recaps/{recap_id}/share:
+    post:
+      operationId: recaps_share
+      parameters:
+      - in: path
+        name: recap_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recap'
+          description: ''
+    delete:
+      operationId: recaps_unshare
+      parameters:
+      - in: path
+        name: recap_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recap'
+          description: ''
+  /api/v1/recaps/shared/{token}:
+    get:
+      operationId: recaps_shared_retrieve
+      description: Public, by explicit share only (JNG-09-06). Shows the recap card
+        and a first name.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - rituals
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedRecap'
+          description: ''
         '404':
           content:
             application/json:
@@ -1798,8 +2537,8 @@ paths:
   /api/v1/reports:
     post:
       operationId: reports_create
-      description: 'JNG-12-01: report a user (circles, notes and comments join as
-        they ship).'
+      description: 'JNG-12-01: report a user, a circle you''re in, or the note on
+        a song sent to you.'
       tags:
       - social
       requestBody:
@@ -1831,6 +2570,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: RATE_LIMITED
+  /api/v1/rituals:
+    get:
+      operationId: rituals_retrieve
+      tags:
+      - rituals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rituals'
+          description: ''
   /api/v1/sessions:
     get:
       operationId: sessions_list
@@ -2298,6 +3051,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: NOT_FOUND
+  /api/v1/users/{username}:
+    get:
+      operationId: users_retrieve
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - insights
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: NOT_FOUND
   /api/v1/users/search:
     get:
       operationId: users_search_list
@@ -2343,11 +3122,77 @@ components:
         * `friends` - Friends
         * `circles` - Circles
         * `nobody` - Nobody
+    AdminFlags:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - results
+    Allowlist:
+      type: object
+      properties:
+        emails:
+          type: array
+          items:
+            type: string
+            format: email
+        max:
+          type: integer
+        from_env:
+          type: array
+          items:
+            type: string
+      required:
+      - emails
+      - from_env
+      - max
+    AllowlistAddRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    AppealDecisionRequest:
+      type: object
+      properties:
+        overturn:
+          type: boolean
+        note:
+          type: string
+      required:
+      - overturn
+    AppealQueue:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - results
     AttributionEnum:
       enum:
       - SPOTIFY
       type: string
       description: '* `SPOTIFY` - SPOTIFY'
+    AuditLog:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - results
     AuthResponse:
       type: object
       properties:
@@ -2358,6 +3203,74 @@ components:
       required:
       - access
       - user
+    Battle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        circle:
+          type: object
+          additionalProperties: {}
+        week:
+          type: string
+          format: date
+        phase:
+          $ref: '#/components/schemas/PhaseEnum'
+        nominate_opens:
+          type: string
+          format: date-time
+        vote_opens:
+          type: string
+          format: date-time
+        closes_at:
+          type: string
+          format: date-time
+        my_nomination:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
+        nomination_count:
+          type: integer
+        nominations:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        votes_left:
+          type: integer
+        results:
+          type:
+          - array
+          - 'null'
+          items:
+            type: object
+            additionalProperties: {}
+        can_skip:
+          type: boolean
+      required:
+      - can_skip
+      - circle
+      - closes_at
+      - id
+      - my_nomination
+      - nominate_opens
+      - nomination_count
+      - nominations
+      - phase
+      - results
+      - vote_opens
+      - votes_left
+      - week
+    BattleVoteRequest:
+      type: object
+      properties:
+        nomination_id:
+          type: string
+          format: uuid
+      required:
+      - nomination_id
     BlankEnum:
       enum:
       - ''
@@ -2450,6 +3363,19 @@ components:
           format: uuid
       required:
       - user_id
+    Budgets:
+      type: object
+      properties:
+        sources:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        available:
+          type: boolean
+      required:
+      - available
+      - sources
     Capabilities:
       type: object
       properties:
@@ -2586,6 +3512,44 @@ components:
           type: string
       required:
       - token
+    Compatibility:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        score:
+          type:
+          - integer
+          - 'null'
+        calibrated:
+          type: boolean
+        breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/Factor'
+        notes:
+          type: array
+          items:
+            type: string
+        shared_artists:
+          type: array
+          items:
+            type: string
+        shared_genres:
+          type: array
+          items:
+            type: string
+        audio_features_available:
+          type: boolean
+      required:
+      - audio_features_available
+      - breakdown
+      - calibrated
+      - notes
+      - ready
+      - score
+      - shared_artists
+      - shared_genres
     ConnectPlan:
       type: object
       properties:
@@ -2670,6 +3634,15 @@ components:
           type: boolean
       required:
       - given
+    CreateAppealRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 1000
+      required:
+      - text
     CreateBlendRequest:
       type: object
       properties:
@@ -2815,6 +3788,26 @@ components:
           $ref: '#/components/schemas/ErrorBody'
       required:
       - error
+    Factor:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        value:
+          type: integer
+        weight:
+          type: number
+          format: double
+        detail:
+          type: string
+      required:
+      - detail
+      - key
+      - label
+      - value
+      - weight
     FeedCard:
       type: object
       description: CONTRACTS.md §7. Never carries the ingestion route (BR-14).
@@ -3021,14 +4014,6 @@ components:
           type: string
           minLength: 1
           maxLength: 500
-    KindEnum:
-      enum:
-      - track
-      - mixtape
-      type: string
-      description: |-
-        * `track` - Track
-        * `mixtape` - Mixtape
     LinkLastfmRequest:
       type: object
       properties:
@@ -3096,6 +4081,14 @@ components:
       required:
       - email
       - password
+    MarkReadRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            format: uuid
     Me:
       type: object
       description: The signed-in user's own profile (JNG-01-01, JNG-01-12).
@@ -3134,6 +4127,11 @@ components:
           type: string
           format: date-time
           readOnly: true
+        is_staff:
+          type: boolean
+          readOnly: true
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
       required:
       - city
       - college
@@ -3142,6 +4140,7 @@ components:
       - display_name
       - email
       - id
+      - is_staff
       - needs_onboarding
       - private_mode
       - username
@@ -3155,6 +4154,53 @@ components:
       required:
       - role
       - user
+    ModerationDecisionKindEnum:
+      enum:
+      - dismiss
+      - warn
+      - mute
+      - suspend
+      - ban
+      type: string
+      description: |-
+        * `dismiss` - dismiss
+        * `warn` - warn
+        * `mute` - mute
+        * `suspend` - suspend
+        * `ban` - ban
+    ModerationDecisionRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/ModerationDecisionKindEnum'
+        reason:
+          type: string
+        days:
+          type: integer
+          maximum: 365
+          minimum: 1
+      required:
+      - kind
+    Month:
+      type: object
+      properties:
+        month:
+          type: string
+        plays:
+          type: integer
+        top_artist:
+          type:
+          - string
+          - 'null'
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedShare'
+      required:
+      - genres
+      - month
+      - plays
+      - top_artist
     MusicPlatformEnum:
       enum:
       - SPOTIFY
@@ -3167,6 +4213,87 @@ components:
         * `APPLE_MUSIC` - APPLE_MUSIC
         * `YOUTUBE_MUSIC` - YOUTUBE_MUSIC
         * `AMAZON_MUSIC` - AMAZON_MUSIC
+    MyModeration:
+      type: object
+      properties:
+        actions:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - actions
+    NamedCount:
+      type: object
+      properties:
+        name:
+          type: string
+        plays:
+          type: integer
+      required:
+      - name
+      - plays
+    NamedShare:
+      type: object
+      properties:
+        name:
+          type: string
+        share:
+          type: number
+          format: double
+      required:
+      - name
+      - share
+    NominateRequest:
+      type: object
+      properties:
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+        title:
+          type: string
+          minLength: 1
+        artist:
+          type: string
+          minLength: 1
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+      required:
+      - created_at
+      - id
+      - read
+      - title
+      - type
+      - url
+    NotificationList:
+      type: object
+      properties:
+        unread:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+      required:
+      - results
+      - unread
     NullEnum:
       type: 'null'
     Participant:
@@ -3269,6 +4396,31 @@ components:
       - id
       - relationship
       - username
+    PhaseEnum:
+      enum:
+      - upcoming
+      - nominating
+      - voting
+      - closed
+      - skipped
+      type: string
+      description: |-
+        * `upcoming` - upcoming
+        * `nominating` - nominating
+        * `voting` - voting
+        * `closed` - closed
+        * `skipped` - skipped
+    PlatformShare:
+      type: object
+      properties:
+        platform:
+          type: string
+        share:
+          type: number
+          format: double
+      required:
+      - platform
+      - share
     Privacy:
       type: object
       description: JNG-02-05 (precise last-active time), JNG-02-06 (Private mode).
@@ -3318,6 +4470,25 @@ components:
       required:
       - active
       - until
+    Profile:
+      type: object
+      properties:
+        person:
+          $ref: '#/components/schemas/Person'
+        is_me:
+          type: boolean
+        compatibility_available:
+          type: boolean
+        college:
+          type: string
+        city:
+          type: string
+      required:
+      - city
+      - college
+      - compatibility_available
+      - is_me
+      - person
     PublicFlags:
       type: object
       properties:
@@ -3351,6 +4522,40 @@ components:
         * `push_notifications` - Push Notifications
         * `email_digest` - Email Digest
         * `lastfm_link` - Lastfm Link
+    PushKey:
+      type: object
+      properties:
+        available:
+          type: boolean
+        public_key:
+          type: string
+      required:
+      - available
+      - public_key
+    PushKeysRequest:
+      type: object
+      properties:
+        p256dh:
+          type: string
+          minLength: 1
+        auth:
+          type: string
+          minLength: 1
+      required:
+      - auth
+      - p256dh
+    PushSubscribeRequest:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          format: uri
+          minLength: 1
+        keys:
+          $ref: '#/components/schemas/PushKeysRequest'
+      required:
+      - endpoint
+      - keys
     QueueAddRequest:
       type: object
       properties:
@@ -3415,6 +4620,26 @@ components:
         * `impersonation` - Impersonation
         * `inappropriate` - Inappropriate
         * `other` - Other
+    Recap:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        month:
+          type: string
+        data:
+          type: object
+          additionalProperties: {}
+        share_url:
+          type:
+          - string
+          - 'null'
+      required:
+      - data
+      - id
+      - month
+      - share_url
     Received:
       type: object
       properties:
@@ -3422,7 +4647,7 @@ components:
           type: string
           format: uuid
         kind:
-          $ref: '#/components/schemas/KindEnum'
+          $ref: '#/components/schemas/SendKindEnum'
         sender:
           $ref: '#/components/schemas/Person'
         note:
@@ -3517,6 +4742,16 @@ components:
         * `outgoing` - outgoing
         * `incoming` - incoming
         * `none` - none
+    ReportQueue:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - results
     Request:
       type: object
       properties:
@@ -3535,6 +4770,34 @@ components:
       - direction
       - id
       - user
+    Rituals:
+      type: object
+      properties:
+        recap:
+          $ref: '#/components/schemas/Recap'
+        battles:
+          type: array
+          items:
+            $ref: '#/components/schemas/Battle'
+      required:
+      - battles
+      - recap
+    Season:
+      type: object
+      properties:
+        weeks:
+          type: integer
+        of:
+          type: integer
+        table:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - of
+      - table
+      - weeks
     SendFriendRequestRequest:
       type: object
       properties:
@@ -3544,6 +4807,14 @@ components:
         username:
           type: string
           minLength: 1
+    SendKindEnum:
+      enum:
+      - track
+      - mixtape
+      type: string
+      description: |-
+        * `track` - Track
+        * `mixtape` - Mixtape
     Sent:
       type: object
       properties:
@@ -3551,7 +4822,7 @@ components:
           type: string
           format: uuid
         kind:
-          $ref: '#/components/schemas/KindEnum'
+          $ref: '#/components/schemas/SendKindEnum'
         note:
           type: string
         items:
@@ -3661,6 +4932,97 @@ components:
       - joined
       - participant_count
       - title
+    SetFlagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        enabled:
+          type: boolean
+      required:
+      - enabled
+      - name
+    Settings:
+      type: object
+      properties:
+        types:
+          type: object
+          additionalProperties: {}
+        labels:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        quiet_start:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+        quiet_end:
+          type: string
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+        tz:
+          type: string
+          maxLength: 64
+        push_daily_cap:
+          type: integer
+          maximum: 20
+          minimum: 1
+        push_available:
+          type: boolean
+          readOnly: true
+        push_subscribed:
+          type: boolean
+          readOnly: true
+      required:
+      - labels
+      - push_available
+      - push_daily_cap
+      - push_subscribed
+      - quiet_end
+      - quiet_start
+      - types
+      - tz
+    SettingsRequest:
+      type: object
+      properties:
+        types:
+          type: object
+          additionalProperties: {}
+        quiet_start:
+          type: string
+          minLength: 1
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+        quiet_end:
+          type: string
+          minLength: 1
+          pattern: ^([01]\d|2[0-3]):[0-5]\d$
+        tz:
+          type: string
+          minLength: 1
+          maxLength: 64
+        push_daily_cap:
+          type: integer
+          maximum: 20
+          minimum: 1
+      required:
+      - push_daily_cap
+      - quiet_end
+      - quiet_start
+      - types
+      - tz
+    SharedRecap:
+      type: object
+      properties:
+        name:
+          type: string
+        month:
+          type: string
+        data:
+          type: object
+          additionalProperties: {}
+      required:
+      - data
+      - month
+      - name
     Song:
       type: object
       properties:
@@ -3717,6 +5079,39 @@ components:
         * `RECENT` - RECENT
         * `TOP` - TOP
         * `HIDDEN` - HIDDEN
+    Stats:
+      type: object
+      properties:
+        ready:
+          type: boolean
+        days_of_data:
+          type: integer
+        ready_in_days:
+          type: integer
+        plays_30d:
+          type: integer
+        minutes_30d:
+          type: integer
+        top_artists:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedCount'
+        genres:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedShare'
+        platforms:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlatformShare'
+        excluded_note:
+          type:
+          - string
+          - 'null'
+      required:
+      - days_of_data
+      - ready
+      - ready_in_days
     StatusEnum:
       enum:
       - sent
@@ -3788,8 +5183,13 @@ components:
     TargetTypeEnum:
       enum:
       - user
+      - circle
+      - send
       type: string
-      description: '* `user` - user'
+      description: |-
+        * `user` - user
+        * `circle` - circle
+        * `send` - send
     Taste:
       type: object
       properties:

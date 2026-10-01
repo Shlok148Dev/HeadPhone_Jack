@@ -15,6 +15,7 @@ import { sortFeed, type Feed } from "./feed";
 
 type Status = "connecting" | "live" | "reconnecting";
 const RealtimeContext = createContext<Status>("connecting");
+const SocketContext = createContext<Socket | null>(null);
 
 /**
  * Socket.IO client for `/rt` (Technical Bible 4.3, ADR-0018). The server only sends hints; this
@@ -29,6 +30,7 @@ export function RealtimeProvider({
 }) {
   const qc = useQueryClient();
   const [status, setStatus] = useState<Status>("connecting");
+  const [sock, setSock] = useState<Socket | null>(null);
 
   useEffect(() => {
     let socket: Socket | null = null;
@@ -64,6 +66,7 @@ export function RealtimeProvider({
       };
 
       const s = socket;
+      setSock(s);
       s.on("connect", () => {
         setStatus("live");
         void qc.invalidateQueries({ queryKey: ["feed"] }); // catch up on anything missed while away
@@ -86,22 +89,27 @@ export function RealtimeProvider({
         void qc.invalidateQueries({ queryKey: ["feed"] });
       });
       s.on("notify", ({ type }: { type?: string }) => {
+        void qc.invalidateQueries({ queryKey: ["notifications"] });
         if (type && type.startsWith("send")) void qc.invalidateQueries({ queryKey: ["inbox"] });
         else if (type === "circle_invite") void qc.invalidateQueries({ queryKey: ["circles", "invites"] });
+        else if (type === "session_invite") void qc.invalidateQueries({ queryKey: ["sessions"] });
         else void qc.invalidateQueries({ queryKey: ["friends", "requests"] });
       });
     });
     return () => {
       cancelled = true;
       socket?.close();
+      setSock(null);
     };
   }, [userId, qc]);
 
   return (
     <RealtimeContext.Provider value={status}>
-      {children}
+      <SocketContext.Provider value={sock}>{children}</SocketContext.Provider>
     </RealtimeContext.Provider>
   );
 }
 
 export const useRealtimeStatus = () => useContext(RealtimeContext);
+/** The shared socket (null until loaded); used by live-session rooms. */
+export const useSocket = () => useContext(SocketContext);

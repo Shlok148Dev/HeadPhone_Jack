@@ -24,8 +24,9 @@ def friends(monkeypatch):
 @given("Asha is Live on Spotify")
 def asha_live(people, fake_redis):
     asha = people["asha"]
-    put_signal(fake_redis, "np", asha.pk, observed_at=time.time() - 5, via="LASTFM",
-               platform="SPOTIFY")
+    put_signal(
+        fake_redis, "np", asha.pk, observed_at=time.time() - 5, via="LASTFM", platform="SPOTIFY"
+    )
     assert resolve_card(asha, people["ravi"])["state"] == "LIVE"
 
 

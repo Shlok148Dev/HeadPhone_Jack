@@ -193,6 +193,9 @@ class QueueView(APIView):
     )
     @ratelimit(key="user", rate="60/m", scope="sessions.queue")
     def post(self, request, session_id):
+        from moderation.services import require_not_muted
+
+        require_not_muted(request.user)
         s = services.get_active(session_id)
         e = services.add(
             s,

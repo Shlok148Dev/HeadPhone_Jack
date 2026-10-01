@@ -38,7 +38,8 @@ test.describe("EP-04 circles", () => {
     await expect(p2.getByRole("heading", { name: `Join ${name}` })).toBeVisible();
     await expectNoA11yViolations(p2);
     await p2.getByRole("button", { name: "Join circle" }).click();
-    await expect(p2.getByRole("heading", { name, level: 1 })).toBeVisible();
+    await p2.waitForURL(/\/circles\/[0-9a-f-]{36}$/);
+    await expect(p2.getByRole("heading", { name, level: 1, exact: true })).toBeVisible();
     await other.close();
 
     await page.reload();

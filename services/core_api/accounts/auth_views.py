@@ -35,6 +35,7 @@ from .validators import contains_profanity, is_old_enough
 
 log = logging.getLogger(__name__)
 
+
 def age_restricted() -> ApiError:
     return ApiError(
         "AGE_RESTRICTED", "Jingle is for people aged 18 and over.", status.HTTP_403_FORBIDDEN
@@ -97,7 +98,7 @@ class LoginView(_PublicAuthView):
             429: err("RATE_LIMITED"),
         },
     )
-    @ratelimit(key="ip+email", rate="10/m", scope="auth.login")
+    @ratelimit(key="ip+email", rate=settings.AUTH_LOGIN_RATE, scope="auth.login")
     def post(self, request):
         ser = LoginSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
@@ -119,7 +120,7 @@ class RefreshView(_PublicAuthView):
         request=None,
         responses={200: AuthResponseSerializer, 401: err("REFRESH_INVALID")},
     )
-    @ratelimit(key="ip", rate="30/m", scope="auth.refresh")
+    @ratelimit(key="ip", rate=settings.AUTH_REFRESH_RATE, scope="auth.refresh")
     def post(self, request):
         raw = request.COOKIES.get(settings.REFRESH_COOKIE_NAME)
         if not raw:

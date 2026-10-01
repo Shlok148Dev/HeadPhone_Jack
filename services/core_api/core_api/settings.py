@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     "sends",
     "blends",
     "listening",
+    "insights",
+    "notifications",
+    "rituals",
+    "moderation",
     "feed",
 ]
 
@@ -122,7 +126,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
-    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+        "moderation.permissions.NotSuspended",
+    ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "EXCEPTION_HANDLER": "core_api.errors.exception_handler",
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
@@ -136,6 +143,8 @@ SPECTACULAR_SETTINGS = {
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": "/api/v1",
     "ENUM_NAME_OVERRIDES": {
+        "SendKindEnum": "sends.models.Kind",
+        "ModerationDecisionKindEnum": ["dismiss", "warn", "mute", "suspend", "ban"],
         "MusicPlatformEnum": "sources.connect_views.PLATFORMS",
         "CircleRoleEnum": "circles.models.Role",
     },
@@ -175,6 +184,16 @@ CELERY_BEAT_SCHEDULE = {
     "sources-drain-identity": {"task": "sources.tasks.drain_identity_queue", "schedule": 60.0},
     # Friend suggestions nightly at 03:00 IST (Tech Bible 7.4); on-change runs are event-driven.
     # Sends: Played from the recipient's own listens; discovery credits daily (Tech Bible 6.4).
+    # Rituals (Tech Bible 7.4): results within 5 min of close; recaps inside 48 h of month start.
+    "battles-close": {"task": "rituals.tasks.close_due", "schedule": 60.0},
+    "recaps-monthly": {
+        "task": "rituals.tasks.make_recaps",
+        "schedule": crontab(day_of_month="1,2", hour=6, minute=0),
+    },
+    "compat-recalibrate-monthly": {
+        "task": "insights.tasks.recalibrate",
+        "schedule": crontab(day_of_month=1, hour=5, minute=0),
+    },
     "sessions-sweep": {"task": "listening.tasks.sweep", "schedule": 30.0},
     "sends-played": {"task": "sends.tasks.check_played", "schedule": 60.0},
     "sends-credits-daily": {
@@ -196,6 +215,13 @@ GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 SPOTIFY_ALLOWLIST = env("SPOTIFY_ALLOWLIST", default="")
 # Sign-ups per IP (NFR-SEC-04). Keep 5/m in production; .env.example loosens it for local E2E.
 AUTH_REGISTER_RATE = env("AUTH_REGISTER_RATE", default="5/m")
+AUTH_LOGIN_RATE = env("AUTH_LOGIN_RATE", default="10/m")
+# Every page load refreshes; a pilot group behind one campus NAT shares an IP.
+AUTH_REFRESH_RATE = env("AUTH_REFRESH_RATE", default="120/m")
+# Web push (JNG-11-02): keys are generated locally; no keys means push is simply unavailable.
+VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY", default="")
+VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY", default="")
+VAPID_SUBJECT = env("VAPID_SUBJECT", default="mailto:admin@jingle.local")
 
 # Privacy (NFR-PRIV-01/02/03)
 CONSENT_VERSION = env("CONSENT_VERSION", default="2026-09")
