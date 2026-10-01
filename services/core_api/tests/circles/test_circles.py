@@ -245,3 +245,12 @@ def test_leiden_names_and_skips_existing():
     assert out[0][2] == "Your indie crew"
     assert jaccard(set("ab"), set("bc")) == pytest.approx(1 / 3)
     assert name_for(["a", "b"], {}, {}) == "Your crew"
+
+
+def test_circle_list_carries_covers_only_through_privacy():
+    o, m = mk("cov_own"), mk("cov_mem")
+    circle = services.create_circle(o, "Covers")
+    token, _ = services.create_link(circle, o)
+    services.join_by_link(token, m)
+    rows = client(o).get("/api/v1/circles").json()
+    assert rows[0]["covers"] == []  # nothing played, nothing shown, never a placeholder URL

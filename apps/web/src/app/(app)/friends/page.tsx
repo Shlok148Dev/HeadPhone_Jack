@@ -7,6 +7,8 @@ import { FindFriends } from "@/components/app/FindFriends";
 import { SuggestionsGrid, TastePicker } from "@/components/app/Suggestions";
 import { PersonMenu, PersonRow } from "@/components/app/PersonRow";
 import { useFriends, useRequests, useSocialActions } from "@/lib/social";
+import { useFeed } from "@/lib/feed";
+import { useRealtimeStatus } from "@/lib/realtime";
 
 function RowsSkeleton() {
   return (
@@ -20,6 +22,8 @@ function RowsSkeleton() {
 
 function FriendsTab({ onFind }: { onFind: () => void }) {
   const friends = useFriends();
+  const feed = useFeed(useRealtimeStatus() === "live");
+  const cards = new Map((feed.data?.results ?? []).map((c) => [c.friend.id, c]));
   if (friends.isLoading) return <RowsSkeleton />;
   if (friends.isError) return <ErrorState message="Couldn't load your friends." onRetry={() => void friends.refetch()} />;
   if (!friends.data?.length)
@@ -27,7 +31,7 @@ function FriendsTab({ onFind }: { onFind: () => void }) {
   return (
     <ul className="flex flex-col gap-1">
       {friends.data.map((p) => (
-        <PersonRow key={p.id} person={p} actions={<PersonMenu person={p} canRemove />} />
+        <PersonRow key={p.id} person={p} card={cards.get(p.id)} actions={<PersonMenu person={p} canRemove />} />
       ))}
     </ul>
   );

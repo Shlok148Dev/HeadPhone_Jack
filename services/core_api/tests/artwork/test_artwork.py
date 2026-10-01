@@ -44,8 +44,19 @@ def test_misses_are_queued_not_fetched(fake_redis):
     assert fake_redis.smembers(services.QUEUE) == {"track\tKasoor\tPrateek Kuhad"}
 
 
+@pytest.fixture(autouse=True)
+def _no_wait(monkeypatch):
+    import time
+
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+
+
 def _transport(results: dict):
     def handler(request: httpx.Request):
+        if request.url.host == "musicbrainz.org":
+            return httpx.Response(200, json=results.get("mb", {"recordings": []}))
+        if request.url.host == "coverartarchive.org" and results.get("caa") == 404:
+            return httpx.Response(404)
         if request.url.host == "itunes.apple.com":
             return httpx.Response(
                 200, json={"results": results.get(request.url.params["entity"], [])}
@@ -138,3 +149,63 @@ def test_prefers_the_original_over_lofi_and_remixes():
     assert services._score(remix, "Kesariya Remix", "Arijit Singh") > services._score(
         original, "Kesariya Remix", "Arijit Singh"
     )
+
+
+def _mb(title, artist, rid="rel-1", status="Official"):
+    return {
+        "recordings": [
+            {
+                "title": f"{title} (Tribute)",
+                "artist-credit": [{"name": "Piano Tribute Players"}],
+                "releases": [{"id": "fake"}],
+            },
+            {
+                "title": title,
+                "artist-credit": [{"name": artist, "artist": {"name": artist}}],
+                "releases": [
+                    {"id": rid, "status": status, "release-group": {"primary-type": "Album"}}
+                ],
+            },
+        ]
+    }
+
+
+def test_falls_back_to_cover_art_archive_for_the_original_only():
+    tribute = {
+        "trackName": "Nanchaku",
+        "artistName": "JAZZY NANU",
+        "artworkUrl100": "https://x/100x100bb.jpg",
+    }
+    with httpx.Client(
+        transport=_transport({"song": [tribute], "mb": _mb("Nanchaku", "Seedhe Maut")})
+    ) as c:
+        a = services.resolve("track", "Nanchaku", "Seedhe Maut", c)
+    assert a.status == "found" and a.source == "coverartarchive" and a.source_id == "rel-1"
+    assert a.url == "https://coverartarchive.org/release/rel-1/front-500"
+    assert a.url_small.endswith("/front-250") and a.colors["ambient_dark"].startswith("#")
+
+
+def test_no_front_cover_in_the_archive_stays_missing():
+    with httpx.Client(
+        transport=_transport({"mb": _mb("Nanchaku", "Seedhe Maut"), "caa": 404})
+    ) as c:
+        a = services.resolve("track", "Nanchaku", "Seedhe Maut", c)
+    assert a.status == "missing"
+
+
+def test_featured_artist_credit_counts_but_namesakes_do_not():
+    ronson = {
+        "trackName": "Uptown Funk (feat. Bruno Mars)",
+        "artistName": "Mark Ronson",
+        "trackId": 7,
+        "artworkUrl100": "https://x/u/100x100bb.jpg",
+    }
+    namesake = {
+        "trackName": "Uptown Funk",
+        "artistName": "Karaoke Kings",
+        "trackId": 8,
+        "artworkUrl100": "https://x/k/100x100bb.jpg",
+    }
+    with httpx.Client(transport=_transport({"song": [namesake, ronson]})) as c:
+        a = services.resolve("track", "Uptown Funk", "Bruno Mars", c)
+    assert a.status == "found" and a.source == "itunes" and a.source_id == "7"

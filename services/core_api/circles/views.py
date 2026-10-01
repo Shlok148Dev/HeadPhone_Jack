@@ -60,6 +60,7 @@ class CircleSerializer(serializers.Serializer):
     members_can_invite = serializers.BooleanField()
     battle_schedule = serializers.DictField()
     members = MemberSerializer(many=True, required=False)
+    covers = serializers.ListField(child=serializers.CharField(), required=False)
 
 
 def circle_payload(c: Circle, viewer, with_members: bool = False) -> dict:
@@ -83,12 +84,38 @@ def circle_payload(c: Circle, viewer, with_members: bool = False) -> dict:
     return data
 
 
+def _covers(c: Circle, viewer, limit: int = 4) -> list[str]:
+    """Up to four real covers of what members played, each through the viewer's privacy view
+    of that member (resolve_card), so a circle tile never reveals more than the feed would."""
+    hidden = blocked_ids(viewer.pk)
+    users = (
+        User.objects.filter(circle_memberships__circle=c, is_active=True, deleted_at__isnull=True)
+        .exclude(pk__in=hidden | {viewer.pk})
+        .order_by("circle_memberships__joined_at")[:8]
+    )
+    out: list[str] = []
+    for u in users:
+        card = resolve_card(u, viewer)
+        rec = card.get("recording") if card.get("state") != "HIDDEN" else None
+        url = rec and (rec.get("artwork_small") or rec.get("artwork_url"))
+        if url and url not in out:
+            out.append(url)
+        if len(out) == limit:
+            break
+    return out
+
+
 class CirclesView(APIView):
     @extend_schema(tags=["circles"], responses={200: CircleSerializer(many=True)})
     def get(self, request):
         ids = CircleMember.objects.filter(user=request.user).values("circle_id")
         circles = Circle.objects.filter(pk__in=ids).order_by("name")
-        return Response([circle_payload(c, request.user) for c in circles])
+        return Response(
+            [
+                {**circle_payload(c, request.user), "covers": _covers(c, request.user)}
+                for c in circles
+            ]
+        )
 
     @extend_schema(
         tags=["circles"],

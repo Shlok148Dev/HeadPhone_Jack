@@ -104,6 +104,8 @@ services:
       NEXT_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://127.0.0.1:8080}
       # Server-side only: the landing page renders real covers on the server (fast LCP).
       CORE_API_INTERNAL_URL: http://core-api:8000
+    # Image-optimizer cache (Cover Art Archive covers) survives rebuilds.
+    volumes: ["webcache:/app/apps/web/.next/cache"]
 
   edge:
     image: caddy:2-alpine
@@ -121,3 +123,4 @@ volumes:
   mongodata:
   redisdata:
   qdrantdata:
+  webcache:

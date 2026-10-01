@@ -4,9 +4,10 @@
 /* Theme is driven by data-theme on <html>, not by the OS media query. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Breakpoints (UX_SPEC §3, min-width). */
+/* Breakpoints (UX_SPEC §3, min-width). sm is 640, not 390: every phone is ≥ 360, so a 390 "sm"
+   switched row layouts on for ordinary phones (D-DS-08). Design and test at 360 and 390 as base. */
 @theme {
-  --breakpoint-sm: 390px;
+  --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1440px;

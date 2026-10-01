@@ -53,7 +53,7 @@ CATALOG: tuple[Track, ...] = (
     Track('Vishal-Shekhar', 'Ghungroo', 'War', 302),
     Track('Sachet-Parampara', 'Bekhayali', 'Kabir Singh', 371),
     Track('A.R. Rahman', 'Jai Ho', 'Slumdog Millionaire', 319),
-    Track('Shankar-Ehsaan-Loy', 'Dil Chahta Hai', 'Dil Chahta Hai', 318),
+    Track('Shankar Mahadevan', 'Dil Chahta Hai', 'Dil Chahta Hai', 318),  # the singer, as stores credit it
     Track('Amit Trivedi', 'Ik Kudi', 'Udta Punjab', 244),
     Track('Ritviz', 'Udd Gaye', 'Udd Gaye', 177),
     Track('Ritviz', 'Liggi', 'Liggi', 171),

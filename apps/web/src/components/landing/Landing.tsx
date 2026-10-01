@@ -1,6 +1,7 @@
 "use client";
 
-import { motion, useReducedMotion } from "motion/react";
+import { useReducedMotion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useEffect, useState, type ReactNode } from "react";
 import { Artwork, Blip, ButtonLink, EqualiserBars, FeedCard, Icons, Pulse, type FeedCardData } from "@/components/ds";
 import type { WallCover } from "./data";

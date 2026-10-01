@@ -164,6 +164,17 @@ export interface ArtworkProps {
   rounded?: "sm" | "md" | "lg" | "none";
 }
 
+/**
+ * Cover Art Archive images redirect twice to archive.org, which takes seconds and sometimes
+ * stalls. Serve them through Next's image optimizer (allowlisted in next.config): fetched once
+ * server-side, cached, then fast from our own origin (D-ART-07). Other hosts are CDN-fast already.
+ */
+export function servable(url: string): string {
+  if (!url.startsWith("https://coverartarchive.org/")) return url;
+  const w = /-(500|1200)$/.test(url) ? 640 : 256;
+  return `/_next/image?url=${encodeURIComponent(url)}&w=${w}&q=80`;
+}
+
 /** Artwork image with a GenerativeCover fallback (missing url or load error). */
 export function Artwork({ url, seed, alt, className, rounded = "md" }: ArtworkProps) {
   const [failed, setFailed] = useState(false);
@@ -176,7 +187,7 @@ export function Artwork({ url, seed, alt, className, rounded = "md" }: ArtworkPr
       <GenerativeCover seed={seed} rounded="none" className="absolute inset-0 h-full" />
       {/* eslint-disable-next-line @next/next/no-img-element -- remote artwork hosts vary; plain img keeps the fallback simple */}
       <img
-        src={url}
+        src={servable(url)}
         alt={alt}
         loading="lazy"
         decoding="async"

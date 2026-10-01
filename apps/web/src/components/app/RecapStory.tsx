@@ -1,6 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as motion from "motion/react-m";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Artwork, Blip, IconButton, Icons } from "@/components/ds";
 import { useMotionSafe } from "@/lib/motion";
@@ -27,7 +28,7 @@ export function RecapStory({ data, name, onClose }: { data: RecapData; name?: st
         <div className="flex flex-col items-start gap-4">
           <p className="font-mono text-sm uppercase tracking-[0.2em] text-text-muted">{name ? `${name}'s` : "Your"} {monthName(data.month)}</p>
           <p className="font-display text-[clamp(4rem,18vw,9rem)] font-semibold leading-[0.9] tracking-tight">{data.minutes.toLocaleString()}</p>
-          <p className="text-2xl">minutes of music, about. {data.plays.toLocaleString()} plays.</p>
+          <p className="text-2xl">minutes of music (estimated). {data.plays.toLocaleString()} plays.</p>
         </div>
       ),
     },

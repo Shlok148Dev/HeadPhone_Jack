@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Avatar, Button, Dialog, useToast } from "@/components/ds";
+import { Avatar, Button, Dialog, IconButton, Icons, Pulse, cn, useToast, type FeedCardData } from "@/components/ds";
+import { pulseOf } from "@/components/app/Presence";
+import { songFromCard, useOpenSend } from "@/lib/send";
 import { useSocialActions, type Person } from "@/lib/social";
 
 const REASONS = [
@@ -14,17 +16,41 @@ const REASONS = [
   ["other", "Something else"],
 ] as const;
 
-export function PersonRow({ person, actions }: { person: Person; actions?: ReactNode }) {
+/** A person, with what they are playing when a feed card is known (the Pulse, then song and freshness). */
+export function PersonRow({ person, actions, card }: { person: Person; actions?: ReactNode; card?: FeedCardData }) {
+  const openSend = useOpenSend();
+  const state = card ? pulseOf(card, Date.now()) : "none";
+  const rec = card?.state !== "HIDDEN" ? card?.recording : null;
   return (
-    <li className="flex min-h-16 items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2">
-      <Avatar name={person.display_name} seed={person.id} size={44} decorative />
+    <li className="group flex min-h-16 items-center gap-3 rounded-lg px-2 py-2 hover:bg-surface-2">
+      {card ? (
+        <Pulse state={state} name={person.display_name} url={card.friend.avatar_url} seed={person.id} size={44} />
+      ) : (
+        <Avatar name={person.display_name} seed={person.id} size={44} decorative />
+      )}
       <div className="min-w-0 flex-1">
         <Link href={`/u/${person.username}`} className="block truncate font-medium hover:underline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
           {person.display_name}
         </Link>
-        <p className="truncate font-mono text-xs text-text-muted">@{person.username}</p>
+        {rec ? (
+          <>
+            <p className="truncate text-sm text-text-muted">
+              <span className="text-text">{rec.title}</span> · {rec.artist}
+            </p>
+            <p className={cn("truncate font-mono text-xs", state === "live" ? "text-live-text" : "text-text-subtle")}>{card!.freshness_label}</p>
+          </>
+        ) : (
+          <p className="truncate font-mono text-xs text-text-muted">@{person.username}</p>
+        )}
       </div>
-      <div className="flex shrink-0 items-center gap-1">{actions}</div>
+      <div className="flex shrink-0 items-center gap-1">
+        {rec && (
+          <IconButton label={`Send ${person.display_name} something back`} className="opacity-70 group-hover:opacity-100 focus-visible:opacity-100" onClick={() => openSend({ song: songFromCard(card!) })}>
+            <Icons.Send size={16} />
+          </IconButton>
+        )}
+        {actions}
+      </div>
     </li>
   );
 }
@@ -67,9 +93,9 @@ export function PersonMenu({ person, canRemove }: { person: Person; canRemove: b
 
   return (
     <>
-      <Button variant="ghost" aria-label={`More options for ${name}`} onClick={() => setDialog("menu")}>
-        •••
-      </Button>
+      <IconButton label={`More options for ${name}`} onClick={() => setDialog("menu")}>
+        <Icons.More size={18} />
+      </IconButton>
       <Dialog open={dialog === "menu"} onClose={close} title={name}>
         <div className="flex flex-col gap-2">
           {canRemove && (

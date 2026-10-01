@@ -16,6 +16,8 @@ export interface Circle {
   members_can_invite: boolean;
   battle_schedule: Record<string, string | null>;
   members?: { user: Person; role: Role }[];
+  /** Real covers of what members played, through the viewer's privacy view (list only). */
+  covers?: string[];
 }
 
 export interface CircleInvite {

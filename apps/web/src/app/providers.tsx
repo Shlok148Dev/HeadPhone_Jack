@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { LazyMotion } from "motion/react";
 import { useState, type ReactNode } from "react";
 import { ToastProvider } from "@/components/ds";
 import { ApiError } from "@/lib/api";
@@ -21,10 +22,15 @@ export function Providers({ children }: { children: ReactNode }) {
       }),
   );
   return (
-    <QueryClientProvider client={client}>
-      <AuthProvider>
-        <ToastProvider>{children}</ToastProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <LazyMotion features={loadMotionFeatures} strict>
+      <QueryClientProvider client={client}>
+        <AuthProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </LazyMotion>
   );
 }
+
+/** Animation features load after first paint (D-PERF-01): keeps Home under its 180 kB budget. */
+const loadMotionFeatures = () => import("@/lib/motion-features").then((r) => r.default);

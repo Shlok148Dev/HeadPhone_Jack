@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Blip, Button, EmptyState, ErrorState, IconButton, Skeleton, cn, useToast, Artwork, Pulse } from "@/components/ds";

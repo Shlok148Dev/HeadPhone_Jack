@@ -1,9 +1,10 @@
 "use client";
 
+import { CoverMosaic } from "@/components/app/CoverMosaic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { Button, Dialog, EmptyState, ErrorState, GenerativeCover, Skeleton, useToast } from "@/components/ds";
+import { Button, Dialog, EmptyState, ErrorState, Skeleton, useToast } from "@/components/ds";
 import { FormAlert, TextField } from "@/components/app/forms";
 import { useCircleActions, useCircleInvites, useCircles, useSuggestedCircles } from "@/lib/circles";
 
@@ -112,9 +113,7 @@ export default function CirclesPage() {
           {circles.data.map((c) => (
             <li key={c.id}>
               <Link href={`/circles/${c.id}`} className="group flex flex-col gap-2 rounded-lg p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
-                <div className="aspect-square overflow-hidden rounded-lg transition-transform group-hover:scale-[1.02]">
-                  <GenerativeCover seed={c.id} />
-                </div>
+                <CoverMosaic covers={c.covers ?? []} seed={c.id} />
                 <p className="truncate font-medium">{c.name}</p>
                 <p className="font-mono text-xs text-text-muted">
                   {c.member_count} members{c.my_role !== "member" ? ` · ${c.my_role}` : ""}

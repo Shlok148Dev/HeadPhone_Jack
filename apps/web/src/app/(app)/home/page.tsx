@@ -27,6 +27,12 @@ const HomeHero = lazy(() => import("@/components/app/HomeExtras").then((m) => ({
 const HomeShelves = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeShelves })));
 const SuggestionsShelf = lazy(() => import("@/components/app/Suggestions").then((m) => ({ default: m.SuggestionsShelf })));
 
+/** "Aanya Rao" → "Aanya"; a placeholder name like "You (demo)" gets no name at all. */
+function firstName(name?: string | null): string {
+  const first = (name ?? "").replace(/\(.*?\)/g, "").trim().split(/\s+/)[0] ?? "";
+  return /^you$/i.test(first) ? "" : first;
+}
+
 function greeting(now = new Date()): string {
   const h = now.getHours();
   return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
@@ -80,7 +86,8 @@ export default function HomePage() {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
-        {greeting()}, {me?.display_name || me?.username}
+        {greeting()}
+        {firstName(me?.display_name || me?.username) ? `, ${firstName(me?.display_name || me?.username)}` : ""}
       </h1>
       <Suspense fallback={<div className="min-h-[220px] rounded-[20px] bg-surface-1" aria-hidden />}>
         <HomeHero />

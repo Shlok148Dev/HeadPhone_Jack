@@ -1,9 +1,10 @@
 "use client";
 
+import { CoverMosaic } from "@/components/app/CoverMosaic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Artwork, AvatarStack, Blip, Button, Dialog, EmptyState, ErrorState, GenerativeCover, Skeleton } from "@/components/ds";
+import { Artwork, AvatarStack, Blip, Button, Dialog, EmptyState, ErrorState, Skeleton } from "@/components/ds";
 import { PeoplePicker, type Picked } from "@/components/app/PeoplePicker";
 import { useBlendActions, useBlends, useSessions, useStartSession } from "@/lib/live";
 
@@ -123,17 +124,9 @@ export default function BlendsPage() {
           {blends.data.map((b) => (
             <li key={b.id}>
               <Link href={`/blends/${b.id}`} className="group flex flex-col gap-2 rounded-lg p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
-                <div className="relative aspect-square overflow-hidden rounded-lg">
-                  {b.covers.length >= 4 ? (
-                    <div className="grid h-full grid-cols-2 gap-px">
-                      {b.covers.slice(0, 4).map((u) => (
-                        <Artwork key={u} url={u} seed={u} alt="" rounded="none" />
-                      ))}
-                    </div>
-                  ) : (
-                    <GenerativeCover seed={b.id} />
-                  )}
-                  <AvatarStack className="absolute bottom-2 left-2" size={28} max={4} people={b.members.map((m) => ({ id: m.id, name: m.display_name }))} />
+                <CoverMosaic covers={b.covers} seed={b.id} />
+                <div className="flex items-center gap-2">
+                  <AvatarStack size={24} max={4} people={b.members.map((m) => ({ id: m.id, name: m.display_name }))} />
                 </div>
                 <p className="truncate font-medium">{b.name}</p>
                 <p className="font-mono text-xs text-text-muted">{b.track_count} songs · {ago(b.generated_at)}</p>

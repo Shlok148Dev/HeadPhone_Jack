@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useId } from "react";
 import { useMotionSafe } from "@/lib/motion";
 import { Blip } from "./Blip";

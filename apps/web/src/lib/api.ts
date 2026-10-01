@@ -78,7 +78,12 @@ async function parse(res: Response): Promise<unknown> {
 
 function toError(status: number, body: unknown): ApiError {
   const env = (body as { error?: ApiErrorBody } | null)?.error;
-  return new ApiError(status, env ?? { code: "ERROR", message: "Something went wrong. Please try again." });
+  if (env) return new ApiError(status, env);
+  // Gateway errors mean Jingle itself is restarting or unreachable, not that the user did anything wrong.
+  if (status >= 502 && status <= 504) {
+    return new ApiError(status, { code: "UNAVAILABLE", message: "Jingle can't be reached right now. Try again in a moment." });
+  }
+  return new ApiError(status, { code: "ERROR", message: "Something went wrong on our side. Please try again." });
 }
 
 async function rawFetch(path: string, init: RequestInit, withAuth: boolean): Promise<Response> {

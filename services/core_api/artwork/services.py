@@ -1,7 +1,8 @@
 """Artwork service: real covers from official, open APIs (docs/ux/DECISIONS.md D-ART-01…05).
 
 Order: Apple's public iTunes Search API (no key; the MusicKit catalogue replaces it once a
-developer token exists) → generative cover in the client. Spotify images are only used for
+developer token exists) → MusicBrainz + Cover Art Archive (open data, 1 request/second) →
+generative cover in the client. Spotify images are only used for
 Spotify-attributed modules and never cached here. We store URLs and extracted colours, never files.
 
 Lookups never call the network: a miss is queued and a rate-limited worker resolves it
@@ -25,6 +26,9 @@ from .models import Artwork, Kind
 log = logging.getLogger(__name__)
 QUEUE = "artwork:queue"
 ITUNES = "https://itunes.apple.com/search"
+MUSICBRAINZ = "https://musicbrainz.org/ws/2/recording"
+CAA = "https://coverartarchive.org/release"
+USER_AGENT = "Jingle/0.1 (social music pilot)"
 RETRY_MISSING_DAYS = 30
 _FEAT = re.compile(r"\s*[\(\[](feat|ft|with|from|prod)[^\)\]]*[\)\]]", re.I)
 _PUNCT = re.compile(r"[^\w\s]", re.U)
@@ -191,6 +195,17 @@ def _score(result: dict, title: str, artist: str) -> float:
     return ts * 0.6 + as_ * 0.4 + exact - 0.25 * variant - 0.02 * len(extra)
 
 
+def _artist_ok(result: dict, artist: str) -> bool:
+    """The same title by someone else (a tribute, a namesake) is never the cover."""
+    want = set(norm(artist).split())
+    # Featured credits count: "Uptown Funk (feat. Bruno Mars)" by Mark Ronson is Bruno Mars's too.
+    raw = f"{result.get('artistName') or ''} {result.get('trackName') or ''}"
+    got = set(_PUNCT.sub(" ", raw.lower()).split()) | set(
+        norm(result.get("artistName") or "").split()
+    )
+    return bool(want) and len(want & got) / len(want) >= 0.5
+
+
 def _itunes(term: str, entity: str, client: httpx.Client) -> list[dict]:
     out: list[dict] = []
     for country in ("IN", "US"):
@@ -206,6 +221,58 @@ def _itunes(term: str, entity: str, client: httpx.Client) -> list[dict]:
     return out
 
 
+def _mb_get(client: httpx.Client, url: str, **kw) -> httpx.Response:
+    """MusicBrainz asks for ≤ 1 request/second and answers 503 when exceeded: wait and retry."""
+    import time
+
+    for attempt in range(3):
+        time.sleep(1.1)
+        r = client.get(url, timeout=10, follow_redirects=True, **kw)
+        if r.status_code != 503:
+            return r
+        time.sleep(2 * (attempt + 1))
+    return r
+
+
+def _cover_art_archive(
+    title: str, artist: str, client: httpx.Client
+) -> tuple[str, str, str] | None:
+    """Find the original recording on MusicBrainz and the front cover of one of its releases.
+
+    Strict: the artist credit and title must match after normalisation, so tributes, covers
+    and lo-fi flips never win. Returns (release id, 500 px url, 250 px url)."""
+    t, a = norm(title), norm(artist)
+    q = f'recording:"{title}" AND artist:"{artist}"'
+    r = _mb_get(client, MUSICBRAINZ, params={"query": q, "fmt": "json", "limit": 5})
+    if r.status_code != 200:
+        return None
+    for rec in r.json().get("recordings") or []:
+        credits = {
+            norm(c.get("name", "")) for c in rec.get("artist-credit") or [] if isinstance(c, dict)
+        }
+        credits |= {
+            norm(c.get("artist", {}).get("name", ""))
+            for c in rec.get("artist-credit") or []
+            if isinstance(c, dict)
+        }
+        if norm(rec.get("title", "")) != t or a not in credits:
+            continue
+        releases = sorted(
+            rec.get("releases") or [],
+            key=lambda rl: (
+                rl.get("status") != "Official",
+                (rl.get("release-group") or {}).get("primary-type")
+                not in ("Album", "Single", "EP"),
+            ),
+        )
+        for rl in releases[:4]:
+            front = f"{CAA}/{rl['id']}/front"
+            head = _mb_get(client, f"{front}-250", headers={"Range": "bytes=0-0"})
+            if head.status_code in (200, 206):
+                return rl["id"], f"{front}-500", f"{front}-250"
+    return None
+
+
 def _sized(url100: str, px: int) -> str:
     return re.sub(r"/\d+x\d+bb\.(jpg|png)$", f"/{px}x{px}bb.jpg", url100)
 
@@ -213,13 +280,33 @@ def _sized(url100: str, px: int) -> str:
 def resolve(kind: str, title: str, artist: str, client: httpx.Client | None = None) -> Artwork:
     """Resolve one item over the network and store it (found or missing)."""
     own = client is None
-    client = client or httpx.Client(headers={"User-Agent": "Jingle/0.1 (pilot)"})
+    client = client or httpx.Client(headers={"User-Agent": USER_AGENT})
     key = track_key(title, artist) if kind == Kind.TRACK else artist_key(artist)
     try:
         if kind == Kind.TRACK:
             results = _itunes(f"{artist} {title}", "song", client)
-            best = max(results, key=lambda r: _score(r, title, artist), default=None)
+            mine = [r for r in results if _artist_ok(r, artist)]
+            best = max(mine, key=lambda r: _score(r, title, artist), default=None)
             ok = best is not None and _score(best, title, artist) >= 0.55
+            if not ok:
+                caa = _cover_art_archive(title, artist, client)
+                if caa is not None:
+                    rid, big, small = caa
+                    img = client.get(small, timeout=10, follow_redirects=True)
+                    img.raise_for_status()
+                    obj, _ = Artwork.objects.update_or_create(
+                        kind=kind,
+                        key=key,
+                        defaults={
+                            "status": "found",
+                            "source": "coverartarchive",
+                            "url": big,
+                            "url_small": small,
+                            "colors": extract_colors(img.content),
+                            "source_id": rid,
+                        },
+                    )
+                    return obj
         else:
             results = _itunes(artist, "album", client)
             a = norm(artist)
@@ -229,20 +316,20 @@ def resolve(kind: str, title: str, artist: str, client: httpx.Client | None = No
             ok = best is not None
             if not ok:
                 # Fall back to the cover of one of their own songs we already resolved.
-                own = Artwork.objects.filter(
+                mine = Artwork.objects.filter(
                     kind=Kind.TRACK, status="found", key__startswith=f"{a}|"
                 ).first()
-                if own is not None:
+                if mine is not None:
                     obj, _ = Artwork.objects.update_or_create(
                         kind=kind,
                         key=key,
                         defaults={
                             "status": "found",
-                            "source": own.source,
-                            "url": own.url,
-                            "url_small": own.url_small,
-                            "colors": own.colors,
-                            "source_id": own.source_id,
+                            "source": mine.source,
+                            "url": mine.url,
+                            "url_small": mine.url_small,
+                            "colors": mine.colors,
+                            "source_id": mine.source_id,
                         },
                     )
                     return obj
@@ -278,7 +365,7 @@ def drain(limit: int = 15) -> int:
 
     r = get_redis()
     done = 0
-    with httpx.Client(headers={"User-Agent": "Jingle/0.1 (pilot)"}) as client:
+    with httpx.Client(headers={"User-Agent": USER_AGENT}) as client:
         for _ in range(limit):
             item = r.spop(QUEUE)
             if not item:

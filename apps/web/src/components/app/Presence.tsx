@@ -7,7 +7,7 @@ import { useRealtimeStatus } from "@/lib/realtime";
 import { songFromCard, useOpenSend } from "@/lib/send";
 
 /** Server state only (BR-01): Live is what the server says, and no older than 90 s. */
-function pulseOf(c: FeedCardData, now: number) {
+export function pulseOf(c: FeedCardData, now: number) {
   return isFreshLive(c, now) && !c.degraded ? "live" : c.state === "RECENT" ? "recent" : "none";
 }
 
@@ -68,29 +68,30 @@ export function ActivityPanel() {
           const state = pulseOf(c, now);
           const rec = c.recording!;
           return (
-            <li key={c.friend.id} className="group flex items-start gap-3 rounded-md px-2 py-2.5 hover:bg-surface-2">
-              <Link href={`/u/${c.friend.username}`} className="shrink-0 rounded-pill focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" aria-label={c.friend.display_name}>
+            // Grid: the state label spans under the art and action, so "Live on YouTube Music" stays on one line.
+            <li key={c.friend.id} className="group grid grid-cols-[auto_minmax(0,1fr)_auto_auto] items-start gap-x-3 rounded-md px-2 py-2.5 hover:bg-surface-2">
+              <Link href={`/u/${c.friend.username}`} className="row-span-2 shrink-0 rounded-pill focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]" aria-label={c.friend.display_name}>
                 <Pulse state={state} name={c.friend.display_name} url={c.friend.avatar_url} seed={c.friend.id} size={34} />
               </Link>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0">
                 <p className="truncate text-[13px] font-semibold">{c.friend.display_name}</p>
                 <p className="truncate text-[13px]" title={`${rec.title} · ${rec.artist}`}>
                   {rec.title}
                 </p>
                 <p className="truncate text-xs text-text-muted">{rec.artist}</p>
-                <p className={cn("mt-0.5 font-mono text-[11px] leading-snug", state === "live" ? "text-live-text" : "text-text-muted")}>{c.freshness_label}</p>
               </div>
-              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[4px]">
+              <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[var(--r-art-sm)]">
                 <Artwork url={rec.artwork_small ?? rec.artwork_url} seed={rec.id ?? `${c.friend.id}|${rec.title}`} alt="" rounded="none" />
               </div>
               <IconButton
                 label={`Send ${c.friend.display_name} something back`}
                 variant="ghost"
-                className="-mr-1 opacity-70 group-hover:opacity-100"
+                className="-mr-1 -mt-0.5 opacity-70 group-hover:opacity-100 focus-visible:opacity-100"
                 onClick={() => openSend({ song: songFromCard(c) })}
               >
                 <Icons.Send size={16} />
               </IconButton>
+              <p className={cn("col-span-3 mt-0.5 truncate font-mono text-[11px]", state === "live" ? "text-live-text" : "text-text-muted")}>{c.freshness_label}</p>
             </li>
           );
         })}

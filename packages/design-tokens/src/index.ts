@@ -170,7 +170,7 @@ export const space = (n: number): number => n * 4;
 export const spacing = { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 10: 40, 12: 48, 16: 64 } as const;
 
 /** Min-width breakpoints (px). 360 is the tested floor. */
-export const breakpoints = { sm: 390, md: 768, lg: 1024, xl: 1440, "2xl": 1920 } as const;
+export const breakpoints = { sm: 640, md: 768, lg: 1024, xl: 1440, "2xl": 1920 } as const;
 
 export const shadows = {
   dark: { 1: "0 1px 2px rgba(0,0,0,0.4)", 2: "0 8px 24px rgba(0,0,0,0.5)" },

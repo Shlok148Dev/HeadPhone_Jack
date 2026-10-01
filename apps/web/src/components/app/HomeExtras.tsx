@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { motion, AnimatePresence } from "motion/react";
+import { AnimatePresence } from "motion/react";
+import * as motion from "motion/react-m";
 import { useState, type CSSProperties } from "react";
 import { Artwork, Avatar, IconButton, Icons, Shelf, type ArtworkColors } from "@/components/ds";
 import { useBlends } from "@/lib/live";

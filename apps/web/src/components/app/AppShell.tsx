@@ -19,7 +19,9 @@ import { SendProvider, songFromCard, useOpenSend } from "@/lib/send";
 import { useUnread } from "@/lib/sends";
 import { useNotifications } from "@/lib/trust";
 import { Logo } from "./Logo";
-import { ActivityPanel, SidebarLive } from "./Presence";
+// Presence lives in wide-screen chrome (lg/xl) and fills from live data anyway: keep it out of first load.
+const SidebarLive = lazy(() => import("./Presence").then((m) => ({ default: m.SidebarLive })));
+const ActivityPanel = lazy(() => import("./Presence").then((m) => ({ default: m.ActivityPanel })));
 
 // Loaded on first ⌘K / tap so the shell stays inside Home's JS budget.
 const CommandPalette = lazy(() => import("./CommandPalette").then((m) => ({ default: m.CommandPalette })));
@@ -128,7 +130,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <SidebarLive />
+          <Suspense fallback={null}>
+            <SidebarLive />
+          </Suspense>
           <div className="mt-auto flex flex-col gap-1">
             <Link
               href="/settings/connections"
@@ -146,7 +150,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <ActivityPanel />
+        <Suspense fallback={null}>
+          <ActivityPanel />
+        </Suspense>
         <div className="md:pl-[72px] lg:pl-60 xl:pl-[280px] xl:pr-[320px]">
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-transparent bg-[var(--surface-glass)] px-4 backdrop-blur-xl md:h-16 md:px-6">
             <div className="md:hidden">
@@ -240,7 +246,7 @@ function SearchButton({ onOpen }: { onOpen: () => void }) {
       aria-keyshortcuts="Control+K Meta+K"
       className="flex h-10 w-11 items-center justify-center gap-2 rounded-pill border border-border bg-surface-2 text-sm text-text-muted transition-colors duration-150 hover:border-border-strong hover:text-text focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)] sm:w-full sm:max-w-[420px] sm:justify-start sm:px-4"
     >
-      <Icons.Sparkle size={16} />
+      <Icons.Search size={17} />
       <span className="hidden flex-1 text-left sm:inline">Search people, songs, circles</span>
       <kbd className="hidden rounded-sm border border-border px-1.5 font-mono text-[11px] lg:inline">Ctrl K</kbd>
     </button>

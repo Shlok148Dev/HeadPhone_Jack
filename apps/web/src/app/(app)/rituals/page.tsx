@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useSearchParams } from "next/navigation";
 import { lazy, Suspense, useState } from "react";
 import { Blip, Button, EmptyState, ErrorState, Skeleton, cn, useToast, Artwork } from "@/components/ds";
@@ -137,7 +137,7 @@ function SeasonTable({ circleId }: { circleId: string }) {
   const season = useSeason(circleId, open);
   return (
     <div>
-      <Button variant="ghost" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Hide season" : "Season table"}</Button>
+      <Button variant="secondary" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Hide season" : "Season table"}</Button>
       {open && season.data && (
         <div className="mt-2 flex flex-col gap-1 text-sm">
           <p className="font-mono text-xs text-text-muted">{season.data.weeks} of {season.data.of} weeks played</p>
@@ -166,7 +166,7 @@ function BattleCard({ battle }: { battle: Battle }) {
           <h2 id={`b-${battle.id}`} className="font-display text-xl font-semibold">{battle.circle.name}</h2>
           <p className="text-sm text-text-muted">{PHASE_LINE[battle.phase](battle)}</p>
         </div>
-        {battle.can_skip && <Button variant="ghost" onClick={() => skip.mutate(battle.circle.id)}>Skip this week</Button>}
+        {battle.can_skip && <Button variant="secondary" onClick={() => skip.mutate(battle.circle.id)}>Skip this week</Button>}
       </header>
       {battle.phase === "nominating" && <Nominate battle={battle} />}
       {battle.phase === "voting" && <Vote battle={battle} />}
@@ -201,7 +201,7 @@ function RecapSection({ recap }: { recap: Recap }) {
               </div>
             </>
           ) : (
-            <Button onClick={() => share.mutate({ id: recap.id, on: true })}>Share a link</Button>
+            <Button variant="secondary" onClick={() => share.mutate({ id: recap.id, on: true })}>Share a link</Button>
           )}
           <DownloadRecap data={recap.data} />
           {story && (

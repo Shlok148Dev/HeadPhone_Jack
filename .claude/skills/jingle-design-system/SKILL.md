@@ -52,9 +52,11 @@ Feature screens compose these and never invent colours, radii or shadows.
 
 ## Artwork (hard rules)
 
-- **Real covers only**, from the Artwork service (`/api/v1/artwork`; iTunes Search API now, MusicKit once a token exists). Payloads carry `artwork_url`, `artwork_small` and `artwork_colors`.
+- **Real covers only**, from the Artwork service (`/api/v1/artwork`; iTunes Search API, then MusicBrainz + Cover Art Archive; MusicKit once a token exists). Payloads carry `artwork_url`, `artwork_small` and `artwork_colors`.
 - When no confident match exists, use `<GenerativeCover>`: muted, clearly a design, never a fake photo, never grey.
 - **Never put text, badges, controls or logos on artwork. Never crop, distort, recolour or animate it.** Motion and Live signals live *around* it (container, shadow, the person's Pulse).
+- Group faces (Blends, Circles) use `<CoverMosaic covers seed>`; avatars go below it, never on it.
+- No hover scale on artwork containers (scaling the box scales the art).
 - Store URLs and colours only; never commit image files.
 
 ## The Pulse (presence without words)

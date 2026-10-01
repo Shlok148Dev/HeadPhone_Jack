@@ -20,6 +20,8 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=build /repo/apps/web/.next/standalone ./
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /repo/apps/web/public ./apps/web/public
+# Writable cache for the image optimizer (Cover Art Archive covers, D-ART-07); the app runs as node.
+RUN mkdir -p ./apps/web/.next/cache && chown -R node:node ./apps/web/.next/cache
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=3s --retries=12 CMD node -e "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"

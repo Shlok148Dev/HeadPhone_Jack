@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { motion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useMotionSafe } from "@/lib/motion";
 import { cn } from "./utils";
 

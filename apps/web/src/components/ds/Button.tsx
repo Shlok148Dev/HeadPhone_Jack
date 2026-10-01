@@ -6,8 +6,11 @@ import { cn } from "./utils";
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 export type ButtonSize = "md" | "lg";
 
+/** `relative` unless the caller positions the button itself (absolute/fixed/sticky would lose to it). */
+const pos = (className?: string) => (/(^|\s)(absolute|fixed|sticky)(\s|$)/.test(className ?? "") ? "" : "relative");
+
 const base =
-  "ds-focus relative inline-flex select-none items-center justify-center gap-2 font-semibold whitespace-nowrap rounded-pill " +
+  "ds-focus inline-flex select-none items-center justify-center gap-2 font-semibold whitespace-nowrap rounded-pill " +
   "min-h-11 min-w-11 motion-safe:transition-[transform,background-color,color,box-shadow,opacity] motion-safe:duration-150 " +
   "motion-safe:active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
 
@@ -24,7 +27,7 @@ const sizes: Record<ButtonSize, string> = {
 };
 
 export function buttonClasses(variant: ButtonVariant = "primary", size: ButtonSize = "md", className?: string) {
-  return cn(base, variants[variant], sizes[size], className);
+  return cn(base, pos(className), variants[variant], sizes[size], className);
 }
 
 function Spinner() {
@@ -100,7 +103,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
       type={type ?? "button"}
       aria-label={label}
       title={label}
-      className={cn(base, variants[variant], "h-11 w-11 p-0", className)}
+      className={cn(base, pos(className), variants[variant], "h-11 w-11 p-0", className)}
       {...rest}
     >
       {children}

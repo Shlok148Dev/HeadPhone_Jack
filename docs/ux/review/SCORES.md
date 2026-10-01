@@ -21,7 +21,7 @@ The gate is every axis ≥ 8, with axes 6 (delight) and 8 (social intelligence) 
 | 2 Visual craft | 9 | Night Studio surfaces, Geist, artwork glow and 4/8 px art radii. Still short of Spotify's years of polish in spacing details (8, not 9) |
 | 3 Motion | 8 | The Pulse, orbit, spring queue, podium, recap story and scroll reveals. All transform/opacity; reduced motion handled |
 | 4 Artwork | 9 | Real covers everywhere; nothing on the art; honest generative fallback for 5 of 104 tracks |
-| 5 Speed | 9 | Home 180 kB and k6 p95 73 ms. Not yet measured: LCP, INP or CLS under Lighthouse CI |
+| 5 Speed | 9 | Home 156 kB (was 181; lazy animation features) and k6 p95 73 ms. Not yet measured: LCP, INP or CLS under Lighthouse CI |
 | 6 Delight | 7 | **Beats Spotify**: the breathing Pulse, Room orbit, podium, recap story and Blip moods |
 | 7 Accessibility | 8 | axe WCAG 2.2 AA clean on every route in both themes; keyboard palette; reduced motion |
 | 8 Social intelligence | 6 | **Beats Spotify by a wide margin**: presence, taste constellation with reasons, send-back from activity, shared rooms |

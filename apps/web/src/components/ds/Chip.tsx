@@ -7,7 +7,8 @@ const chipBase =
   "ds-focus inline-flex min-h-11 items-center gap-1.5 rounded-pill px-4 text-sm font-medium whitespace-nowrap " +
   "motion-safe:transition-[transform,background-color,color] motion-safe:duration-150 motion-safe:active:scale-[0.96]";
 const chipOff = "bg-surface-2 text-text-muted border border-border hover:text-text hover:bg-surface-3";
-const chipOn = "bg-gradient-brand text-on-brand border border-transparent";
+// Selected is a solid, inverted chip: the brand gradient is kept for the three moments per screen.
+const chipOn = "bg-text text-bg border border-transparent";
 
 export interface ChipProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onChange"> {
   selected?: boolean;
@@ -80,7 +81,8 @@ export function FilterChips({ options, value, defaultValue, onChange, label, cla
   const selectedIndex = Math.max(0, options.findIndex((o) => o.value === current));
 
   return (
-    <div role="radiogroup" aria-label={label} className={cn("flex flex-wrap gap-2", className)}>
+    // Phones: one row that scrolls sideways (padding keeps focus rings unclipped); wider: wraps.
+    <div role="radiogroup" aria-label={label} className={cn("ds-scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1 py-1 md:flex-wrap md:overflow-visible [&>button]:shrink-0", className)}>
       {options.map((opt, i) => {
         const checked = opt.value === current;
         return (

@@ -1,8 +1,8 @@
 "use client";
 
-import { motion } from "motion/react";
+import * as motion from "motion/react-m";
 import { useState } from "react";
-import { Button, seedGradient } from "@/components/ds";
+import { Artwork, Button, seedGradient } from "@/components/ds";
 import { useMotionSafe } from "@/lib/motion";
 import type { RecapData } from "@/lib/trust";
 
@@ -12,13 +12,28 @@ export function monthName(m: string): string {
 }
 
 function Front({ data, name }: { data: RecapData; name?: string }) {
-  const [from, to] = seedGradient(`recap-${data.month}`, "deep");
+  // The month takes its colour from its most-played cover (contrast-checked ambient); else a seeded gradient.
+  const top = data.top_tracks[0];
+  const amb = top?.artwork_colors?.ambient_dark;
+  const [from, to] = amb ? [amb, `color-mix(in srgb, ${amb} 55%, #000)`] : seedGradient(`recap-${data.month}`, "deep");
+  const covers = data.top_tracks.slice(0, 3).filter((t) => t.artwork_small || t.artwork_url);
   return (
     <div className="flex h-full flex-col justify-between rounded-xl p-6 text-white" style={{ background: `linear-gradient(150deg, ${from}, ${to})` }}>
-      <p className="font-mono text-xs uppercase tracking-wide text-white/80">{name ? `${name}'s ` : "Your "}{monthName(data.month)}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="font-mono text-xs uppercase tracking-wide text-white/80">{name ? `${name}'s ` : "Your "}{monthName(data.month)}</p>
+        {covers.length > 0 && (
+          <div className="flex -space-x-3" aria-hidden>
+            {covers.map((t) => (
+              <div key={`${t.title}|${t.artist}`} className="h-11 w-11 shrink-0 overflow-hidden rounded-[var(--r-art-sm)] shadow-2 ring-2 ring-black/30">
+                <Artwork url={t.artwork_small ?? t.artwork_url ?? null} seed={t.title} alt="" rounded="none" />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <div>
-        <p className="font-display text-5xl font-semibold">{data.minutes.toLocaleString()}</p>
-        <p className="text-sm text-white/85">minutes of music, about</p>
+        <p className="font-display text-5xl font-semibold tabular-nums">{data.minutes.toLocaleString()}</p>
+        <p className="text-sm text-white/85">minutes of music (estimated)</p>
       </div>
       <p className="text-sm text-white/85">Tap to see what you played</p>
     </div>
