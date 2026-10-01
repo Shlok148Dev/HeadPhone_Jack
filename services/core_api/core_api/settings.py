@@ -81,7 +81,9 @@ TEMPLATES = [
 DATABASES = {
     "default": env.db("DATABASE_URL", default="sqlite:///" + str(BASE_DIR / "test.sqlite3"))
 }
-DATABASES["default"]["CONN_MAX_AGE"] = 0  # PgBouncer-ready (Tech Bible 8.3)
+# 0 behind PgBouncer at scale (Tech Bible 8.3); the single-server pilot reuses connections.
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=0)
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 
 _REDIS_URL_ENV = env("REDIS_URL", default="")

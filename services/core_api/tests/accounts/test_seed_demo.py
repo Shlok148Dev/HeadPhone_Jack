@@ -22,7 +22,8 @@ def test_seeds_personas_idempotently(settings):
     settings.JINGLE_DEMO = True
     call_command("seed_demo")
     call_command("seed_demo")
-    assert User.objects.count() == len(PERSONAS)
+    assert User.objects.count() == len(PERSONAS) + 1  # + the demo moderator (mod@jingle.local)
+    assert User.objects.get(username="mod").is_staff
     assert ScrobbleToken.objects.count() == len(PERSONAS)
     demo = User.objects.get(email=DEMO_EMAIL)
     assert demo.check_password("jingle-demo-2026")

@@ -9,7 +9,7 @@ const ITEMS = [
   { href: "/settings/connections", label: "Music apps" },
   { href: "/settings/privacy", label: "Privacy" },
   { href: "/settings/notifications", label: "Notifications" },
-  { href: "/settings/account", label: "Account standing" },
+  { href: "/settings/account", label: "Account" },
 ];
 
 /** Settings sub-navigation (UX_SPEC §5.14). */

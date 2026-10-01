@@ -10,7 +10,10 @@ class Blend(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=80)
     created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="blends_created"
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,  # a Blend stays for the others when its creator leaves
+        related_name="blends_created",
     )
     circle = models.ForeignKey(
         "circles.Circle", null=True, blank=True, on_delete=models.CASCADE, related_name="blends"

@@ -1,0 +1,26 @@
+# Pilot server overlay: TLS on 80/443, no demo world, restart on failure.
+# docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+services:
+  edge:
+    ports: !override ["80:80", "443:443"]
+    environment:
+      JINGLE_DOMAIN: ${JINGLE_DOMAIN:?set JINGLE_DOMAIN in .env}
+      JINGLE_ACME_EMAIL: ${JINGLE_ACME_EMAIL:?set JINGLE_ACME_EMAIL in .env}
+    volumes: !override
+      - ./infra/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    restart: unless-stopped
+  core-api: { restart: unless-stopped }
+  workers: { restart: unless-stopped }
+  beat: { restart: unless-stopped }
+  ingest-ml: { restart: unless-stopped }
+  realtime: { restart: unless-stopped }
+  web: { restart: unless-stopped }
+  postgres: { restart: unless-stopped }
+  mongo: { restart: unless-stopped }
+  redis: { restart: unless-stopped }
+  qdrant: { restart: unless-stopped }
+  demo-simulator:
+    profiles: ["demo"]  # never runs on the pilot server unless asked for
+volumes:
+  caddydata:

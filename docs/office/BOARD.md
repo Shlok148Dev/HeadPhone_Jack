@@ -1,18 +1,12 @@
 # Sprint board
 
-Owner: Orchestrator (founder directive: no agents unless necessary; advance sprint to sprint through S11). Story IDs from SRS v4.0.
+Owner: Orchestrator. All sprints S0–S11 are done. The next phase is in STATE.md.
 
-## Sprint 11 — Hardening
-Goal: ship a pilot that is safe, accessible, measured and documented, runnable by Shlok from the README alone.
-
-### To do
-- S11-01 Security review: auth, tokens, CSP/headers, rate limits, IDOR sweep over every endpoint, secrets in logs, dependency audit (EP-13)
-- S11-02 Accessibility pass: axe on every route, keyboard walkthrough, focus order, reduced motion (JNG-13-07)
-- S11-03 k6: smoke at 50 users locally (run + results); 5,000-user scripts written and documented (JNG-13-01)
-- S11-04 Performance budgets: route JS table, API p95 from the smoke run
-- S11-05 Backups + tested restore runbook (JNG-13-03); data export check (JNG-13-04)
-- S11-06 Runbooks, pilot deployment guide (one small server), README 5-minute quick start, HUMAN_ACTIONS refresh
-- S11-07 Final STATE: complete / behind flags / known gaps / next phase
-
-### Done
-- Sprint 0–10: see STATE.md
+## Sprint 11 — Hardening (Done)
+- S11-01 Security review: Django admin closed at the edge, loopback bind, deletion hand-over, full export, NAT-safe refresh limit, dependency audits clean (`docs/office/reviews/S11-SECURITY-review.md`)
+- S11-02 Accessibility pass: axe on every route in both themes, keyboard skip link and focus (`e2e/a11y.spec.ts`)
+- S11-03 k6: 50-user smoke run (p95 73 ms, 0 errors); 5,000-user and session-storm scripts written
+- S11-04 Performance budgets table and tuning record (`docs/runbooks/performance.md`)
+- S11-05 Backups + tested restore (run: counts match); data export covers every domain + UI
+- S11-06 Runbooks, pilot deployment guide + TLS overlay, README quick start, HUMAN_ACTIONS HA-8/HA-9
+- S11-07 Final STATE

@@ -8,7 +8,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 from django.conf import settings
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -314,11 +314,161 @@ def purge_account(user_id) -> bool:
         except Exception:  # noqa: BLE001
             log.warning("mongo listens purge failed")
             raise
+    hand_over_shared(user)
     user.delete()
     return True
 
 
+def hand_over_shared(user: User) -> None:
+    """Leaving Jingle must not take shared spaces with you: circles you own pass to the
+    longest-standing admin (else member), live sessions you host hand over, Blends you made stay
+    for the others (their creator just becomes empty)."""
+    from circles.models import Circle, CircleMember, Role
+    from listening import services as listening
+    from listening.models import ListeningSession
+
+    for c in Circle.objects.filter(owner=user):
+        heir = (
+            CircleMember.objects.filter(circle=c)
+            .exclude(user=user)
+            .order_by(
+                # admins first, then the longest-standing member
+                models.Case(models.When(role=Role.ADMIN, then=0), default=1),
+                "id",
+            )
+            .first()
+        )
+        if heir is None:
+            continue  # nobody else: the circle goes with the account
+        heir.role = Role.OWNER
+        heir.save(update_fields=["role"])
+        Circle.objects.filter(pk=c.pk).update(owner_id=heir.user_id)
+    for s in ListeningSession.objects.filter(host=user, ended_at__isnull=True):
+        with transaction.atomic():
+            listening._hand_over(s, exclude=user.pk)
+            listening.broadcast(s)
+
+
 # ---------------------------------------------------------------- export
+
+
+def _export_social(user: User) -> dict:
+    """Everything Jingle-native the person made or received (S3–S10 domains)."""
+    from blends.models import BlendMember
+    from circles.models import CircleMember
+    from core_api.mongo import get_db
+    from listening.models import Participant, QueueEntry
+    from moderation.models import ModerationAction
+    from notifications.models import Notification, NotificationPrefs
+    from rituals.models import BattleVote, Nomination, Recap
+    from sends.models import Delivery, Recommendation
+    from social.models import Block, Friendship, FriendshipStatus, Report
+    from social.services import friend_ids
+    from suggestions.models import SuggestionFeedback, TasteSeed
+
+    def items(rec):
+        return [{"title": i.title, "artist": i.artist} for i in rec.items.all()]
+
+    names = dict(User.objects.values_list("id", "username"))
+    listens = []
+    db = get_db()
+    if db is not None:
+        try:
+            for d in (
+                db.listens.find(
+                    {"$or": [{"user_id": str(user.pk)}, {"meta.user_id": str(user.pk)}]},
+                    {"_id": 0, "played_at": 1, "raw.title": 1, "raw.artist": 1, "meta.platform": 1},
+                )
+                .sort("played_at", -1)
+                .limit(10_000)
+            ):
+                listens.append(
+                    {
+                        "played_at": d.get("played_at"),
+                        "title": (d.get("raw") or {}).get("title"),
+                        "artist": (d.get("raw") or {}).get("artist"),
+                        "platform": (d.get("meta") or {}).get("platform"),
+                    }
+                )
+        except Exception:  # noqa: BLE001
+            log.warning("listen export failed")
+    prefs = NotificationPrefs.objects.filter(user=user).first()
+    return {
+        "listens": listens,
+        "friends": sorted(names.get(u, "") for u in friend_ids(user.pk)),
+        "pending_requests_sent": [
+            names.get(f.user_high_id if f.user_low_id == user.pk else f.user_low_id)
+            for f in Friendship.objects.filter(requested_by=user, status=FriendshipStatus.PENDING)
+        ],
+        "blocked": [names.get(b.blocked_id) for b in Block.objects.filter(blocker=user)],
+        "reports_filed": [
+            {"target_type": r.target_type, "reason": r.reason, "created_at": r.created_at}
+            for r in Report.objects.filter(reporter=user)
+        ],
+        "taste_picks": (
+            {"artists": seed.artists, "genres": seed.genres}
+            if (seed := TasteSeed.objects.filter(user=user).first())
+            else None
+        ),
+        "suggestions_dismissed": SuggestionFeedback.objects.filter(user=user).count(),
+        "circles": [
+            {"name": m.circle.name, "role": m.role}
+            for m in CircleMember.objects.filter(user=user).select_related("circle")
+        ],
+        "sends": [
+            {
+                "sent_at": r.created_at,
+                "note": r.note,
+                "songs": items(r),
+                "to": [names.get(d.recipient_id) for d in r.deliveries.all()],
+            }
+            for r in Recommendation.objects.filter(sender=user).prefetch_related(
+                "items", "deliveries"
+            )
+        ],
+        "received": [
+            {
+                "from": names.get(d.rec.sender_id),
+                "sent_at": d.rec.created_at,
+                "note": d.rec.note,
+                "songs": items(d.rec),
+                "reaction": d.reaction,
+            }
+            for d in Delivery.objects.filter(recipient=user)
+            .select_related("rec")
+            .prefetch_related("rec__items")
+        ],
+        "blends": [
+            b.blend.name for b in BlendMember.objects.filter(user=user).select_related("blend")
+        ],
+        "sessions_joined": Participant.objects.filter(user=user, joined_at__isnull=False).count(),
+        "session_songs_added": [
+            {"title": e.title, "artist": e.artist, "anonymous": e.added_by_id is None}
+            for e in QueueEntry.objects.filter(submitted_by=user)
+        ],
+        "battle_nominations": [
+            {"week": n.battle.week, "title": n.title, "artist": n.artist}
+            for n in Nomination.objects.filter(user=user).select_related("battle")
+        ],
+        "battle_votes": BattleVote.objects.filter(voter=user).count(),
+        "recaps": [{"month": r.month, "data": r.data} for r in Recap.objects.filter(user=user)],
+        "notification_settings": {
+            "types": prefs.types,
+            "quiet_start": prefs.quiet_start,
+            "quiet_end": prefs.quiet_end,
+            "push_daily_cap": prefs.push_daily_cap,
+        }
+        if prefs
+        else None,
+        "notifications": [
+            {"title": n.title, "created_at": n.created_at, "read": n.read_at is not None}
+            for n in Notification.objects.filter(user=user).order_by("-created_at")[:500]
+        ],
+        "moderation": [
+            {"kind": a.kind, "reason": a.reason, "created_at": a.created_at}
+            for a in ModerationAction.objects.filter(user=user)
+        ],
+    }
 
 
 def export_account(user: User) -> dict:
@@ -364,6 +514,7 @@ def export_account(user: User) -> dict:
             }
             for c in PlatformConnection.objects.filter(user=user).order_by("created_at")
         ],
+        **_export_social(user),
         "companion_tokens": [
             {
                 "label": t.label,

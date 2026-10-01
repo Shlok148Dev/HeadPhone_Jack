@@ -11,4 +11,4 @@ Feature: Sign up and stay signed in (JNG-01-01, NFR-PRIV-02, ADR-0011)
     Given a signed-in member with a refresh cookie
     When the web app refreshes the session
     Then it receives a new access token and a new refresh cookie
-    And the old refresh cookie is rejected
+    And the old refresh cookie is rejected once its 30-second grace has passed

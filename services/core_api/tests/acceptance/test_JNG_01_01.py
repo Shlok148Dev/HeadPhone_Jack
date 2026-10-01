@@ -73,8 +73,12 @@ def new_tokens(ctx):
     assert resp.cookies[COOKIE]["httponly"]
 
 
-@then("the old refresh cookie is rejected")
+@then("the old refresh cookie is rejected once its 30-second grace has passed")
 def old_rejected(ctx):
+    from core_api.redis_client import get_redis
+
+    for k in get_redis().scan_iter("refresh:grace:*"):  # the grace window has expired
+        get_redis().delete(k)
     client = APIClient()
     client.cookies[COOKIE] = ctx["old_refresh"]
     resp = client.post("/api/v1/auth/refresh")

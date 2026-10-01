@@ -93,3 +93,19 @@ Spotify's design guidelines require its official logo next to Spotify-sourced co
 1. Go to <https://developer.spotify.com/documentation/design> and download the official logo pack.
 2. Put the full-colour logo (icon + wordmark) SVGs in `apps/web/public/brand/spotify/` as `logo-white.svg` and `logo-black.svg`, unmodified.
 3. Rebuild the web image. Only direct-Spotify cards (5 testers) use it.
+
+## HA-8 Put the pilot on a server (when you're ready to invite the 10)
+
+Unlocks: friends using Jingle from their own phones and laptops over HTTPS.
+
+1. Rent a 4 vCPU / 8 GB Ubuntu 24.04 server (for example Hetzner CPX31). Install Docker Engine and the Compose plugin.
+2. Point a domain or subdomain (A record) at it.
+3. Follow [`docs/runbooks/deploy-pilot.md`](../runbooks/deploy-pilot.md) step by step: `.env` values, one `docker compose` command, make yourself staff, add backups to cron.
+4. Update the Spotify, Last.fm and Google redirect URIs (HA-1…3) from `http://127.0.0.1:8080` to `https://<your-domain>`.
+
+Verify: open `https://<your-domain>`, sign up, connect a source, and see your card on Home.
+
+## HA-9 (optional) Ticketmaster key for concerts (EP-10)
+
+Concerts are not built in the pilot. EP-10 is all Should/Could except "attendance private by default", which has nothing to protect until concerts exist. To build them later, get a free key at <https://developer.ticketmaster.com> (Discovery API) and set `TICKETMASTER_API_KEY` in `.env`.
+

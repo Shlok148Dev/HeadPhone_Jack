@@ -67,6 +67,15 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-12-05 | Feature flags per source and feature | `test_JNG_12_05_flags_toggle_is_audited` | `/staff` Flags | ✅ |
 | JNG-12-06 | Spotify tester allowlist | `test_JNG_12_06_…` | `moderation.AllowlistEntry`, `sources/connect_views._allowlisted` | ✅ |
 | JNG-12-08 | Appeal a moderation action | `test_JNG_12_08_overturned_appeal_lifts_the_action`; E2E | `/settings/account`, `/staff` Appeals | ✅ |
+| JNG-13-01 | 5,000 concurrent users | k6 `infra/k6/smoke.js` (50 users, run: p95 73 ms, 0 errors); `scale-5000.js`, `session-storm.js` written | `docs/runbooks/performance.md`, `scale-test.md` | 🟡 scale run needs staging (documented) |
+| JNG-13-02 | Dashboards and alerts per NFR | structured logs + health endpoints; panels listed | `docs/runbooks/scale-test.md` | 🟡 Grafana stack with the scale environment |
+| JNG-13-03 | Daily backups, tested restore | `infra/backup/restore-test.sh` (run: counts match) | `infra/backup/*`, `docs/runbooks/backup-restore.md` | ✅ |
+| JNG-13-04 | Download my data as JSON | `tests/accounts/test_data_rights_s11.py::test_export_covers_every_domain`; E2E `ep13/JNG-13.spec.ts` | `accounts/services.export_account`, Settings → Account | ✅ |
+| JNG-01-10 | Delete my account (purge within 30 days, shared spaces handed over) | `test_deleting_an_owner_hands_shared_spaces_over`; E2E delete | `accounts/services.purge_account`, `hand_over_shared` | ✅ |
+| JNG-13-05 | Zero-downtime deploys | — | `docs/runbooks/deploy-pilot.md` §5 | 🟡 pilot accepts seconds of downtime; needs 2 replicas |
+| JNG-13-06 | Contract tests for every adapter | ingest-ml fixture contract tests (S2) | `services/ingest_ml/tests` | ✅ |
+| JNG-13-07 | Screen reader and keyboard | E2E `a11y.spec.ts` (every route, both themes, axe WCAG 2.2 AA; skip link, focus visible) | all routes | ✅ |
+| JNG-13-08 | Status page | `/healthz` per service | — | 🟡 not built (Should) |
 | JNG-05-04 | Open in my own app (search fallback) | `test_JNG_05_04_search_links_for_open_in_my_app` | `feed/resolver._search_links`, `FeedCard.pickLink` | ✅ |
 | JNG-05-07 | Source down → cached card, honest time, delayed | `test_JNG_05_07_needs_reconnect_marks_recent_as_delayed` | `feed/resolver._source_delayed`, Home degraded line | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |

@@ -1,11 +1,83 @@
 # STATE — Jingle
 
-_Last updated: 2026-10-01 — Sprint 10 complete_
+_Last updated: 2026-10-01 — **All sprints (S0–S11) complete.** Phase 1 (web pilot) is done._
 
-## Current sprint
-**Sprints 0–10 done.** Now: **Sprint 11 — hardening, final docs** (see `BOARD.md`). Founder directive: advance sprint to sprint through S11 after each readiness check.
+## Final summary
+
+### Complete and working (demo mode needs no keys: `docker compose up`, see README)
+- **Accounts and data rights.**
+  - Email sign-up and sign-in, plus Google sign-in once HA-3 is done. 18+ gate.
+  - Privacy settings, Private mode, itemised consents.
+  - Export of every domain as JSON, from the UI.
+  - Account deletion: hidden now, purged within 30 days, shared circles, sessions and Blends handed over.
+- **Jingle Connect.**
+  - One button per platform, with invisible routing (ADR-0017).
+  - Spotify: direct for up to 5 allowlisted users, Spotify's Last.fm link for everyone else, and the Companion on the web player.
+  - YouTube Music, Apple Music and Amazon Music web players through the Companion extension (MV3, unpacked).
+  - Last.fm and ListenBrainz connections; YouTube Takeout import.
+  - Identity resolver; honest capability copy throughout.
+- **Live feed.**
+  - Live is never shown on a signal older than 90 s (BR-01).
+  - Live, Recent and Top cards; realtime hints; honest degraded states.
+  - Circle filter chips; Open in my app with a search fallback.
+- **Social.** Friends, requests, blocks, reports, invite links + QR, and friend suggestions with ≤ 3 safe reasons (ADR-0019).
+- **Circles.** Up to 50 members, roles, invites and 7-day links, circle feed, and Leiden suggested circles that never auto-join.
+- **Sends.**
+  - Tracks and 5–8 song mixtapes with notes.
+  - Sent → Delivered → Viewed → Played, from the recipient's own listens.
+  - Reactions, replies with a song, and discovery credits.
+- **Blends** (with reasons and pins) and **live sessions** (shared queue, anonymous adds, one vote each with live re-order, host hand-over, rejoin).
+- **Understand.**
+  - Compatibility always shown with its breakdown (BR-09), and sound honestly "unavailable".
+  - My stats and a 12-month timeline.
+- **Rituals.**
+  - Weekly battle per circle: nominate, 3 votes, late votes refused, results within 5 min, season table, skip week.
+  - Monthly recap with a flip reveal, an opt-in share link and image export.
+- **Notifications.** In-app centre, per-type controls, quiet hours, and opt-in web push (VAPID) capped at 5 a day.
+- **Trust.**
+  - Reports on users, circles and notes.
+  - Staff console: queue with context, warn/mute/suspend/ban, appeals, audit log, feature flags, live per-source budgets, Spotify tester allowlist.
+- **Quality bar.**
+  - Gherkin scenarios from the SRS automated.
+  - Unit coverage: core-api 93 %, ingest-ml 86 %, with each new app ≥ 86 %; realtime and web are covered by unit and E2E tests (no % gate configured).
+  - E2E across EP-01…13, with axe WCAG 2.2 AA on every route in both themes.
+  - Screenshots for both themes at 1440 and 390 px.
+  - Security review approved (`reviews/S11-SECURITY-review.md`).
+  - k6 smoke at 50 users: p95 73 ms, 0 errors.
+  - Tested backup restore.
+
+### Behind feature flags (off by default; built and tested against fixtures)
+| Flag | What | Why off |
+| --- | --- | --- |
+| `apple_music_enabled` | Apple MusicKit direct route | needs Apple Developer enrolment |
+| `amazon_music_enabled` | Amazon Music API route | needs Amazon API access |
+| `google_dataportability_enabled` | Google Data Portability (YouTube history) | needs Google app verification; Takeout upload works now |
+| `concerts_enabled` | Concerts (EP-10) | not built; needs a Ticketmaster key (HA-9) |
+| `spotify_direct_enabled` (on) | Direct Spotify for ≤ 5 testers | works once HA-1 keys exist |
+
+### Known gaps (accepted and shown honestly in the product)
+- **No Live from phones** for YouTube Music, Apple Music or Amazon Music in the web phase. Those plays show as Recent and history (via Takeout, or Last.fm where the person scrobbles). Spotify phone listening is Live through Spotify's Last.fm link.
+- **Spotify and Last.fm are not verified live** until HA-1 and HA-2 keys exist. They are covered by recorded fixtures and contract tests.
+- **Compatibility "Sound"** stays unavailable: there is no audio analysis (Essentia) yet.
+- **Saving a Blend to a platform** is reported as unavailable: there is no zero-approval write path.
+- **Not built (Should/Could).** Concerts (EP-10), circles digest (JNG-09-09), email digest (JNG-11-05), comment threads (JNG-11-06), send streaks (JNG-09-07), timeline overlay and circle taste map (JNG-08-04/05), status page (JNG-13-08).
+- **Scale.** The 5,000-user test and the NFR dashboards (JNG-13-01/02) are written and documented but need a staging environment. Zero-downtime deploys (JNG-13-05) need 2 replicas.
+- **Staff accounts have no second factor.** Add TOTP before growing past the pilot.
+
+### Recommended next phase
+1. **Run the pilot.** Do HA-1, HA-2, HA-4 and HA-8 and invite the 10 people. Watch `/staff` → Budgets and the backup log for two weeks.
+2. **Mobile apps (Phase 2).** An Android app that reads the phone's media session (Tech Bible 7.1) closes the biggest honest gap: Live from phones for YouTube Music, Apple Music and Amazon Music. iOS follows with MusicKit once Apple enrolment exists.
+3. **Scale readiness.** Stand up staging with PgBouncer, run `infra/k6/scale-5000.js` and `session-storm.js`, add Grafana panels per NFR, and cache each owner's resolved feed signal.
+4. **Approval-gated integrations.** Apple Music, Amazon Music, Google Data Portability and a Last.fm commercial agreement (BR-04).
 
 ## Done (on main)
+### Sprint 11 — Hardening
+- Security review: refresh-rotation race fixed (30 s grace, ADR-0011 addendum); Django admin closed at the edge, loopback bind by default, account deletion hands circles/sessions/Blends over (was cascading), full data export + UI (download, delete), refresh limit NAT-safe, postcss override; pnpm and pip audits clean.
+- Accessibility pass: axe on every route in both themes + keyboard skip link/focus checks (`e2e/a11y.spec.ts`).
+- Performance: k6 smoke 50 users (p95 73 ms, 0 errors); stress ceiling ~80 req/s at 0 errors; tuning record (uvicorn 4 workers, `DB_CONN_MAX_AGE=0`); 5,000-user + session-storm scripts.
+- Backups: daily script, weekly tested restore (counts match), real-restore runbook.
+- Docs: runbooks (operations, deploy-pilot with TLS overlay, backup-restore, incident, performance, scale-test), README, HUMAN_ACTIONS HA-8/HA-9, traceability EP-13.
+
 ### Sprint 0 — Setup
 - Source docs in `docs/source/`; `docs/PLAN.md`, `docs/architecture/CONTRACTS.md`, ADR-0001…0016.
 - 14 agent definitions, 6 project skills (no `frontend-design` skill installed; `jingle-design-system` + UX spec used instead).
@@ -85,6 +157,9 @@ _Last updated: 2026-10-01 — Sprint 10 complete_
 Founder directive: the Orchestrator does all work itself; subagents only when extremely necessary (PLAN §10 rule 0).
 
 ## Next
+See "Recommended next phase" above.
+
+<!-- previous next-steps kept below for history -->
 1. Sprint 11 — hardening: security review, accessibility pass, k6 smoke (50 users) + 5,000-user scripts, performance budgets, runbooks, README quick start, pilot deployment guide, final STATE.
 
 ## Open risks
@@ -93,9 +168,12 @@ Founder directive: the Orchestrator does all work itself; subagents only when ex
 - R-C: Spotify redirect must use 127.0.0.1; callbacks state-bound (ADR-0016).
 - R-D: Docker Desktop on this host stops intermittently; restart it before `docker compose up`.
 - R-F: Home route JS is at the 180 kB budget; new Home features must lazy-load.
-- R-E: Refresh-token rotation can race across two open tabs (second tab is signed out); acceptable for pilot, revisit with a grace window in S11.
+- R-E (resolved S11): refresh-token rotation race fixed with a 30 s rotation grace (ADR-0011 addendum).
 
 ## Retros
+### Sprint 11 (2026-10-01)
+- Went well: a deliberate security pass found two real issues tests hadn't (cascade on owner deletion, exposed Django admin); measuring before tuning saved a bad change (threaded WSGI was slower).
+- Watch: re-run the a11y + smoke specs before every pilot update.
 ### Sprint 10 (2026-10-01)
 - Went well: one notify() entry point made prefs, quiet hours and caps apply everywhere at once; tests caught two real bugs before the UI did.
 - Watch: shared-IP rate limits (pilot behind NAT); keep E2E self-healing when a run is interrupted.

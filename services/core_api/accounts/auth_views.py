@@ -127,13 +127,50 @@ class RefreshView(_PublicAuthView):
             raise ApiError("REFRESH_INVALID", "Please sign in again.", 401)
         try:
             token = RefreshToken(raw)
+            rotated_just_now = False
         except TokenError as exc:
-            raise ApiError("REFRESH_INVALID", "Please sign in again.", 401) from exc
+            token = _within_rotation_grace(raw)
+            if token is None:
+                raise ApiError("REFRESH_INVALID", "Please sign in again.", 401) from exc
+            rotated_just_now = True
         user = User.objects.filter(pk=token.payload.get("sub"), is_active=True).first()
         if user is None or user.deleted_at is not None:
             raise ApiError("REFRESH_INVALID", "Please sign in again.", 401)
-        token.blacklist()
+        if not rotated_just_now:
+            token.blacklist()
+            _mark_rotated(token)
         return _auth_response(user)
+
+
+ROTATION_GRACE_S = 30
+
+
+def _grace_key(token) -> str:
+    return f"refresh:grace:{token.payload.get('jti')}"
+
+
+def _mark_rotated(token) -> None:
+    """A page that navigates while its refresh is in flight never stores the new cookie and
+    presents the old one again. Allow that for a few seconds (R-E); logout never sets this."""
+    from core_api.redis_client import get_redis
+
+    try:
+        get_redis().set(_grace_key(token), str(token.payload.get("sub")), ex=ROTATION_GRACE_S)
+    except Exception:  # noqa: BLE001 - no Redis: no grace, the user signs in again
+        log.warning("refresh grace unavailable")
+
+
+def _within_rotation_grace(raw: str):
+    from core_api.redis_client import get_redis
+
+    try:
+        token = RefreshToken(raw, verify=False)  # signature still checked; blacklist is not
+        token.check_exp()
+        return (
+            token if get_redis().get(_grace_key(token)) == str(token.payload.get("sub")) else None
+        )
+    except Exception:  # noqa: BLE001
+        return None
 
 
 class LogoutView(_PublicAuthView):

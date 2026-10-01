@@ -12,6 +12,11 @@ export const options = {
     http_req_failed: ["rate<0.01"],
     "http_req_duration{name:feed}": ["p(95)<300"],
     "http_req_duration{name:me}": ["p(95)<300"],
+    "http_req_duration{name:notifications}": ["p(95)<300"],
+    "http_req_duration{name:inbox_unread}": ["p(95)<300"],
+    "http_req_duration{name:friends}": ["p(95)<300"],
+    "http_req_duration{name:rituals}": ["p(95)<300"],
+    "http_req_duration{name:suggestions}": ["p(95)<300"],
     http_req_duration: ["p(95)<300"],
   },
 };
@@ -31,5 +36,7 @@ export default function (data) {
   get("/friends", u.token, "friends");
   get("/rituals", u.token, "rituals");
   get("/suggestions", u.token, "suggestions");
-  sleep(1 + Math.random() * 2);
+  // Realistic browsing: a page change every 5–10 s (the socket keeps the feed live in between).
+  // STRESS=1 drops the think time to 1–3 s to find the throughput ceiling instead.
+  sleep(__ENV.STRESS ? 1 + Math.random() * 2 : 5 + Math.random() * 5);
 }

@@ -203,14 +203,26 @@ class TestRefreshLogout:
         )
         return r.cookies[COOKIE].value
 
-    def test_refresh_rotates_and_blacklists_old(self, api):
+    def test_refresh_rotates_and_blacklists_old(self, api, fake_redis):
         old = self._login(api)
         r = api.post("/api/v1/auth/refresh")
         assert r.status_code == 200
         new = r.cookies[COOKIE].value
         assert new != old
         assert _decode(r.json()["access"])["typ"] == "access"
+        # R-E: a page that navigated mid-refresh re-presents the old cookie within 30 s: allowed.
         api.cookies[COOKIE] = old
+        assert api.post("/api/v1/auth/refresh").status_code == 200
+        # After the grace window the rotated token is dead for good.
+        for k in fake_redis.scan_iter("refresh:grace:*"):
+            fake_redis.delete(k)
+        api.cookies[COOKIE] = old
+        assert api.post("/api/v1/auth/refresh").status_code == 401
+
+    def test_logged_out_token_gets_no_grace(self, api, fake_redis):
+        tok = self._login(api)
+        api.post("/api/v1/auth/logout")
+        api.cookies[COOKIE] = tok
         r2 = api.post("/api/v1/auth/refresh")
         assert r2.status_code == 401
         assert r2.json()["error"]["code"] == "REFRESH_INVALID"
