@@ -31,7 +31,7 @@ test("JNG-05-02 a friend's Live card appears without refreshing", async ({ page,
   await page.getByLabel("Password", { exact: true }).fill("e2e-password-123");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/home/);
-  await expect(page.getByText(/No one.s playing right now/)).toBeVisible();
+  await expect(page.getByText(/No(body| one).s playing right now/)).toBeVisible();
 
   // B starts playing on YouTube Music in the browser; A's page updates live.
   const sent = await request.post("/ingest/1/submit-listens", {
@@ -39,8 +39,9 @@ test("JNG-05-02 a friend's Live card appears without refreshing", async ({ page,
     data: { listen_type: "playing_now", payload: [{ track_metadata: { artist_name: "Anuv Jain", track_name: "Husn", additional_info: { music_service: "music.youtube.com" } } }] },
   });
   expect(sent.ok()).toBeTruthy();
-  const shelf = page.getByRole("region", { name: /Live now/ }).or(page.locator("section").filter({ hasText: "Live now" }));
-  await expect(shelf.getByText("Live on YouTube Music").first()).toBeVisible({ timeout: 15_000 });
+  // Home shows friends' listening in the Now stage (D-HOME-02).
+  const stage = page.getByRole("region", { name: "Playing now" });
+  await expect(stage.getByText("Live on YouTube Music").first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("Husn").first()).toBeVisible();
   await expect(page.locator("main")).not.toContainText(ROUTE_WORDS);
   await expectNoA11yViolations(page);

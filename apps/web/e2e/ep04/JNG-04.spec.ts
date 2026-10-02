@@ -68,12 +68,12 @@ test.describe("EP-04 circles", () => {
     await expect(page.getByRole("heading", { name: /doesn.t work any more/ })).toBeVisible();
   });
 
-  test("JNG-05-03 circle chip narrows Home to that circle", async ({ page }) => {
+  test("JNG-05-03 a circle's page shows only that circle's listening", async ({ page }) => {
+    // Home no longer has circle chips (D-HOME-02); the circle page is where a circle's feed lives.
     await signIn(page);
-    await page.goto("/home");
-    await page.getByRole("radio", { name: "KJ Somaiya crew" }).click();
-    await expect(page.getByRole("heading", { name: /In this circle|Everyone else/ })).toBeVisible();
-    await expect(page.getByRole("article", { name: /Zoya/ })).toHaveCount(0); // Zoya isn't in this circle
+    await page.goto("/circles");
+    await page.getByRole("link", { name: /KJ Somaiya crew/ }).first().click();
     await expect(page.getByRole("article", { name: /Aanya/ }).first()).toBeVisible();
+    await expect(page.getByRole("article", { name: /Zoya/ })).toHaveCount(0); // Zoya isn't in this circle
   });
 });

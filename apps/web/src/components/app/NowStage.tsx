@@ -45,7 +45,13 @@ export function NowStage({
     return () => window.clearInterval(t);
   }, [stage.length, paused, m.reduced]);
 
-  if (!stage.length) return null;
+  if (!stage.length)
+    return (
+      <section aria-labelledby="now-stage-h" className="flex items-center gap-3 rounded-[28px] border border-border bg-surface-1 p-5">
+        <h2 id="now-stage-h" className="sr-only">Playing now</h2>
+        <p className="text-sm text-text-muted">Nobody&rsquo;s playing right now. When a friend presses play, it shows up here.</p>
+      </section>
+    );
   const card = stage[index % stage.length]!;
   const rec = card.recording!;
   const live = isFreshLive(card, now) && !card.degraded;

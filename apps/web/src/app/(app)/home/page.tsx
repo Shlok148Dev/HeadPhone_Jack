@@ -4,22 +4,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
-  Blip,
-  Button,
   EmptyState,
   ErrorState,
   FeedCard,
   FeedCardSkeleton,
-  FilterChips,
-  Shelf,
   Skeleton,
   type Platform,
 } from "@/components/ds";
 import { NowStage } from "@/components/app/NowStage";
 import { useAuth } from "@/lib/auth";
 import { songFromCard, useOpenSend } from "@/lib/send";
-import { useCircles } from "@/lib/circles";
-import { isFreshLive, useFeed } from "@/lib/feed";
+import { useFeed } from "@/lib/feed";
 import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
 
@@ -60,12 +55,8 @@ export default function HomePage() {
   const openSend = useOpenSend();
   const router = useRouter();
   const realtime = useRealtimeStatus();
-  const [filter, setFilter] = useState("all");
-  const circleId = filter.startsWith("c:") ? filter.slice(2) : undefined;
-  const allFeed = useFeed(realtime === "live");
-  const circleFeed = useFeed(realtime === "live", circleId);
-  const feed = circleId ? circleFeed : allFeed;
-  const circles = useCircles();
+  // D-HOME-02: Home shows friends' listening once, in the Now stage (no duplicate shelves).
+  const feed = useFeed(realtime === "live");
   const mine = useMyCard();
   const connections = useConnections();
   const now = useTick();
@@ -79,11 +70,7 @@ export default function HomePage() {
   const allCards = feed.data?.results ?? [];
   const spotifyCards = allCards.filter((c) => c.attribution === "SPOTIFY");
   const cards = allCards.filter((c) => c.attribution !== "SPOTIFY");
-  const live = cards.filter((c) => isFreshLive(c, now));
-  const liveIds = new Set(live.map((c) => c.friend.id));
-  // "All": Live friends sit in the shelf above, so the grid is everyone else (UX_SPEC §5.4).
-  const shown = filter === "live" ? live : cards.filter((c) => !liveIds.has(c.friend.id));
-  const hasFriends = allCards.length > 0 || !!circleId;
+  const hasFriends = allCards.length > 0;
 
   return (
     <div className="flex min-w-0 flex-col gap-8">
@@ -92,90 +79,28 @@ export default function HomePage() {
         {firstName(me?.display_name || me?.username) ? `, ${firstName(me?.display_name || me?.username)}` : ""}
       </h1>
       {/* D-HOME-01: the stage (what a friend is playing, Tune in), then today's Drop, then rituals. */}
-      <NowStage cards={cards} now={now} myPlatform={myPlatform} onSend={(c) => openSend({ song: songFromCard(c) })} />
+      {feed.isLoading ? (
+        <Skeleton className="h-[340px]" rounded="lg" />
+      ) : feed.isError ? (
+        <ErrorState title="We couldn't load your friends' music." message="This is on us. Try again in a moment." onRetry={() => void feed.refetch()} retrying={feed.isFetching} />
+      ) : !hasFriends ? (
+        <section className="rounded-lg border border-border bg-surface-1">
+          <EmptyState
+            pose="wave"
+            title="Your Home is waiting for friends"
+            description="Add a friend and you'll see what they're playing here."
+            action={{ label: "Invite friends", onClick: () => router.push("/friends?tab=find") }}
+          />
+        </section>
+      ) : (
+        <NowStage cards={cards} now={now} myPlatform={myPlatform} onSend={(c) => openSend({ song: songFromCard(c) })} />
+      )}
       <Suspense fallback={<div className="min-h-[280px] rounded-[24px] bg-surface-1" aria-hidden />}>
         <DailyDrop myPlatform={myPlatform} />
       </Suspense>
       <Suspense fallback={<div className="min-h-[220px] rounded-[20px] bg-surface-1" aria-hidden />}>
         <HomeHero />
       </Suspense>
-
-      {feed.isLoading ? (
-        <div className="flex flex-col gap-4" aria-busy="true">
-          <Skeleton className="h-9 w-40" rounded="pill" />
-          <div className="flex gap-4 overflow-hidden">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="w-[148px] shrink-0 md:w-[184px]">
-                <FeedCardSkeleton />
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : feed.isError ? (
-        <ErrorState title="We couldn't load your feed." message="This is on us. Try again in a moment." onRetry={() => void feed.refetch()} retrying={feed.isFetching} />
-      ) : !hasFriends ? (
-        <section className="rounded-lg border border-border bg-surface-1">
-          <EmptyState
-            pose="wave"
-            title="Your feed is waiting for friends"
-            description="Add a friend and you'll see what they're playing here."
-            action={{ label: "Invite friends", onClick: () => router.push("/friends?tab=find") }}
-          />
-        </section>
-      ) : (
-        <>
-          <div className="flex flex-col gap-2">
-            <FilterChips
-              label="Filter your feed"
-              value={filter}
-              onChange={setFilter}
-              options={[
-                { value: "all", label: "All" },
-                { value: "live", label: live.length ? `Live · ${live.length}` : "Live" },
-                ...(circles.data ?? []).map((c) => ({ value: `c:${c.id}`, label: c.name })),
-              ]}
-            />
-            {feed.data?.degraded && (
-              <p className="font-mono text-xs text-text-muted">Some friends&rsquo; plays may be delayed. Showing the latest we have.</p>
-            )}
-          </div>
-
-          {filter !== "live" &&
-            (live.length ? (
-              <Shelf title="Live now" live count={live.length} itemWidth="clamp(148px, 40vw, 200px)">
-                {live.map((c, i) => (
-                  <FeedCard key={c.friend.id} card={c} myPlatform={myPlatform} index={i} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} />
-                ))}
-              </Shelf>
-            ) : (
-              <section aria-labelledby="live-h" className="flex items-center gap-3 rounded-lg border border-border bg-surface-1 p-4">
-                <h2 id="live-h" className="sr-only">Live now</h2>
-                <Blip pose="sleepy" size={48} decorative />
-                <p className="text-sm text-text-muted">No one&rsquo;s playing right now.</p>
-              </section>
-            ))}
-
-          <section aria-labelledby="friends-h" className="flex flex-col gap-3">
-            <h2 id="friends-h" className="font-display text-xl font-semibold">
-              {filter === "live" ? "Live now" : live.length ? "Everyone else" : circleId ? "In this circle" : "Your friends"}
-            </h2>
-            {shown.length ? (
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(148px,1fr))] gap-4 md:grid-cols-[repeat(auto-fill,minmax(184px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(200px,1fr))]">
-                {shown.map((c, i) => (
-                  <li key={c.friend.id}>
-                    <FeedCard card={c} myPlatform={myPlatform} index={i} sharedLayout={false} onSend={(x) => openSend({ song: songFromCard(x) })} />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="flex flex-col items-start gap-2">
-                <p className="text-sm text-text-muted">{circleId ? "Everyone in this circle is live above." : "No one’s live right now."}</p>
-                <Button variant="ghost" onClick={() => setFilter("all")}>Show everyone</Button>
-              </div>
-            )}
-          </section>
-        </>
-      )}
 
       {spotifyCards.length > 0 && (
         <section aria-labelledby="spotify-h" className="flex flex-col gap-3 rounded-[12px] border border-border p-3">
