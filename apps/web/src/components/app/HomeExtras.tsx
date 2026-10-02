@@ -157,7 +157,7 @@ export function HomeShelves() {
             return (
               <Link key={d.id} href="/inbox" className="group flex flex-col gap-2 rounded-lg p-2 hover:bg-surface-1 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
                 <div className="jg-art-glow overflow-hidden rounded-[8px]" style={first?.artwork_colors ? ({ "--art": first.artwork_colors.accent } as CSSProperties) : undefined}>
-                  <Artwork url={first?.artwork_url} seed={`${first?.artist}|${first?.title}`} alt="" rounded="none" />
+                  <Artwork url={first?.artwork_url} seed={`${first?.artist}|${first?.title}`} alt="" rounded="none" eager tint={first?.artwork_colors?.dominant} sizes="(min-width: 1024px) 260px, 40vw" />
                 </div>
                 <span className="flex items-center gap-2">
                   <Avatar name={d.sender.display_name} seed={d.sender.id} size={20} decorative />

@@ -162,6 +162,12 @@ export interface ArtworkProps {
   alt: string;
   className?: string;
   rounded?: "sm" | "md" | "lg" | "none";
+  /** Rendered width hint for srcset; default lets the browser measure lazy images ("auto"). */
+  sizes?: string;
+  /** Above-the-fold art (auth wall, heroes): load now, at high priority. */
+  eager?: boolean;
+  /** The cover's own dominant colour, shown while it loads (from artwork_colors). */
+  tint?: string | null;
 }
 
 /**
@@ -169,31 +175,52 @@ export interface ArtworkProps {
  * stalls. Serve them through Next's image optimizer (allowlisted in next.config): fetched once
  * server-side, cached, then fast from our own origin (D-ART-07). Other hosts are CDN-fast already.
  */
-export function servable(url: string): string {
+export function servable(url: string, w = 256): string {
   if (!url.startsWith("https://coverartarchive.org/")) return url;
-  const w = /-(500|1200)$/.test(url) ? 640 : 256;
-  return `/_next/image?url=${encodeURIComponent(url)}&w=${w}&q=80`;
+  return `/_next/image?url=${encodeURIComponent(url)}&w=${w}&q=82`;
+}
+
+const ITUNES_SIZE = /\/\d+x\d+bb\.(jpg|png|webp)$/;
+const CAA_SIZE = /-(250|500|1200)$/;
+
+/**
+ * Every cover in every resolution the source offers (D-ART-10): the payload's URL is only a key.
+ * Apple's CDN renders any square size from the same path; Cover Art Archive has 250/500/1200.
+ * The browser picks the sharpest that fits the rendered size × device pixel ratio.
+ */
+export function artworkSources(url: string): { src: string; srcSet?: string } {
+  if (url.includes("mzstatic.com") && ITUNES_SIZE.test(url)) {
+    const at = (w: number) => url.replace(ITUNES_SIZE, `/${w}x${w}bb.jpg`);
+    return { src: at(600), srcSet: [160, 300, 600, 1000, 1400].map((w) => `${at(w)} ${w}w`).join(", ") };
+  }
+  if (url.startsWith("https://coverartarchive.org/") && CAA_SIZE.test(url)) {
+    const at = (s: number, w: number) => servable(url.replace(CAA_SIZE, `-${s}`), w);
+    return { src: at(500, 640), srcSet: `${at(250, 256)} 250w, ${at(500, 640)} 500w, ${at(1200, 1200)} 1200w` };
+  }
+  return { src: url };
 }
 
 /** Artwork image with a GenerativeCover fallback (missing url or load error). */
-export function Artwork({ url, seed, alt, className, rounded = "md" }: ArtworkProps) {
+export function Artwork({ url, seed, alt, className, rounded = "md", sizes, eager = false, tint }: ArtworkProps) {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   if (!url || failed) return <GenerativeCover seed={seed} label={alt || undefined} className={className} rounded={rounded} />;
   const round = cn(rounded === "sm" && "rounded-sm", rounded === "md" && "rounded-md", rounded === "lg" && "rounded-lg");
-  // The generative cover paints first (never grey); the image fades in over it once loaded.
+  // While loading: a calm surface in the cover's own colour when known (D-ART-06, revised: the busy
+  // generative pattern flashing on every load read as low quality). Generative = truly missing only.
   return (
-    <span className={cn("relative block aspect-square w-full overflow-hidden", round, className)}>
-      <GenerativeCover seed={seed} rounded="none" className="absolute inset-0 h-full" />
+    <span className={cn("relative block aspect-square w-full overflow-hidden bg-surface-2", round, className)} style={tint ? { backgroundColor: tint } : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element -- remote artwork hosts vary; plain img keeps the fallback simple */}
       <img
-        src={servable(url)}
+        {...artworkSources(url)}
+        sizes={sizes ?? (eager ? "(min-width: 1024px) 300px, 45vw" : "auto, (min-width: 1024px) 240px, 45vw")}
         alt={alt}
-        loading="lazy"
+        loading={eager ? "eager" : "lazy"}
+        fetchPriority={eager ? "high" : "auto"}
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => setFailed(true)}
-        className={cn("absolute inset-0 h-full w-full object-cover motion-safe:transition-opacity motion-safe:duration-200", loaded ? "opacity-100" : "opacity-0")}
+        className={cn("absolute inset-0 h-full w-full object-cover motion-safe:transition-opacity motion-safe:duration-300", loaded ? "opacity-100" : "opacity-0")}
       />
     </span>
   );

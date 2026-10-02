@@ -151,7 +151,7 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
             style={artColor ? ({ "--art": artColor } as CSSProperties) : undefined}
           >
             <div className="overflow-hidden rounded-[8px]">
-              <Artwork url={rec.artwork_url} seed={seedFor(rec, card.friend.id)} alt="" rounded="none" />
+              <Artwork url={rec.artwork_url} seed={seedFor(rec, card.friend.id)} alt="" rounded="none" tint={rec.artwork_colors?.dominant} />
             </div>
           </div>
         )}

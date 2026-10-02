@@ -17,7 +17,7 @@ export function SidebarLive() {
   const now = Date.now();
   const live = (feed.data?.results ?? []).filter((c) => pulseOf(c, now) === "live").slice(0, 6);
   return (
-    <section aria-labelledby="side-live-h" className="mt-6 hidden flex-col gap-1 lg:flex xl:hidden">
+    <section aria-labelledby="side-live-h" className="mt-6 hidden flex-col gap-1 lg:flex">
       <h2 id="side-live-h" className="flex items-center gap-2 px-3 font-mono text-[11px] uppercase tracking-wider text-text-muted">
         <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-live" />
         Live now
@@ -50,7 +50,8 @@ export function SidebarLive() {
  * Friend activity (≥ 1440 px), Jingle's answer to Spotify's friend feed: the Pulse, the track with
  * its real cover, an honest time, and one tap to send something back.
  */
-export function ActivityPanel() {
+/** Friend activity, opened from the top bar (D-SHELL-04): overlays at lg, docks at xl. */
+export function ActivityPanel({ onClose }: { onClose: () => void }) {
   const feed = useFeed(useRealtimeStatus() === "live");
   const openSend = useOpenSend();
   const now = Date.now();
@@ -58,10 +59,13 @@ export function ActivityPanel() {
   return (
     <aside
       aria-label="Friend activity"
-      className="fixed bottom-0 right-0 top-0 z-20 hidden w-[320px] flex-col border-l border-border bg-surface-1 xl:flex"
+      className="jg-enter fixed bottom-0 right-0 top-0 z-40 hidden w-[320px] flex-col border-l border-border bg-surface-1 shadow-2 lg:flex xl:z-20 xl:shadow-none"
     >
-      <div className="flex h-16 items-center px-5">
+      <div className="flex h-16 items-center justify-between pl-5 pr-2">
         <h2 className="font-display text-lg font-semibold">Friend activity</h2>
+        <IconButton label="Close friend activity" onClick={onClose}>
+          <Icons.Close size={18} />
+        </IconButton>
       </div>
       <ul className="ds-scrollbar-none flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-28" aria-live="polite" aria-relevant="additions">
         {cards.map((c) => {

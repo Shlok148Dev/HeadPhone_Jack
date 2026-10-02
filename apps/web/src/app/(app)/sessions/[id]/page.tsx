@@ -190,7 +190,7 @@ export default function SessionPage() {
             </div>
             <div className="jg-art-glow absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[8px]" style={np?.artwork_colors ? ({ ["--art" as string]: np.artwork_colors.accent }) : undefined}>
               {np ? (
-                <Artwork url={np.artwork_url ?? null} seed={`${np.artist}|${np.title}`.toLowerCase()} alt="" rounded="none" />
+                <Artwork url={np.artwork_url ?? null} seed={`${np.artist}|${np.title}`.toLowerCase()} alt="" rounded="none" eager tint={np.artwork_colors?.dominant} sizes="(min-width: 768px) 320px, 70vw" />
               ) : (
                 <div className="flex h-full items-center justify-center bg-surface-2">
                   <Blip pose="idle" size={88} decorative />

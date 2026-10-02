@@ -52,6 +52,23 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const card = useMyCard(status === "signed-in" && !me?.needs_onboarding);
   const [palette, setPalette] = useState(false);
+  // Friend activity is a panel you open, not chrome you must live with (D-SHELL-04). Remembered per device.
+  const [activity, setActivity] = useState(false);
+  useEffect(() => {
+    try {
+      setActivity(localStorage.getItem("jingle-activity") === "open");
+    } catch {
+      /* storage unavailable: stays closed */
+    }
+  }, []);
+  const toggleActivity = (open: boolean) => {
+    setActivity(open);
+    try {
+      localStorage.setItem("jingle-activity", open ? "open" : "closed");
+    } catch {
+      /* ignore */
+    }
+  };
 
   // ⌘K / Ctrl+K opens search and commands anywhere (D-SHELL-03).
   useEffect(() => {
@@ -130,9 +147,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <Suspense fallback={null}>
-            <SidebarLive />
-          </Suspense>
+          {!activity && (
+            <Suspense fallback={null}>
+              <SidebarLive />
+            </Suspense>
+          )}
           <div className="mt-auto flex flex-col gap-1">
             <Link
               href="/settings/connections"
@@ -150,10 +169,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        <Suspense fallback={null}>
-          <ActivityPanel />
-        </Suspense>
-        <div className="md:pl-[72px] lg:pl-60 xl:pl-[280px] xl:pr-[320px]">
+        {activity && (
+          <Suspense fallback={null}>
+            <ActivityPanel onClose={() => toggleActivity(false)} />
+          </Suspense>
+        )}
+        <div className={cn("md:pl-[72px] lg:pl-60 xl:pl-[280px]", activity && "xl:pr-[320px]")}>
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-transparent bg-[var(--surface-glass)] px-4 backdrop-blur-xl md:h-16 md:px-6">
             <div className="md:hidden">
               <Logo href="/home" className="text-lg" />
@@ -163,6 +184,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
             <InboxButton active={isActive(pathname, "/inbox")} />
             <BellButton active={isActive(pathname, "/notifications")} />
+            <IconButton
+              label="Friend activity"
+              aria-pressed={activity}
+              className={cn("hidden lg:inline-flex", activity && "bg-surface-2 text-text")}
+              onClick={() => toggleActivity(!activity)}
+            >
+              <Icons.Friends size={20} />
+            </IconButton>
             {me.is_staff && (
               <Link href="/staff" className="hidden rounded-full px-3 py-2 text-sm text-text-muted hover:bg-surface-2 hover:text-text md:inline-flex">
                 Staff
