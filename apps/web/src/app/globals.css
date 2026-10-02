@@ -156,8 +156,8 @@
   }
 }
 .ds-eq-bar {
-  transform-box: fill-box;
   transform-origin: bottom;
+  will-change: transform;
   animation: ds-eq var(--eq-dur, 1s) ease-in-out infinite alternate;
   animation-delay: var(--eq-delay, 0s);
 }
@@ -263,11 +263,21 @@
   }
 }
 /* Time-based entrance for focus screens (sign-in, onboarding): form first, then the art. */
+/* Entrances move but never start invisible: Chrome ignores opacity-0 elements as LCP candidates,
+   so a fade-in made the real hero invisible to LCP (QA 2026-10). Transform only. */
+@keyframes jg-settle {
+  from {
+    transform: translateY(14px);
+  }
+  to {
+    transform: none;
+  }
+}
 .jg-enter {
-  animation: jg-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: jg-settle 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .jg-enter-late {
-  animation: jg-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+  animation: jg-settle 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
 }
 
 @supports (animation-timeline: view()) {

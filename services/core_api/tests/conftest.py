@@ -51,6 +51,12 @@ def auth_api(user) -> APIClient:
 
 
 @pytest.fixture(autouse=True)
+def _no_catalogue_network(settings):
+    """Song search never calls Apple from tests; catalogue tests opt in and mock the transport."""
+    settings.CATALOGUE_SEARCH = False
+
+
+@pytest.fixture(autouse=True)
 def ingest_deletions(monkeypatch):
     """Record calls to ingest-ml's data-deletion endpoint instead of making HTTP requests."""
     calls: list = []

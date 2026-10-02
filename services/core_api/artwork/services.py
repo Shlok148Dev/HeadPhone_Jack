@@ -421,3 +421,70 @@ def enrich_artists(items: list[dict], name: str = "name") -> list[dict]:
         i["image_url"] = p["url_small"] if p else None
         i["image_colors"] = p["colors"] if p else None
     return items
+
+
+# ---- catalogue search (songs Jingle hasn't seen yet) --------------------------------------
+
+CATALOGUE_RATE = "16/m"  # 80% of the iTunes Search API's ~20 calls a minute (NFR-SCAL-06)
+CATALOGUE_TTL = 24 * 3600
+
+
+def catalogue_search(q: str, limit: int = 12) -> list[dict]:
+    """Songs from Apple's public catalogue for a query (D-CAT-01). Server-side, cached 24 h per
+    query, inside a global token bucket; when the bucket is empty it returns [] (Jingle's own
+    results still show). Each song carries an exact Apple Music link and real artwork URLs."""
+    import hashlib
+    import json
+
+    from django.conf import settings
+
+    from core_api.ratelimit import hit
+    from core_api.redis_client import get_redis
+
+    q = " ".join(q.split())[:100]
+    if len(q) < 2 or not settings.CATALOGUE_SEARCH:
+        return []
+    r = get_redis()
+    key = "catalogue:q:" + hashlib.sha256(q.lower().encode()).hexdigest()[:32]
+    cached = r.get(key)
+    if cached:
+        return json.loads(cached)[:limit]
+    allowed, _, _ = hit("itunes.search", "global", CATALOGUE_RATE)
+    if not allowed:
+        return []
+    try:
+        with httpx.Client(headers={"User-Agent": USER_AGENT}) as client:
+            res = client.get(
+                ITUNES,
+                params={"term": q, "entity": "song", "limit": 25, "country": "IN"},
+                timeout=6,
+            )
+            res.raise_for_status()
+            rows = res.json().get("results") or []
+    except Exception:  # noqa: BLE001 - catalogue is a bonus; never fail the search
+        log.warning("catalogue search failed")
+        return []
+    out: list[dict] = []
+    seen: set[str] = set()
+    for x in rows:
+        title, artist = x.get("trackName") or "", x.get("artistName") or ""
+        k = track_key(title, artist)
+        if not title or not artist or k in seen:
+            continue
+        seen.add(k)
+        art = x.get("artworkUrl100") or ""
+        out.append(
+            {
+                "recording_id": None,
+                "title": title,
+                "artist": artist,
+                "album": x.get("collectionName") or "",
+                "apple_url": f"https://music.apple.com/song/{x['trackId']}"
+                if x.get("trackId")
+                else None,
+                "artwork_url": _sized(art, 600) if art else None,
+                "artwork_small": _sized(art, 120) if art else None,
+            }
+        )
+    r.setex(key, CATALOGUE_TTL, json.dumps(out))
+    return out[:limit]

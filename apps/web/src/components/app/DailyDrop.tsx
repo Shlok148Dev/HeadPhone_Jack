@@ -19,7 +19,7 @@ export function DailyDrop({ myPlatform }: { myPlatform?: Platform }) {
   if (!today.data) return null;
   const t = today.data;
   return (
-    <section aria-labelledby="drop-h" className="flex flex-col gap-4">
+    <section aria-labelledby="drop-h" className="flex min-w-0 flex-col gap-4">
       <header className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.14em] text-text-muted">Today&apos;s Drop</p>
@@ -181,7 +181,7 @@ function DropPicker({ dropped }: { dropped: Person[] }) {
 function Revealed({ mine, friends, myPlatform }: { mine: Drop | null; friends: Drop[]; myPlatform?: Platform }) {
   const all = [...(mine ? [mine] : []), ...friends];
   return (
-    <ul className="ds-scrollbar-none -mx-1 flex snap-x gap-4 overflow-x-auto px-1 pb-2">
+    <ul className="ds-scrollbar-none -mx-1 flex w-full min-w-0 max-w-full snap-x gap-4 overflow-x-auto px-1 pb-2">
       {all.map((d) => (
         <DropCard key={d.id} d={d} isMine={d.id === mine?.id} myPlatform={myPlatform} />
       ))}
@@ -205,18 +205,19 @@ function DropCard({ d, isMine, myPlatform }: { d: Drop; isMine: boolean; myPlatf
         <p className="truncate font-semibold">{d.title}</p>
         <p className="truncate text-sm text-text-muted">{d.artist}</p>
       </div>
-      <div className="flex min-w-0 items-start gap-2">
-        <Avatar name={d.user.display_name} url={d.user.avatar_url} seed={d.user.id} size={22} decorative />
-        <p className="min-w-0 text-[13px] leading-snug">
-          {isMine ? (
-            <span className="font-semibold">Your drop</span>
-          ) : (
-            <Link href={`/u/${d.user.username}`} className="font-semibold hover:underline">
-              {d.user.display_name}
-            </Link>
-          )}
-          {d.note && <span className="block text-text-muted">&ldquo;{d.note}&rdquo;</span>}
-        </p>
+      <div className="flex min-w-0 flex-col gap-1">
+        {isMine ? (
+          <span className="inline-flex min-h-8 items-center gap-2 text-[13px] font-semibold">
+            <Avatar name={d.user.display_name} url={d.user.avatar_url} seed={d.user.id} size={24} decorative />
+            Your drop
+          </span>
+        ) : (
+          <Link href={`/u/${d.user.username}`} className="inline-flex min-h-8 w-fit items-center gap-2 rounded-pill pr-2 text-[13px] font-semibold hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
+            <Avatar name={d.user.display_name} url={d.user.avatar_url} seed={d.user.id} size={24} decorative />
+            {d.user.display_name}
+          </Link>
+        )}
+        {d.note && <p className="text-[13px] leading-snug text-text-muted">&ldquo;{d.note}&rdquo;</p>}
       </div>
       {tune && !isMine && (
         <a

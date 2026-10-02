@@ -35,6 +35,8 @@ class User(AbstractUser, TimeStamped):
     username = models.CharField(max_length=20, validators=[validate_username])
     email = models.EmailField(unique=True)
     display_name = models.CharField(max_length=60, blank=True)
+    # Profile photo: path under MEDIA_ROOT ("avatars/<user>/<hash>.jpg"); empty = initials avatar.
+    avatar = models.CharField(max_length=200, blank=True)
     birth_year = models.PositiveSmallIntegerField(null=True, blank=True)
     college = models.CharField(max_length=120, blank=True)
     city = models.CharField(max_length=80, blank=True)

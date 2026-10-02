@@ -18,7 +18,7 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core_api.errors import ApiError
-from core_api.ratelimit import ratelimit
+from core_api.ratelimit import RateLimited, ratelimit
 from core_api.schema import err
 
 from . import services
@@ -102,14 +102,48 @@ class LoginView(_PublicAuthView):
     def post(self, request):
         ser = LoginSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
-        user = authenticate(
-            request,
-            email=ser.validated_data["email"].strip().lower(),
-            password=ser.validated_data["password"],
-        )
+        email = ser.validated_data["email"].strip().lower()
+        _check_lockout(email)
+        user = authenticate(request, email=email, password=ser.validated_data["password"])
         if user is None or user.deleted_at is not None:
+            _record_failure(email)
             raise ApiError("INVALID_CREDENTIALS", "Email or password is incorrect.", 401)
+        _clear_failures(email)
         return _auth_response(user)
+
+
+# Account lockout (NFR-SEC-02/04, ASVS 2.2.1): failed sign-ins per email, from any IP. Only
+# failures count, so it can stay strict everywhere; the per-IP+email bucket above still applies.
+def _fail_key(email: str) -> str:
+    import hashlib
+
+    return "auth:fail:" + hashlib.sha256(email.encode()).hexdigest()[:32]  # no raw emails in Redis
+
+
+def _check_lockout(email: str) -> None:
+    from core_api.redis_client import get_redis
+
+    r = get_redis()
+    n = int(r.get(_fail_key(email)) or 0)
+    if n >= settings.AUTH_LOGIN_FAILURES_PER_HOUR:
+        raise RateLimited(
+            wait=max(1, r.ttl(_fail_key(email))), limit=settings.AUTH_LOGIN_FAILURES_PER_HOUR
+        )
+
+
+def _record_failure(email: str) -> None:
+    from core_api.redis_client import get_redis
+
+    r = get_redis()
+    k = _fail_key(email)
+    if r.incr(k) == 1:
+        r.expire(k, 3600)
+
+
+def _clear_failures(email: str) -> None:
+    from core_api.redis_client import get_redis
+
+    get_redis().delete(_fail_key(email))
 
 
 class RefreshView(_PublicAuthView):

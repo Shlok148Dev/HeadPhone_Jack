@@ -5,6 +5,10 @@ name: jingle
 x-py-env: &py-env
   env_file: .env
 
+# Profile photos (JNG-01-15): written by core-api, deleted by purge in workers, served by the edge.
+x-media: &media
+  MEDIA_ROOT: /var/jingle/media
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -48,6 +52,8 @@ services:
     <<: *py-env
     build: { context: ., dockerfile: services/core_api/Dockerfile, target: api }
     command: ["api"]
+    environment: *media
+    volumes: ["media:/var/jingle/media"]
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -75,6 +81,8 @@ services:
     <<: *py-env
     build: { context: ., dockerfile: services/core_api/Dockerfile, target: worker }
     command: ["worker"]
+    environment: *media
+    volumes: ["media:/var/jingle/media"]
     healthcheck:
       test: ["CMD-SHELL", "celery -A core_api inspect ping -d celery@$$HOSTNAME -t 5 >/dev/null || exit 1"]
       interval: 30s
@@ -111,7 +119,7 @@ services:
     image: caddy:2-alpine
     # Loopback by default; the pilot server sets JINGLE_BIND=0.0.0.0 behind TLS (docs/runbooks/deploy-pilot.md).
     ports: ["${JINGLE_BIND:-127.0.0.1}:${JINGLE_HTTP_PORT:-8080}:8080"]
-    volumes: ["./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro"]
+    volumes: ["./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro", "media:/srv/media:ro"]
     depends_on:
       web: { condition: service_healthy }
       core-api: { condition: service_healthy }
@@ -124,3 +132,4 @@ volumes:
   redisdata:
   qdrantdata:
   webcache:
+  media:

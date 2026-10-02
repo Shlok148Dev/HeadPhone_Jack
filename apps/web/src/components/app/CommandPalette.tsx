@@ -62,7 +62,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
     if (!needle || "listen together".includes(needle))
       out.push({ id: "a-room", group: "Actions", label: "Listen together", hint: "Start a room", icon: <Icons.Blend size={16} />, run: go("/blends") });
     for (const p of (people.data ?? []).slice(0, 5))
-      out.push({ id: `u-${p.id}`, group: "People", label: p.display_name, hint: `@${p.username}`, icon: <Avatar name={p.display_name} seed={p.id} size={22} decorative />, run: go(`/u/${p.username}`) });
+      out.push({ id: `u-${p.id}`, group: "People", label: p.display_name, hint: `@${p.username}`, icon: <Avatar name={p.display_name} url={p.avatar_url} seed={p.id} size={22} decorative />, run: go(`/u/${p.username}`) });
     for (const c of (circles.data ?? []).filter((c) => !needle || c.name.toLowerCase().includes(needle)).slice(0, 5))
       out.push({ id: `c-${c.id}`, group: "Circles", label: c.name, hint: `${c.member_count} members`, icon: <Icons.Circles size={16} />, run: go(`/circles/${c.id}`) });
     for (const s of (songs.data ?? []).slice(0, 6))

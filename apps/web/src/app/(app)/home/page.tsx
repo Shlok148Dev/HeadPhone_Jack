@@ -86,7 +86,7 @@ export default function HomePage() {
   const hasFriends = allCards.length > 0 || !!circleId;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-8">
       <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">
         {greeting()}
         {firstName(me?.display_name || me?.username) ? `, ${firstName(me?.display_name || me?.username)}` : ""}

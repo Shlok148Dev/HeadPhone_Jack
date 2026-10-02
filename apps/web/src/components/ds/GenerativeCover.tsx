@@ -118,6 +118,7 @@ export function GenerativeCover({ seed, label, className, rounded = "md" }: Gene
   const y2 = r1(50 + Math.sin(rad) * 50);
   return (
     <svg
+      data-generative="true"
       viewBox="0 0 100 100"
       preserveAspectRatio="xMidYMid slice"
       className={cn(
@@ -220,7 +221,9 @@ export function Artwork({ url, seed, alt, className, rounded = "md", sizes, eage
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => setFailed(true)}
-        className={cn("absolute inset-0 h-full w-full object-cover motion-safe:transition-opacity motion-safe:duration-300", loaded ? "opacity-100" : "opacity-0")}
+        // Eager (above-the-fold) art paints the moment it arrives, never gated on hydration + onLoad:
+        // that gate pushed LCP to ~5 s under Lighthouse's model (QA 2026-10). Lazy art still fades in.
+        className={cn("absolute inset-0 h-full w-full object-cover", eager ? "" : "motion-safe:transition-opacity motion-safe:duration-300", eager || loaded ? "opacity-100" : "opacity-0")}
       />
     </span>
   );

@@ -33,6 +33,15 @@
 	}
 	@rt path /rt/*
 	reverse_proxy @rt realtime:4000
+	# User photos: static, read-only, never executed or sniffed (JNG-01-15).
+	@media path /media/*
+	handle @media {
+		root * /srv
+		header Cache-Control "public, max-age=31536000, immutable"
+		header X-Content-Type-Options nosniff
+		header Content-Security-Policy "default-src 'none'; img-src 'self'"
+		file_server
+	}
 	@internal path /internal/*
 	respond @internal 404
 	reverse_proxy web:3000

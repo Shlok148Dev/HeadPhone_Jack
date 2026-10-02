@@ -171,6 +171,10 @@ def _links(recording_id: str | None) -> dict[str, str | None]:
         rid = uuid.UUID(str(recording_id))
     except ValueError:
         return links
+    from core_api import policy
+
+    if policy.defer_links(rid, links):
+        return links  # filled with the rest of the page in one query (policy.bulk)
     from sources.models import RecordingLink
 
     for platform, url in RecordingLink.objects.filter(recording_id=rid).values_list(
@@ -212,6 +216,10 @@ def _recording(signal: Signal) -> dict[str, Any]:
         "links": _links(rid),
         "search_links": _search_links(raw.get("title") or "", raw.get("artist") or ""),
     }
+    from core_api import policy
+
+    if policy.defer_enrich(rec):
+        return rec  # artwork for the whole page in one query (policy.bulk)
     from artwork.services import enrich
 
     return enrich([rec])[0]

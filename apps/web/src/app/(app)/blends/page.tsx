@@ -126,7 +126,7 @@ export default function BlendsPage() {
               <Link href={`/blends/${b.id}`} className="group flex flex-col gap-2 rounded-lg p-2 hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
                 <CoverMosaic covers={b.covers} seed={b.id} />
                 <div className="flex items-center gap-2">
-                  <AvatarStack size={24} max={4} people={b.members.map((m) => ({ id: m.id, name: m.display_name }))} />
+                  <AvatarStack size={24} max={4} people={b.members.map((m) => ({ id: m.id, name: m.display_name, url: m.avatar_url }))} />
                 </div>
                 <p className="truncate font-medium">{b.name}</p>
                 <p className="font-mono text-xs text-text-muted">{b.track_count} songs · {ago(b.generated_at)}</p>

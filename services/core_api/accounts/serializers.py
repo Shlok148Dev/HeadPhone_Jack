@@ -49,6 +49,7 @@ class MeSerializer(serializers.ModelSerializer):
 
     needs_onboarding = serializers.BooleanField(read_only=True)
     private_mode = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -64,8 +65,14 @@ class MeSerializer(serializers.ModelSerializer):
             "private_mode",
             "created_at",
             "is_staff",
+            "avatar_url",
         ]
         read_only_fields = fields
+
+    def get_avatar_url(self, obj) -> str | None:
+        from .avatar import url_for
+
+        return url_for(obj)
 
     def get_private_mode(self, obj) -> PrivateModeStateSerializer:
         return PrivateModeStateSerializer(services.private_mode_state(obj)).data

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Artwork, Pulse } from "@/components/ds";
 import { api } from "@/lib/api";
+import { useServerWall } from "./WallContext";
 
 interface Cover {
   url: string;
@@ -19,7 +20,13 @@ const PEOPLE: [string, "live" | "recent"][] = [
 
 /** Shared query: the public cover wall (real covers only). */
 function useWall() {
-  return useQuery({ queryKey: ["artwork-wall"], queryFn: () => api<{ covers: Cover[] }>("/artwork/wall"), staleTime: 3600_000 });
+  const server = useServerWall();
+  return useQuery({
+    queryKey: ["artwork-wall"],
+    queryFn: () => api<{ covers: Cover[] }>("/artwork/wall"),
+    staleTime: 3600_000,
+    initialData: server?.length ? { covers: server } : undefined,
+  });
 }
 
 /** Phones: a row of real covers above the form, so the page is never artless (D-ONB-02). */

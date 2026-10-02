@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ds";
 import { FocusShell } from "@/components/app/FocusShell";
 import { GoogleButton } from "@/components/app/GoogleButton";
@@ -18,7 +18,9 @@ function safeNext(next: string | null): string {
 function SignInForm() {
   const { signIn, status } = useAuth();
   const router = useRouter();
-  const next = safeNext(useSearchParams().get("next"));
+  // Read ?next= when it's needed, not during render: useSearchParams forced a client-side render
+  // bailout, and on a first (ISR) render the streamed and client forms briefly coexisted (QA 2026-10).
+  const next = () => safeNext(new URLSearchParams(window.location.search).get("next"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [alert, setAlert] = useState<string | null>(null);
@@ -26,8 +28,8 @@ function SignInForm() {
   const onGoogle = useCallback(() => undefined, []);
 
   useEffect(() => {
-    if (status === "signed-in") router.replace(next);
-  }, [status, router, next]);
+    if (status === "signed-in") router.replace(next());
+  }, [status, router]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -35,7 +37,7 @@ function SignInForm() {
     setBusy(true);
     try {
       const me = await signIn(email.trim(), password);
-      router.replace(me.needs_onboarding ? "/onboarding/profile" : next);
+      router.replace(me.needs_onboarding ? "/onboarding/profile" : next());
     } catch (err) {
       if (err instanceof ApiError && (err.status === 400 || err.status === 401)) setAlert("That email and password don't match.");
       else setAlert(err instanceof Error ? err.message : "Something went wrong.");
@@ -79,9 +81,7 @@ function SignInForm() {
 export default function SignInPage() {
   return (
     <FocusShell>
-      <Suspense>
-        <SignInForm />
-      </Suspense>
+      <SignInForm />
     </FocusShell>
   );
 }

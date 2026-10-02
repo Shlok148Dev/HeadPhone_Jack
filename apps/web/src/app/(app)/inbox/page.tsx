@@ -84,7 +84,7 @@ function ReceivedRow({ item }: { item: Received }) {
         {first && <Cover song={first} />}
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-sm text-text-muted">
-            <Avatar name={name} seed={item.sender.id} size={20} decorative />
+            <Avatar name={name} url={item.sender.avatar_url} seed={item.sender.id} size={20} decorative />
             <span>
               <span className="font-medium text-text">{name}</span>
               {item.is_reply ? " replied with a song" : item.circle ? ` · ${item.circle.name}` : ""}
@@ -166,7 +166,7 @@ function SentRow({ item }: { item: Sent }) {
         {item.recipients.map((r) => (
           <li key={r.user.id} className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span className="flex min-w-32 items-center gap-2 text-sm">
-              <Avatar name={r.user.display_name} seed={r.user.id} size={24} decorative />
+              <Avatar name={r.user.display_name} url={r.user.avatar_url} seed={r.user.id} size={24} decorative />
               {r.user.display_name}
               {r.reaction && <span aria-label={`reacted ${r.reaction}`}>{r.reaction}</span>}
             </span>

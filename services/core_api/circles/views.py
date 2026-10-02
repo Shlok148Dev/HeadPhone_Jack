@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from accounts.validators import validate_clean_text
+from core_api import policy
 from core_api.errors import ApiError
 from core_api.ratelimit import ratelimit
 from core_api.schema import err
@@ -94,8 +95,10 @@ def _covers(c: Circle, viewer, limit: int = 4) -> list[str]:
         .order_by("circle_memberships__joined_at")[:8]
     )
     out: list[str] = []
-    for u in users:
-        card = resolve_card(u, viewer)
+    users = list(users)
+    with policy.bulk(viewer, users):
+        cards = [resolve_card(u, viewer) for u in users]
+    for card in cards:
         rec = card.get("recording") if card.get("state") != "HIDDEN" else None
         url = rec and (rec.get("artwork_small") or rec.get("artwork_url"))
         if url and url not in out:
@@ -199,7 +202,10 @@ class CircleFeedView(APIView):
         users = User.objects.filter(
             circle_memberships__circle=c, is_active=True, deleted_at__isnull=True
         ).exclude(pk__in=hidden | {request.user.pk})
-        return Response(sorted((resolve_card(u, request.user) for u in users), key=_sort_key))
+        users = list(users)
+        with policy.bulk(request.user, users):
+            cards = [resolve_card(u, request.user) for u in users]
+        return Response(sorted(cards, key=_sort_key))
 
 
 class MemberView(APIView):

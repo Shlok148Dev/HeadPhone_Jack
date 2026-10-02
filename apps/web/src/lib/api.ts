@@ -46,6 +46,8 @@ export interface Me {
   needs_onboarding: boolean;
   private_mode: { active: boolean; until: string | null } | null;
   created_at: string;
+  /** Profile photo (served by the edge at /media/…); null shows initials. */
+  avatar_url?: string | null;
 }
 
 export interface AuthPayload {

@@ -25,6 +25,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       className={`${display.variable} ${ui.variable} ${mono.variable}`}
     >
       <head>
+        {/* Cover art host: connect early so above-the-fold covers aren't waiting on DNS/TLS. */}
+        <link rel="preconnect" href="https://is1-ssl.mzstatic.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://is1-ssl.mzstatic.com" />
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>

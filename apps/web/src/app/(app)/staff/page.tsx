@@ -210,7 +210,13 @@ function Allowlist() {
 export default function StaffPage() {
   const { me } = useAuth();
   const [tab, setTab] = useState("reports");
-  if (!me?.is_staff) return <ErrorState title="Staff only" message="This page is for Jingle's moderators." />;
+  if (!me?.is_staff)
+    return (
+      <div className="flex flex-col gap-4">
+        <h1 className="font-display text-3xl font-semibold tracking-tight">Staff console</h1>
+        <ErrorState title="Staff only" message="This page is for Jingle's moderators." />
+      </div>
+    );
   return (
     <div className="flex max-w-4xl flex-col gap-6">
       <h1 className="font-display text-3xl font-semibold tracking-tight">Staff console</h1>

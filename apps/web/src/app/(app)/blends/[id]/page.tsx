@@ -39,7 +39,7 @@ export default function BlendPage() {
           <p className="font-mono text-xs uppercase tracking-wide text-white/80">Blend{b.circle ? ` · ${b.circle.name}` : ""}</p>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-white md:text-5xl">{b.name}</h1>
           <div className="flex items-center gap-3">
-            <AvatarStack size={28} people={b.members.map((m) => ({ id: m.id, name: m.display_name }))} />
+            <AvatarStack size={28} people={b.members.map((m) => ({ id: m.id, name: m.display_name, url: m.avatar_url }))} />
             <p className="font-mono text-xs text-white/80">{tracks.length} songs</p>
           </div>
           <div className="flex flex-wrap gap-2">

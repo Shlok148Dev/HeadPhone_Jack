@@ -203,7 +203,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="hidden rounded-full md:inline-flex"
               aria-label="Your account and settings"
             >
-              <Avatar name={me.display_name || me.username} size={36} />
+              <Avatar name={me.display_name || me.username} url={me.avatar_url} seed={me.id} size={36} />
             </Link>
             <IconButton
               label="Sign out"

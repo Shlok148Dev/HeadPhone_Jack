@@ -66,7 +66,8 @@ function Timeline({ months }: { months: Month[] }) {
           ? `${monthLabel(shown.month)}: ${shown.plays} plays${shown.top_artist ? ` · most played ${shown.top_artist}` : ""}${shown.genres.length ? ` · ${shown.genres.map((g) => g.name).join(", ")}` : ""}`
           : "Hover a month to see what you played most."}
       </p>
-      <table className="sr-only">
+      <div className="sr-only">
+      <table>
         <caption>Plays per month</caption>
         <thead>
           <tr><th>Month</th><th>Plays</th><th>Most played</th><th>Genres</th></tr>
@@ -79,6 +80,7 @@ function Timeline({ months }: { months: Month[] }) {
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   );
 }

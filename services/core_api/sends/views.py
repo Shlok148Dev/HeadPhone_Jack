@@ -251,7 +251,8 @@ class InboxReactView(DeliveryActionView):
 
 
 class SongSearchView(APIView):
-    """Songs already known to Jingle (anyone's resolved plays); no third-party search call."""
+    """Songs known to Jingle first (anyone's resolved plays), then Apple's public catalogue for
+    everything else (D-CAT-01), so any released song can be sent, dropped or queued."""
 
     @extend_schema(
         tags=["sends"],
@@ -270,17 +271,39 @@ class SongSearchView(APIView):
         for w in words:
             qs = qs.filter(Q(title__icontains=w) | Q(artist_name__icontains=w))
         rows = qs.order_by("title")[:20]
-        return Response(
-            _with_art(
-                [
-                    {
-                        "recording_id": str(r.pk),
-                        "title": r.title,
-                        "artist": r.artist_name,
-                        "links": _links(str(r.pk)),
-                        "search_links": _search_links(r.title, r.artist_name),
-                    }
-                    for r in rows
-                ]
-            )
+        local = _with_art(
+            [
+                {
+                    "recording_id": str(r.pk),
+                    "title": r.title,
+                    "artist": r.artist_name,
+                    "links": _links(str(r.pk)),
+                    "search_links": _search_links(r.title, r.artist_name),
+                }
+                for r in rows
+            ]
         )
+        if len(local) >= 8:
+            return Response(local)
+        from artwork.services import catalogue_search, track_key
+
+        have = {track_key(s["title"], s["artist"]) for s in local}
+        extra = []
+        for c in catalogue_search(q):
+            if track_key(c["title"], c["artist"]) in have:
+                continue
+            links = dict.fromkeys(("SPOTIFY", "APPLE_MUSIC", "AMAZON_MUSIC", "YOUTUBE_MUSIC"))
+            links["APPLE_MUSIC"] = c["apple_url"]
+            extra.append(
+                {
+                    "recording_id": None,
+                    "title": c["title"],
+                    "artist": c["artist"],
+                    "links": links,
+                    "search_links": _search_links(c["title"], c["artist"]),
+                    "artwork_url": c["artwork_url"],
+                    "artwork_small": c["artwork_small"],
+                    "artwork_colors": None,
+                }
+            )
+        return Response(local + extra[: 20 - len(local)])

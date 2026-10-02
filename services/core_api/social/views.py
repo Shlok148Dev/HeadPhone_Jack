@@ -38,7 +38,7 @@ def person(u: User, rel: str) -> dict:
         "id": u.pk,
         "username": u.username,
         "display_name": u.display_name or u.username,
-        "avatar_url": None,
+        "avatar_url": (f"/media/{u.avatar}" if getattr(u, "avatar", "") else None),
         "relationship": rel,
     }
 

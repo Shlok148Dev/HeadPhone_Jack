@@ -10,7 +10,7 @@ COPY services/core_api/pyproject.toml services/core_api/uv.lock ./
 FROM base AS api
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project
 COPY services/core_api ./
-RUN chmod +x docker-entrypoint.sh && useradd -r -m -u 10001 jingle && chown -R jingle /repo
+RUN chmod +x docker-entrypoint.sh && useradd -r -m -u 10001 jingle && chown -R jingle /repo     && mkdir -p /var/jingle/media && chown jingle /var/jingle/media
 USER jingle
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --retries=18 CMD python -c "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
@@ -20,7 +20,7 @@ CMD ["api"]
 FROM base AS worker
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project --extra ml
 COPY services/core_api ./
-RUN chmod +x docker-entrypoint.sh && useradd -r -m -u 10001 jingle && chown -R jingle /repo
+RUN chmod +x docker-entrypoint.sh && useradd -r -m -u 10001 jingle && chown -R jingle /repo     && mkdir -p /var/jingle/media && chown jingle /var/jingle/media
 USER jingle
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["worker"]

@@ -10,6 +10,7 @@ urlpatterns = [
     path("auth/logout", auth_views.LogoutView.as_view(), name="auth-logout"),
     path("auth/google", auth_views.GoogleSignInView.as_view(), name="auth-google"),
     path("me", views.MeView.as_view(), name="me"),
+    path("me/avatar", views.MeAvatarView.as_view(), name="me-avatar"),
     path("me/privacy", views.PrivacyView.as_view(), name="me-privacy"),
     path("me/consents", views.ConsentListView.as_view(), name="me-consents"),
     path("me/consents/<str:purpose>", views.ConsentDetailView.as_view(), name="me-consent"),

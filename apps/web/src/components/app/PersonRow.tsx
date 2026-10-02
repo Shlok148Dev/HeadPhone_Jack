@@ -26,7 +26,7 @@ export function PersonRow({ person, actions, card }: { person: Person; actions?:
       {card ? (
         <Pulse state={state} name={person.display_name} url={card.friend.avatar_url} seed={person.id} size={44} />
       ) : (
-        <Avatar name={person.display_name} seed={person.id} size={44} decorative />
+        <Avatar name={person.display_name} url={person.avatar_url} seed={person.id} size={44} decorative />
       )}
       <div className="min-w-0 flex-1">
         <Link href={`/u/${person.username}`} className="block truncate font-medium hover:underline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">

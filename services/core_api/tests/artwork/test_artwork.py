@@ -209,3 +209,74 @@ def test_featured_artist_credit_counts_but_namesakes_do_not():
     with httpx.Client(transport=_transport({"song": [namesake, ronson]})) as c:
         a = services.resolve("track", "Uptown Funk", "Bruno Mars", c)
     assert a.status == "found" and a.source == "itunes" and a.source_id == "7"
+
+
+def test_catalogue_search_finds_songs_jingle_has_never_seen(fake_redis, monkeypatch, settings):
+    """D-CAT-01: any released song is findable; exact Apple link; cached; bucket-limited."""
+    settings.CATALOGUE_SEARCH = True
+    calls = []
+
+    def handler(request: httpx.Request):
+        calls.append(request.url.params["term"])
+        return httpx.Response(
+            200,
+            json={
+                "results": [
+                    {
+                        "trackName": "Pasoori",
+                        "artistName": "Ali Sethi & Shae Gill",
+                        "trackId": 42,
+                        "collectionName": "Coke Studio",
+                        "artworkUrl100": "https://is1-ssl.mzstatic.com/x/100x100bb.jpg",
+                    },
+                    {
+                        "trackName": "Pasoori",
+                        "artistName": "Ali Sethi & Shae Gill",
+                        "trackId": 43,
+                        "artworkUrl100": "",
+                    },
+                ]
+            },
+        )
+
+    real = httpx.Client
+    monkeypatch.setattr(
+        services.httpx, "Client", lambda **kw: real(transport=httpx.MockTransport(handler), **kw)
+    )
+    out = services.catalogue_search("pasoori")
+    assert len(out) == 1 and out[0]["apple_url"] == "https://music.apple.com/song/42"
+    assert out[0]["artwork_url"].endswith("/600x600bb.jpg")
+    assert services.catalogue_search("Pasoori ") == out and len(calls) == 1  # cached per query
+    import core_api.ratelimit as rl
+
+    monkeypatch.setattr(rl, "hit", lambda *a, **k: (False, 0, 30))
+    assert services.catalogue_search("something new") == []  # bucket empty: degrade quietly
+
+
+@pytest.mark.django_db
+def test_song_search_adds_catalogue_after_local(fake_redis, monkeypatch):
+    from rest_framework_simplejwt.tokens import AccessToken
+
+    from tests.factories import UserFactory
+
+    monkeypatch.setattr(
+        services,
+        "catalogue_search",
+        lambda q: [
+            {
+                "title": "Pasoori",
+                "artist": "Ali Sethi",
+                "apple_url": "https://music.apple.com/song/42",
+                "artwork_url": None,
+                "artwork_small": None,
+            }
+        ],
+    )
+    c = APIClient()
+    c.credentials(HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(UserFactory())}")
+    rows = c.get("/api/v1/songs/search", {"q": "pasoori"}).json()
+    assert rows[0]["title"] == "Pasoori" and rows[0]["recording_id"] is None
+    assert (
+        rows[0]["links"]["APPLE_MUSIC"] == "https://music.apple.com/song/42"
+        and "SPOTIFY" in rows[0]["search_links"]
+    )

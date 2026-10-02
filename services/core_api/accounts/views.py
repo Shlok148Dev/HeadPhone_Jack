@@ -205,3 +205,40 @@ class ExportView(APIView):
         resp["Content-Disposition"] = 'attachment; filename="jingle-export.json"'
         resp["Cache-Control"] = "private, no-store"
         return resp
+
+
+class MeAvatarView(APIView):
+    """JNG-01-15: upload or remove your profile photo (multipart field "file", ≤ 5 MB)."""
+
+    from rest_framework.parsers import MultiPartParser
+
+    parser_classes = [MultiPartParser]
+
+    @extend_schema(
+        tags=["me"],
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {"file": {"type": "string", "format": "binary"}},
+            }
+        },
+        responses={
+            200: MeSerializer,
+            400: err("UNSUPPORTED_IMAGE"),
+            413: err("FILE_TOO_LARGE"),
+            429: err("RATE_LIMITED"),
+        },
+    )
+    @ratelimit(key="user", rate="20/h", scope="me.avatar")
+    def post(self, request):
+        from .avatar import save
+
+        save(request.user, request.FILES.get("file"))
+        return Response(MeSerializer(request.user).data)
+
+    @extend_schema(tags=["me"], request=None, responses={200: MeSerializer})
+    def delete(self, request):
+        from .avatar import remove
+
+        remove(request.user)
+        return Response(MeSerializer(request.user).data)

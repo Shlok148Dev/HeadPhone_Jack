@@ -382,3 +382,37 @@ class TestGoogle:
         monkeypatch.setattr("google.oauth2.id_token.verify_oauth2_token", fake)
         assert auth_views.verify_google_id_token("tok") == {"sub": "1"}
         assert seen == {"token": "tok", "audience": "cid"}
+
+
+@pytest.mark.django_db
+def test_account_locks_after_repeated_failures_from_any_ip(api, fake_redis, settings):
+    """NFR-SEC-04 / ASVS 2.2.1: failures per account, regardless of IP; success clears the count."""
+    settings.AUTH_LOGIN_FAILURES_PER_HOUR = 3
+    user = UserFactory()
+    for i in range(3):
+        r = api.post(
+            "/api/v1/auth/login",
+            {"email": user.email, "password": "wrong"},
+            format="json",
+            REMOTE_ADDR=f"10.0.0.{i}",
+        )
+        assert r.status_code == 401
+    # Locked now, even with the right password and a new IP; no raw email is stored in Redis.
+    r = api.post(
+        "/api/v1/auth/login",
+        {"email": user.email, "password": PASSWORD},
+        format="json",
+        REMOTE_ADDR="10.9.9.9",
+    )
+    assert r.status_code == 429 and r.json()["error"]["code"] == "RATE_LIMITED"
+    assert not [k for k in fake_redis.scan_iter("auth:fail:*") if user.email in str(k)]
+    # Another account is unaffected; after the window clears, a success resets the count.
+    for k in fake_redis.scan_iter("auth:fail:*"):
+        fake_redis.delete(k)
+    assert (
+        api.post(
+            "/api/v1/auth/login", {"email": user.email, "password": PASSWORD}, format="json"
+        ).status_code
+        == 200
+    )
+    assert not list(fake_redis.scan_iter("auth:fail:*"))

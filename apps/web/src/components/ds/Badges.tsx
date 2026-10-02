@@ -56,29 +56,31 @@ export function EqualiserBars({ size = 16, seed = "", color = "var(--live)", dec
   const gap = size / 12;
   const w = (size - gap * 3) / 4;
   const offset = (hashString(seed) % 300) / 1000;
+  // HTML bars, not SVG <rect>s: Chrome only runs transform animations on the compositor for HTML
+  // boxes. SVG-child animations repainted on the main thread every frame (~800 ms per 6 s of
+  // main-thread work on the landing page; QA 2026-10). Same geometry and timing as before.
   return (
-    <svg
-      width={size}
-      height={h}
-      viewBox={`0 0 ${size} ${h}`}
-      className={cn("shrink-0", className)}
+    <span
+      className={cn("inline-flex shrink-0 items-end", className)}
+      style={{ width: size, height: h, gap }}
       {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": "Live" })}
-      focusable="false"
     >
       {BARS.map((b, i) => (
-        <rect
+        <span
           key={i}
-          x={i * (w + gap)}
-          y={reduced ? h * (1 - b.rest) : 0}
-          width={w}
-          height={reduced ? h * b.rest : h}
-          rx={Math.min(1, w / 2)}
-          fill={color}
-          className={reduced ? undefined : "ds-eq-bar"}
-          style={reduced ? undefined : ({ "--eq-dur": `${b.dur}s`, "--eq-delay": `${-(offset + i * 0.17).toFixed(2)}s` } as CSSProperties)}
+          className={reduced ? "block" : "ds-eq-bar block"}
+          style={
+            {
+              width: w,
+              height: reduced ? h * b.rest : h,
+              borderRadius: Math.min(1, w / 2),
+              background: color,
+              ...(reduced ? {} : { "--eq-dur": `${b.dur}s`, "--eq-delay": `${-(offset + i * 0.17).toFixed(2)}s` }),
+            } as CSSProperties
+          }
         />
       ))}
-    </svg>
+    </span>
   );
 }
 

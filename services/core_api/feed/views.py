@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import IsOnboarded
+from core_api import policy
 from core_api.schema import err
 from moderation.permissions import NotSuspended
 from sources.models import LinkedSource, PlatformConnection, ScrobbleToken, SourceKind, SourceStatus
@@ -186,7 +187,10 @@ class FeedView(APIView):
         friends = User.objects.filter(pk__in=ids, is_active=True, deleted_at__isnull=True)[
             :MAX_FEED
         ]
-        cards = sorted((resolve_card(f, request.user) for f in friends), key=_sort_key)
+        friends = list(friends)
+        with policy.bulk(request.user, friends):
+            cards = [resolve_card(f, request.user) for f in friends]
+        cards = sorted(cards, key=_sort_key)
         live = sum(1 for c in cards if c["state"] == "LIVE")
         if only_live:
             cards = [c for c in cards if c["state"] == "LIVE"]

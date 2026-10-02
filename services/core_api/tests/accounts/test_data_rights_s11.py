@@ -23,7 +23,11 @@ pytestmark = pytest.mark.django_db
 
 def mk(name):
     return services.create_account(
-        email=f"{name}@x.test", username=name, password="password-1234", display_name=name.title(), birth_year=1999
+        email=f"{name}@x.test",
+        username=name,
+        password="password-1234",
+        display_name=name.title(),
+        birth_year=1999,
     )
 
 
@@ -35,18 +39,35 @@ def test_export_covers_every_domain(mongo_db):
     a, b = mk("anna"), mk("bala")
     befriend(a, b)
     circles.create_circle(a, "Crew")
-    sends.send(a, [{"title": "Kasoor", "artist": "Prateek Kuhad"}], note="for you", user_ids=[str(b.pk)])
+    sends.send(
+        a, [{"title": "Kasoor", "artist": "Prateek Kuhad"}], note="for you", user_ids=[str(b.pk)]
+    )
     sends.send(b, [{"title": "Blue", "artist": "Yung Kai"}], user_ids=[str(a.pk)])
-    mongo_db.listens.insert_one({"meta": {"user_id": str(a.pk), "platform": "SPOTIFY"}, "played_at": timezone.now(), "raw": {"title": "Kasoor", "artist": "Prateek Kuhad"}})
+    mongo_db.listens.insert_one(
+        {
+            "meta": {"user_id": str(a.pk), "platform": "SPOTIFY"},
+            "played_at": timezone.now(),
+            "raw": {"title": "Kasoor", "artist": "Prateek Kuhad"},
+        }
+    )
     c = APIClient()
     c.credentials(HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(a)}")
     body = c.get("/api/v1/me/export").json()
     assert body["friends"] == ["bala"]
     assert body["circles"] == [{"name": "Crew", "role": "owner"}]
     assert body["sends"][0]["note"] == "for you" and body["sends"][0]["to"] == ["bala"]
-    assert body["received"][0]["from"] == "bala" and body["received"][0]["songs"][0]["title"] == "Blue"
+    assert (
+        body["received"][0]["from"] == "bala" and body["received"][0]["songs"][0]["title"] == "Blue"
+    )
     assert body["listens"][0]["title"] == "Kasoor"
-    for key in ("blends", "recaps", "battle_nominations", "notifications", "moderation", "taste_picks"):
+    for key in (
+        "blends",
+        "recaps",
+        "battle_nominations",
+        "notifications",
+        "moderation",
+        "taste_picks",
+    ):
         assert key in body
 
 

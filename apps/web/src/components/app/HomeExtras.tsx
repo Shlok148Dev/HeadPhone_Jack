@@ -160,7 +160,7 @@ export function HomeShelves() {
                   <Artwork url={first?.artwork_url} seed={`${first?.artist}|${first?.title}`} alt="" rounded="none" eager tint={first?.artwork_colors?.dominant} sizes="(min-width: 1024px) 260px, 40vw" />
                 </div>
                 <span className="flex items-center gap-2">
-                  <Avatar name={d.sender.display_name} seed={d.sender.id} size={20} decorative />
+                  <Avatar name={d.sender.display_name} url={d.sender.avatar_url} seed={d.sender.id} size={20} decorative />
                   <span className="truncate text-[13px] font-semibold">{d.sender.display_name}</span>
                 </span>
                 <span className="truncate text-[15px] font-semibold leading-tight">{d.kind === "mixtape" ? `Mixtape · ${d.items.length}` : first?.title}</span>

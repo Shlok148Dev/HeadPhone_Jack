@@ -1,5 +1,6 @@
 "use client";
 
+import { AvatarUploader } from "@/components/app/AvatarUploader";
 import { useQueryClient } from "@tanstack/react-query";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
@@ -64,6 +65,7 @@ function ProfileStep({ me, next }: { me: Me; next: () => void }) {
     <form onSubmit={submit} noValidate className="flex flex-col gap-4">
       <h1 className="font-display text-2xl font-semibold">How should friends see you?</h1>
       {alert && <FormAlert>{alert}</FormAlert>}
+      <AvatarUploader size={72} />
       <TextField label="Display name" value={displayName} maxLength={60} onChange={(e) => setDisplayName(e.target.value)} error={errors.display_name} />
       <details className="rounded-md border border-border p-3">
         <summary className="cursor-pointer text-sm font-medium">Tell us what you love (helps find your people)</summary>

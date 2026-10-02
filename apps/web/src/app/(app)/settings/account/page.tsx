@@ -3,7 +3,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button, Dialog, ErrorState, Skeleton, useToast } from "@/components/ds";
+import { AvatarUploader } from "@/components/app/AvatarUploader";
 import { TextField } from "@/components/app/forms";
+import { ApiError, type Me } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { api, json } from "@/lib/api";
 import { useMyModeration, type MyAction } from "@/lib/trust";
@@ -111,11 +113,61 @@ function YourData() {
 }
 
 /** Account standing and appeals (JNG-12-03, 12-08), plus data rights. */
+/** Your profile as friends see it: photo, name, college, city (JNG-01-12, JNG-01-15). */
+function ProfileEditor() {
+  const { me, setMe } = useAuth();
+  const toast = useToast();
+  const [name, setName] = useState(me?.display_name ?? "");
+  const [college, setCollege] = useState(me?.college ?? "");
+  const [city, setCity] = useState(me?.city ?? "");
+  const [busy, setBusy] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  if (!me) return null;
+  const dirty = name !== me.display_name || college !== (me.college ?? "") || city !== (me.city ?? "");
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setErrors({});
+    try {
+      setMe(await api<Me>("/me", { method: "PATCH", ...json({ display_name: name.trim(), college: college.trim(), city: city.trim() }) }));
+      toast.toast({ title: "Profile saved", tone: "success" });
+    } catch (err) {
+      if (err instanceof ApiError && err.code === "VALIDATION_ERROR") {
+        const d = (err.details ?? {}) as Record<string, string[] | string>;
+        setErrors(Object.fromEntries(Object.entries(d).map(([k, v]) => [k, Array.isArray(v) ? v[0]! : String(v)])));
+      } else toast.toast({ title: "Couldn't save your profile.", tone: "danger" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section aria-labelledby="profile-h" className="flex flex-col gap-5 rounded-lg border border-border bg-surface-1 p-5">
+      <h2 id="profile-h" className="font-medium">Your profile</h2>
+      <AvatarUploader />
+      <form onSubmit={save} className="grid gap-4 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <TextField label="Display name" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} error={errors.display_name} required />
+        </div>
+        <TextField label="College (optional)" value={college} maxLength={80} onChange={(e) => setCollege(e.target.value)} error={errors.college} />
+        <TextField label="City (optional)" value={city} maxLength={60} onChange={(e) => setCity(e.target.value)} error={errors.city} />
+        <div className="sm:col-span-2">
+          <Button type="submit" variant="secondary" loading={busy} loadingLabel="Saving" disabled={!dirty || !name.trim()}>
+            Save profile
+          </Button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
 export default function AccountPage() {
   const q = useMyModeration();
   return (
     <div className="flex max-w-2xl flex-col gap-6">
       <h1 className="font-display text-3xl font-semibold tracking-tight">Account</h1>
+      <ProfileEditor />
       <YourData />
       <h2 className="font-display text-xl font-semibold">Standing</h2>
       {q.isLoading ? (

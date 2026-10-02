@@ -315,6 +315,9 @@ def purge_account(user_id) -> bool:
             log.warning("mongo listens purge failed")
             raise
     hand_over_shared(user)
+    from .avatar import remove as remove_avatar
+
+    remove_avatar(user)  # profile photo files go with the account (NFR-PRIV-03)
     user.delete()
     return True
 

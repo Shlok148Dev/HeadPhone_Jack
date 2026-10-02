@@ -84,7 +84,8 @@ DATABASES = {
     "default": env.db("DATABASE_URL", default="sqlite:///" + str(BASE_DIR / "test.sqlite3"))
 }
 # 0 behind PgBouncer at scale (Tech Bible 8.3); the single-server pilot reuses connections.
-DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=0)
+# Persistent, health-checked connections: one per request cost ~5-10 ms (load test 2026-10).
+DATABASES["default"]["CONN_MAX_AGE"] = env.int("DB_CONN_MAX_AGE", default=60)
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 DATABASES["default"]["DISABLE_SERVER_SIDE_CURSORS"] = True
 
@@ -223,6 +224,15 @@ SPOTIFY_ALLOWLIST = env("SPOTIFY_ALLOWLIST", default="")
 # Sign-ups per IP (NFR-SEC-04). Keep 5/m in production; .env.example loosens it for local E2E.
 AUTH_REGISTER_RATE = env("AUTH_REGISTER_RATE", default="5/m")
 AUTH_LOGIN_RATE = env("AUTH_LOGIN_RATE", default="10/m")
+# Failed sign-ins per account per hour before a temporary lockout (any IP). Not relaxed for dev.
+# Apple catalogue fallback for song search (D-CAT-01); tests switch it off (no network).
+# User uploads (profile photos). Served read-only by the edge at /media/ (never by Django).
+MEDIA_ROOT = env("MEDIA_ROOT", default=str(BASE_DIR / "media"))
+MEDIA_URL = "/media/"
+AVATAR_MAX_BYTES = 5 * 1024 * 1024
+CATALOGUE_SEARCH = env.bool("CATALOGUE_SEARCH", default=True)
+API_DOCS_PUBLIC = env.bool("API_DOCS_PUBLIC", default=False)
+AUTH_LOGIN_FAILURES_PER_HOUR = env.int("AUTH_LOGIN_FAILURES_PER_HOUR", default=20)
 # Every page load refreshes; a pilot group behind one campus NAT shares an IP.
 AUTH_REFRESH_RATE = env("AUTH_REFRESH_RATE", default="120/m")
 # Web push (JNG-11-02): keys are generated locally; no keys means push is simply unavailable.
