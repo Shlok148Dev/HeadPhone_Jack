@@ -62,3 +62,9 @@ One line of reasoning each. Priority when sources conflict: SRS business rules â
 - **D-DROP-01** Daily Drop (JNG-14-01). One song per person per local day, final once posted. Friends' drops stay **sealed** until you drop: you see who dropped, never what. That trade is the daily habit loop. A streak counts consecutive days. Demo personas drop between 06:00 and 13:00; the demo login never drops automatically.
 - **D-DS-09** Buttons add `inline-flex` only when the caller doesn't hide them (`hidden lg:inline-flex`). The base class used to win, so the Friend activity toggle appeared on phones (same family as D-DS-06).
 - **D-HOME-02** (founder, 2026-10-02) Home shows friends' listening **once**, in the Now stage. The "Live now" shelf, the "Everyone else" grid and the circle filter chips are removed: the same friends appeared up to four times (stage, shelf, grid, activity panel). Loading, error and "no friends yet" states moved to the stage's slot; with friends but no plays, the stage shows a quiet one-line state. A circle's listening lives on its circle page (JNG-05-03 now verified there). "From Spotify" stays as its own attributed module (D-BR-01).
+- **D-BRAND-03** (founder, 2026-10-02) New Jingle mark: a cassette whose earphone cable curls into a lowercase "j", with the lowercase "jingle" wordmark.
+  - **Colour:** single-colour (currentColor), so it is white on dark and black on light; app icons are white on a near-black rounded square.
+  - **Small sizes:** at 32 px and below a simplified drawing (body, reels, earbud, "j" cable) keeps it legible.
+  - **Source:** redrawn as vector from the founder's AI-generated concept; the masters are in `components/app/LogoMark.tsx` and `app/icon.svg`.
+  - **Generated icons:** `app/apple-icon.png` (180 px) and the extension icons (16/32/48/128) are rendered from the vector.
+  - **Before launch:** run a trademark and reverse-image check on the concept (HUMAN_ACTIONS).

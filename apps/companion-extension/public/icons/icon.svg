@@ -1,15 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
-  <!-- Jingle-original icon (source for scripts/make-icons.mjs). No platform marks. -->
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8B6BFF"/>
-      <stop offset="1" stop-color="#3FE7D8"/>
-    </linearGradient>
-  </defs>
-  <rect width="128" height="128" rx="28" fill="url(#g)"/>
-  <g fill="#fff">
-    <ellipse cx="50" cy="86" rx="17" ry="13" transform="rotate(-20 50 86)"/>
-    <rect x="58" y="28" width="8" height="56"/>
-    <polygon points="66,28 92,44 92,58 66,44"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0A090C"/>
+  <g transform="translate(9 9) scale(0.7188)" fill="none" stroke="#FFFFFF" color="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="5" y="20" width="40" height="27" rx="4.5" stroke-width="3.2"/>
+  
+  <rect x="11" y="25.5" width="28" height="10.5" rx="2.6" stroke-width="2.4"/>
+  
+  <circle cx="18.5" cy="30.75" r="2.6" stroke-width="2.2"/>
+  <circle cx="31.5" cy="30.75" r="2.6" stroke-width="2.2"/>
+  
+  <path d="M21.6 30.75h6.8" stroke-width="2.2"/>
+  
+  <path d="M14.5 47l2.8-5.6h15.4l2.8 5.6" stroke-width="2.4"/>
+  
+  <circle cx="49.5" cy="9.6" r="3.4" fill="#FFFFFF" stroke-width="1.4"/>
+  <path d="M49.5 13v2.2" stroke-width="3.4"/>
+  <circle cx="57.6" cy="12.4" r="3.4" fill="#FFFFFF" stroke-width="1.4"/>
+  <path d="M57.4 15.8v2" stroke-width="3.4"/>
+  
+  <path d="M49.5 15v15.5c0 2.6 2 4.2 4.4 4.2" stroke-width="2.6"/>
+  <path d="M57.3 17.6v8.8c0 4.4-3.4 4.2-3.4 8.3v12.8c0 7.7-5.8 12.2-12.4 12.2-5.3 0-9.4-3.3-10.6-8" stroke-width="2.9"/>
   </g>
 </svg>

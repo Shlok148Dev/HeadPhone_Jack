@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { cn } from "@/components/ds";
+import { LogoMark } from "./LogoMark";
 
-/** Jingle's own mark: a gradient note-dot plus the wordmark in Bricolage. */
+/** Jingle's logo: the cassette-and-earphones mark plus the lowercase wordmark (D-BRAND-03). */
 export function Logo({ href = "/", className }: { href?: string; className?: string }) {
   return (
     <Link
@@ -9,11 +10,8 @@ export function Logo({ href = "/", className }: { href?: string; className?: str
       className={cn("inline-flex items-center gap-2 rounded-md font-display text-xl font-bold tracking-tight text-text", className)}
       aria-label="Jingle home"
     >
-      <span aria-hidden="true" className="relative inline-block h-6 w-6 rounded-full bg-gradient-brand">
-        <span className="absolute left-[9px] top-[5px] h-[11px] w-[3px] rounded-full bg-bg" />
-        <span className="absolute left-[5px] top-[13px] h-[6px] w-[7px] rounded-full bg-bg" />
-      </span>
-      Jingle
+      <LogoMark size={34} className="-my-1" />
+      jingle
     </Link>
   );
 }

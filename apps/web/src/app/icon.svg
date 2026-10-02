@@ -1,12 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="64" height="64">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8B6BFF"/>
-      <stop offset="1" stop-color="#3FE7D8"/>
-    </linearGradient>
-  </defs>
-  <!-- Jingle's mark (same geometry as components/app/Logo.tsx): gradient dot with a note. -->
-  <circle cx="12" cy="12" r="12" fill="url(#g)"/>
-  <rect x="9" y="5" width="3" height="11" rx="1.5" fill="#0A090C"/>
-  <rect x="5" y="13" width="7" height="6" rx="3" fill="#0A090C"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0A090C"/>
+  <g transform="translate(8 8) scale(0.7500)" fill="none" stroke="#FFFFFF" color="#FFFFFF" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4" y="19" width="42" height="30" rx="6" stroke-width="5"/>
+  <circle cx="17" cy="32" r="4.2" stroke-width="4"/>
+  <circle cx="33" cy="32" r="4.2" stroke-width="4"/>
+  <circle cx="55" cy="10" r="5" fill="#FFFFFF" stroke="none"/>
+  <path d="M55 14v32c0 8-6 13-13 13-5 0-9-3-10.5-7.5" stroke-width="5"/>
+  </g>
 </svg>

@@ -17,3 +17,6 @@ Needs Apple Developer enrolment (paid). Create a MusicKit key, then set `APPLE_M
 
 ## HA-UX-3 (optional) 21st.dev MCP key
 Only useful for component inspiration; not needed.
+
+## HA-UX-4 Logo originality check (before public launch)
+The cassette-and-earphones mark started as an AI-generated concept. Before launch, run a reverse-image search and a trademark search (India: IP India public search; plus WIPO Global Brand Database) for similar marks in class 9/41/42. If anything close turns up, adjust the drawing (`apps/web/src/components/app/LogoMark.tsx`) before filing.
