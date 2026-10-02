@@ -50,7 +50,7 @@ function StatusChips({ status, name }: { status: SendStatus; name?: string }) {
   );
 }
 
-function ReceivedRow({ item }: { item: Received }) {
+function ReceivedRow({ item, focused = false }: { item: Received; focused?: boolean }) {
   const { view, react } = useSendActions();
   const openSend = useOpenSend();
   const ref = useRef<HTMLLIElement>(null);
@@ -78,7 +78,10 @@ function ReceivedRow({ item }: { item: Received }) {
   }, [isNew, item.id]);
 
   return (
-    <li ref={ref} className="relative flex flex-col gap-3 rounded-lg border border-border bg-surface-1 p-4" aria-label={`${item.kind === "mixtape" ? "Mixtape" : first?.title} from ${name}`}>
+    <li
+      ref={ref}
+      id={`send-${item.id}`}
+      className={cn("relative flex scroll-mt-24 flex-col gap-3 rounded-lg border bg-surface-1 p-4 transition-shadow duration-500", focused ? "border-[var(--brand-violet)] shadow-[0_0_0_3px_color-mix(in_srgb,var(--brand-violet)_30%,transparent)]" : "border-border")} aria-label={`${item.kind === "mixtape" ? "Mixtape" : first?.title} from ${name}`}>
       {isNew && <span aria-label="New" className="absolute left-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--brand-violet)]" />}
       <div className="flex items-start gap-3">
         {first && <Cover song={first} />}
@@ -188,12 +191,18 @@ function RowsSkeleton() {
 
 function ReceivedTab() {
   const inbox = useInbox();
+  // From Home's "Sent to you": open this exact send, scrolled into view and highlighted.
+  const focusId = useSearchParams().get("item");
+  useEffect(() => {
+    if (!focusId || !inbox.data) return;
+    document.getElementById(`send-${focusId}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [focusId, inbox.data]);
   const openSend = useOpenSend();
   if (inbox.isLoading) return <RowsSkeleton />;
   if (inbox.isError) return <ErrorState message="Couldn't load your inbox." onRetry={() => void inbox.refetch()} />;
   if (!inbox.data?.length)
     return <EmptyState pose="wave" title="Nothing here yet." description="When friends send you songs, they land here." action={{ label: "Send a song first", onClick: () => openSend() }} />;
-  return <ul className="flex flex-col gap-3">{inbox.data.map((r) => <ReceivedRow key={r.id} item={r} />)}</ul>;
+  return <ul className="flex flex-col gap-3">{inbox.data.map((r) => <ReceivedRow key={r.id} item={r} focused={r.id === focusId} />)}</ul>;
 }
 
 function SentTab() {

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { AnimatePresence } from "motion/react";
 import * as motion from "motion/react-m";
 import { useState, type CSSProperties } from "react";
-import { Artwork, Avatar, IconButton, Icons, Shelf, type ArtworkColors } from "@/components/ds";
+import { Artwork, Avatar, IconButton, Icons, PlatformMark, Shelf, buttonClasses, type ArtworkColors, type Platform } from "@/components/ds";
+import { tuneIn } from "@/lib/tunein";
 import { useBlends } from "@/lib/live";
 import { useMotionSafe } from "@/lib/motion";
 import { useInbox } from "@/lib/sends";
@@ -142,7 +143,7 @@ export function HomeHero() {
 }
 
 /** "Sent to you" and "Your Blends" shelves (UX_SPEC §5.4). */
-export function HomeShelves() {
+export function HomeShelves({ myPlatform }: { myPlatform?: Platform }) {
   const inbox = useInbox();
   const blends = useBlends();
   const { me } = useAuth();
@@ -154,18 +155,52 @@ export function HomeShelves() {
         <Shelf title="Sent to you" count={sent.length} itemWidth="clamp(136px, 38vw, 184px)">
           {sent.map((d) => {
             const first = d.items[0];
+            const isNew = d.status === "sent" || d.status === "delivered";
+            const played = d.status === "played";
+            const tune = first ? tuneIn(first, myPlatform, null) : null;
+            const label = d.kind === "mixtape" ? `Mixtape · ${d.items.length}` : first?.title;
             return (
-              <Link key={d.id} href="/inbox" className="group flex flex-col gap-2 rounded-lg p-2 hover:bg-surface-1 focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]">
-                <div className="jg-art-glow overflow-hidden rounded-[8px]" style={first?.artwork_colors ? ({ "--art": first.artwork_colors.accent } as CSSProperties) : undefined}>
-                  <Artwork url={first?.artwork_url} seed={`${first?.artist}|${first?.title}`} alt="" rounded="none" eager tint={first?.artwork_colors?.dominant} sizes="(min-width: 1024px) 260px, 40vw" />
-                </div>
-                <span className="flex items-center gap-2">
-                  <Avatar name={d.sender.display_name} url={d.sender.avatar_url} seed={d.sender.id} size={20} decorative />
-                  <span className="truncate text-[13px] font-semibold">{d.sender.display_name}</span>
-                </span>
-                <span className="truncate text-[15px] font-semibold leading-tight">{d.kind === "mixtape" ? `Mixtape · ${d.items.length}` : first?.title}</span>
-                {d.note ? <span className="line-clamp-2 text-[13px] text-text-muted">&ldquo;{d.note}&rdquo;</span> : <span className="truncate text-[13px] text-text-muted">{first?.artist}</span>}
-              </Link>
+              <div key={d.id} className="flex flex-col gap-2 rounded-lg p-2 hover:bg-surface-1">
+                {/* Opens this exact send in the Inbox (scrolled to and highlighted there). */}
+                <Link
+                  href={`/inbox?item=${encodeURIComponent(d.id)}`}
+                  className="group flex flex-col gap-2 rounded-md focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+                  aria-label={`${label} from ${d.sender.display_name}${isNew ? ", new" : ""}${played ? ", you played this" : ""}`}
+                >
+                  <div className="jg-art-glow overflow-hidden rounded-[8px]" style={first?.artwork_colors ? ({ "--art": first.artwork_colors.accent } as CSSProperties) : undefined}>
+                    <Artwork url={first?.artwork_url} seed={`${first?.artist}|${first?.title}`} alt="" rounded="none" tint={first?.artwork_colors?.dominant} sizes="(min-width: 1024px) 200px, 40vw" />
+                  </div>
+                  <span className="flex items-center gap-2">
+                    <Avatar name={d.sender.display_name} url={d.sender.avatar_url} seed={d.sender.id} size={20} decorative />
+                    <span className="truncate text-[13px] font-semibold">{d.sender.display_name}</span>
+                    {isNew && (
+                      <span className="ml-auto inline-flex h-5 shrink-0 items-center gap-1 rounded-pill bg-[color-mix(in_srgb,var(--brand-violet)_22%,transparent)] px-2 font-mono text-[10px] font-semibold uppercase tracking-wide text-text">
+                        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[var(--brand-violet)]" />
+                        New
+                      </span>
+                    )}
+                  </span>
+                  <span className="truncate text-[15px] font-semibold leading-tight">{label}</span>
+                  {d.note ? <span className="line-clamp-2 text-[13px] text-text-muted">&ldquo;{d.note}&rdquo;</span> : <span className="truncate text-[13px] text-text-muted">{first?.artist}</span>}
+                  {played && (
+                    <span className="inline-flex items-center gap-1 font-mono text-[11px] text-text-muted">
+                      <Icons.Check size={12} /> You played this · {d.sender.display_name.split(" ")[0]} can see
+                    </span>
+                  )}
+                </Link>
+                {tune && (
+                  <a
+                    href={tune.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${tune.label}: ${first?.title}`}
+                    className={buttonClasses("secondary", "md", "min-h-9 justify-start gap-2 px-3 text-[13px]")}
+                  >
+                    {tune.platform !== "UNKNOWN" ? <PlatformMark platform={tune.platform} size={14} /> : <Icons.Open size={14} />}
+                    <span className="truncate">{tune.label}</span>
+                  </a>
+                )}
+              </div>
             );
           })}
         </Shelf>

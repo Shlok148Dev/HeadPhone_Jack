@@ -116,7 +116,7 @@ export default function HomePage() {
       )}
 
       <Suspense fallback={null}>
-        <HomeShelves />
+        <HomeShelves myPlatform={myPlatform} />
       </Suspense>
 
       <Suspense fallback={null}>
