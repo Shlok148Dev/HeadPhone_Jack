@@ -17,17 +17,37 @@ const PEOPLE: [string, "live" | "recent"][] = [
   ["Meera", "live"],
 ];
 
+/** Shared query: the public cover wall (real covers only). */
+function useWall() {
+  return useQuery({ queryKey: ["artwork-wall"], queryFn: () => api<{ covers: Cover[] }>("/artwork/wall"), staleTime: 3600_000 });
+}
+
+/** Phones: a row of real covers above the form, so the page is never artless (D-ONB-02). */
+export function CoverStrip() {
+  const covers = (useWall().data?.covers ?? []).slice(0, 8);
+  if (!covers.length) return null;
+  return (
+    <div aria-hidden className="ds-scrollbar-none -mx-6 flex shrink-0 gap-2 overflow-hidden px-6 pt-2 md:hidden">
+      {covers.map((cv, i) => (
+        <div key={i} className="jg-art-glow h-16 w-16 shrink-0 overflow-hidden rounded-[var(--r-art-sm)]" style={{ ["--art" as string]: cv.color ?? "#000" }}>
+          <Artwork url={cv.url_small || cv.url || null} seed={cv.label} alt="" rounded="none" sizes="64px" eager tint={cv.color} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** Sign-in / sign-up / onboarding side panel: real covers drifting, friends' Pulse rings. */
 export function ArtPanel() {
-  const q = useQuery({ queryKey: ["artwork-wall"], queryFn: () => api<{ covers: Cover[] }>("/artwork/wall"), staleTime: 3600_000 });
+  const q = useWall();
   const covers = q.data?.covers ?? [];
   const cols = [0, 1, 2].map((c) => Array.from({ length: 6 }, (_, i) => covers[(c * 6 + i * 2 + c) % Math.max(1, covers.length)]));
   return (
-    <div aria-hidden className="jg-enter-late hidden h-dvh min-h-0 p-3 lg:block">
+    <div aria-hidden className="jg-enter-late hidden h-dvh min-h-0 p-3 md:block">
       <div className="flex h-full flex-col overflow-hidden rounded-[24px] bg-surface-1">
-      <div className="grid min-h-0 flex-1 grid-cols-3 gap-4 overflow-hidden p-4">
+      <div className="grid min-h-0 flex-1 grid-cols-2 gap-3 overflow-hidden p-3 lg:grid-cols-3 lg:gap-4 lg:p-4">
         {cols.map((col, c) => (
-          <div key={c} className="jg-drift flex flex-col gap-3" style={{ animationDuration: `${46 + c * 8}s`, animationDirection: c % 2 ? "reverse" : "normal" }}>
+          <div key={c} className={`jg-drift flex flex-col gap-3 ${c === 2 ? "hidden lg:flex" : ""}`} style={{ animationDuration: `${46 + c * 8}s`, animationDirection: c % 2 ? "reverse" : "normal" }}>
             {[...col, ...col].map((cv, i) => (
               <div key={i} className="jg-art-glow aspect-square shrink-0 overflow-hidden rounded-[8px]" style={{ ["--art" as string]: cv?.color ?? "#000" }}>
                 <Artwork url={cv?.url || cv?.url_small || null} seed={cv?.label ?? `${c}${i}`} alt="" rounded="none" sizes="(min-width: 1440px) 300px, 22vw" eager={i < 4} tint={cv?.color} />

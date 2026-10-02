@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/ds";
-import { ArtPanel } from "./ArtPanel";
+import { ArtPanel, CoverStrip } from "./ArtPanel";
 import { Logo } from "./Logo";
 
 /**
@@ -24,13 +24,14 @@ export function FocusShell({ children, wide = false }: { children: ReactNode; wi
     );
   }
   return (
-    <div className="grid h-dvh overflow-hidden bg-bg lg:grid-cols-[minmax(440px,5fr)_7fr]">
+    <div className="grid h-dvh overflow-hidden bg-bg md:grid-cols-[minmax(340px,1fr)_1fr] lg:grid-cols-[minmax(440px,5fr)_7fr]">
       {/* Scrolls only if the form itself is taller than a very short window. */}
       <div className="flex min-h-0 flex-col overflow-y-auto px-6 md:px-12">
         <header className="flex h-16 shrink-0 items-center justify-between">
           <Logo />
           <ThemeToggle />
         </header>
+        <CoverStrip />
         <main id="main" className="flex flex-1 items-center justify-center py-6">
           <div className="jg-enter w-full max-w-[400px]">{children}</div>
         </main>
