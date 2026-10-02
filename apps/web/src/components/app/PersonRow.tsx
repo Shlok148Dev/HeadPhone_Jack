@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { Avatar, Button, Dialog, IconButton, Icons, Pulse, cn, useToast, type FeedCardData } from "@/components/ds";
+import { Avatar, Button, Dialog, IconButton, Icons, PlatformMark, Pulse, cn, useToast, type FeedCardData } from "@/components/ds";
 import { pulseOf } from "@/components/app/Presence";
 import { songFromCard, useOpenSend } from "@/lib/send";
 import { useSocialActions, type Person } from "@/lib/social";
@@ -37,7 +37,10 @@ export function PersonRow({ person, actions, card }: { person: Person; actions?:
             <p className="truncate text-sm text-text-muted">
               <span className="text-text">{rec.title}</span> · {rec.artist}
             </p>
-            <p className={cn("truncate font-mono text-xs", state === "live" ? "text-live-text" : "text-text-subtle")}>{card!.freshness_label}</p>
+            <p className={cn("flex min-w-0 items-center gap-1.5 font-mono text-xs", state === "live" ? "text-live-text" : "text-text-subtle")}>
+              {card!.platform !== "UNKNOWN" && card!.platform !== "AMAZON_MUSIC" && <PlatformMark platform={card!.platform} size={12} />}
+              <span className="truncate">{card!.freshness_label}</span>
+            </p>
           </>
         ) : (
           <p className="truncate font-mono text-xs text-text-muted">@{person.username}</p>

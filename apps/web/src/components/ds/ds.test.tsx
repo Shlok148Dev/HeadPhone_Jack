@@ -94,10 +94,12 @@ describe("PlatformBadge", () => {
     ["YOUTUBE_MUSIC", "YouTube Music"],
     ["AMAZON_MUSIC", "Amazon Music"],
   ];
-  it.each(names)("%s renders text only", (p, text) => {
+  it.each(names)("%s renders the official mark beside its name", (p, text) => {
     const { container } = render(<PlatformBadge platform={p} />);
-    expect(container.textContent).toBe(text);
-    expect(container.querySelector("svg, img, picture, [style*='background-image']")).toBeNull();
+    expect(container.textContent).toBe(text); // the name is always there (sr-only for Amazon's wordmark)
+    const svg = container.querySelector("svg");
+    expect(svg?.getAttribute("aria-hidden")).toBe("true");
+    expect(container.querySelector("img, picture, [style*='background-image']")).toBeNull();
   });
   it("renders nothing for UNKNOWN", () => {
     const { container } = render(<PlatformBadge platform="UNKNOWN" />);

@@ -2,14 +2,15 @@
 
 Nothing waits on these; every screen already works with the fallbacks.
 
-## HA-UX-1 Official platform badges (optional polish)
-1. Download each platform's official assets from its own brand page only:
-   - Spotify: <https://developer.spotify.com/documentation/design>
-   - Apple Music: Apple's Marketing Guidelines, "Listen on Apple Music" badges
-   - YouTube Music: <https://www.youtube.com/howyoutubeworks/resources/brand-resources/>
-   - Amazon Music: the Amazon Music brand guidelines (from your Amazon partner contact)
-2. Put them in `apps/web/public/brands/<platform>/`, each with a `SOURCE.md` (URL, date, rules: minimum size, clear space, colour use).
-3. Tell Claude "badges added". It will swap the text badges for the official marks wherever the guidelines allow (never in a sentence, never altered).
+## HA-UX-1 Platform marks: guideline check before public launch
+The founder asked for real logos (2026-10-02). The marks now ship in `apps/web/src/components/ds/platformMarks.ts`:
+- Spotify, Apple Music and YouTube Music icons: from Simple Icons (CC0 path data).
+- Amazon Music wordmark: from Wikimedia Commons (a public-domain file).
+
+They are shown unmodified, in brand colour, at text size, beside the platform name. The marks are still their owners' trademarks. Before a public launch:
+1. Read each guideline: Spotify <https://developer.spotify.com/documentation/design>, Apple Music marketing guidelines, YouTube brand resources <https://www.youtube.com/howyoutubeworks/resources/brand-resources/>, and Amazon Music brand guidelines.
+2. Check minimum size, clear space and colour rules. Spotify requires its full logo, not just the icon, in some contexts, and Apple prefers its official "Listen on Apple Music" badge for links.
+3. Replace any mark that needs the official asset file: put it in `apps/web/public/brands/<platform>/` with a `SOURCE.md` and tell Claude.
 
 ## HA-UX-2 Apple MusicKit developer token (better covers and artist photos)
 Needs Apple Developer enrolment (paid). Create a MusicKit key, then set `APPLE_MUSIC_TEAM_ID`, `APPLE_MUSIC_KEY_ID` and `APPLE_MUSIC_PRIVATE_KEY_PATH` in `.env`. Until then the free iTunes Search API supplies the covers.

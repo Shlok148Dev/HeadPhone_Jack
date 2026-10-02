@@ -87,7 +87,12 @@ The open action shows the destination app's name ("Apple Music"). The full sente
 
 ## Platform marks
 
-Official logos are pending (HUMAN_ACTIONS HA-UX-1). Until then, platforms are **text badges** (`<PlatformBadge>`), which the brand guidelines permit. Never put a logo in a sentence.
+Official marks (D-BRAND-02): `<PlatformMark platform>` shows the icon, and `<PlatformLabel>` / `<PlatformBadge>` show the icon plus the name. Amazon Music is a wordmark, so its name is sr-only. Rules:
+- Unmodified and in brand colour.
+- At text size, beside the name or the server's label; never inside a sentence.
+- Never on artwork.
+- In feed labels, the mark sits *outside* the verbatim `freshness_label` span.
+- Guideline check before launch: HUMAN_ACTIONS HA-UX-1.
 
 ## Motion
 

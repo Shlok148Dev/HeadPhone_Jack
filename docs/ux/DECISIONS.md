@@ -49,3 +49,7 @@ One line of reasoning each. Priority when sources conflict: SRS business rules â
 - **D-ART-06 (revised)** While a cover loads, show a calm surface in its own dominant colour. The busy generative pattern flashing on every load read as low quality. Generative covers are now for truly missing art only.
 - **D-ONB-02** Sign-in and sign-up are a viewport-locked split: the form on the left, vertically centred, never below the fold; the live cover wall fills the right from lg up. Phones get the form only.
 - **D-SHELL-04** Friend activity is a panel the user opens from the top bar (remembered per device), closed by default. It overlays at lg and docks at xl. The sidebar "Live now" list shows when it is closed.
+- **D-BRAND-02** (supersedes D-BRAND-01; the founder asked for real logos, 2026-10-02.)
+  - **Sources:** official marks from Simple Icons for Spotify, Apple Music and YouTube Music (CC0 paths), and a public-domain Wikimedia Commons file for the Amazon Music wordmark.
+  - **Placement:** unmodified, in brand colour, at text size, beside the platform name on badges, feed labels, the open-in-app action, friend activity and friend rows.
+  - **Trademarks** remain with their owners; the guideline check is HA-UX-1.

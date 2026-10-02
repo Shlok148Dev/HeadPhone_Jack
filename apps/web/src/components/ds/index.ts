@@ -34,3 +34,4 @@ export { SuggestionCard } from "./SuggestionCard";
 export type { SuggestionCardProps } from "./SuggestionCard";
 export { NowPlayingBar } from "./NowPlayingBar";
 export type { NowPlayingBarProps, NowPlayingTrack } from "./NowPlayingBar";
+export { PlatformMark, PlatformLabel } from "./PlatformMark";

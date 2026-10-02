@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Artwork, IconButton, Icons, Pulse, cn, type FeedCardData } from "@/components/ds";
+import { Artwork, IconButton, Icons, PlatformMark, Pulse, cn, type FeedCardData } from "@/components/ds";
 import { isFreshLive, sortFeed, useFeed } from "@/lib/feed";
 import { useRealtimeStatus } from "@/lib/realtime";
 import { songFromCard, useOpenSend } from "@/lib/send";
@@ -95,7 +95,10 @@ export function ActivityPanel({ onClose }: { onClose: () => void }) {
               >
                 <Icons.Send size={16} />
               </IconButton>
-              <p className={cn("col-span-3 mt-0.5 truncate font-mono text-[11px]", state === "live" ? "text-live-text" : "text-text-muted")}>{c.freshness_label}</p>
+              <p className={cn("col-span-3 mt-0.5 flex min-w-0 items-center gap-1.5 font-mono text-[11px]", state === "live" ? "text-live-text" : "text-text-muted")}>
+                {c.platform !== "UNKNOWN" && c.platform !== "AMAZON_MUSIC" && <PlatformMark platform={c.platform} size={11} />}
+                <span className="truncate">{c.freshness_label}</span>
+              </p>
             </li>
           );
         })}

@@ -2,7 +2,8 @@
 
 import type { CSSProperties } from "react";
 import { useReducedMotion } from "motion/react";
-import { PLATFORM_NAMES, type Platform } from "./types";
+import { PlatformLabel } from "./PlatformMark";
+import { type Platform } from "./types";
 import { cn, hashString } from "./utils";
 
 export interface PlatformBadgeProps {
@@ -12,18 +13,18 @@ export interface PlatformBadgeProps {
   className?: string;
 }
 
-/** Platform name as neutral TEXT. Never a logo, glyph, brand font or brand colour. UNKNOWN renders nothing. */
+/** Platform mark + name (D-BRAND-02): official mark, unmodified, beside the name. UNKNOWN renders nothing. */
 export function PlatformBadge({ platform, variant = "pill", className }: PlatformBadgeProps) {
   if (platform === "UNKNOWN") return null;
-  if (variant === "inline") return <span className={className}>{PLATFORM_NAMES[platform]}</span>;
+  if (variant === "inline") return <PlatformLabel platform={platform} size={13} className={className} />;
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center rounded-pill bg-surface-3 px-2 text-xs font-medium text-text-muted",
+        "inline-flex h-6 items-center rounded-pill bg-surface-3 px-2.5 text-xs font-medium text-text",
         className,
       )}
     >
-      {PLATFORM_NAMES[platform]}
+      <PlatformLabel platform={platform} size={13} />
     </span>
   );
 }

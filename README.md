@@ -83,3 +83,8 @@ Real Spotify, Last.fm and Google keys, and production secrets: see [`docs/office
 | `docs/` | Plan, ADRs, contracts, research, UX spec, runbooks, office state, traceability |
 
 Platform names are trademarks of their owners. Jingle is not affiliated with Spotify, Apple, Google or Amazon.
+
+## Credits
+
+- Platform marks: [Simple Icons](https://simpleicons.org) (CC0 path data) for Spotify, Apple Music and YouTube Music, and Wikimedia Commons "Amazon Music (Logo).svg" (public domain). All marks are trademarks of their owners and are used only to name the platform. See `docs/ux/HUMAN_ACTIONS.md` HA-UX-1.
+- Cover art: Apple iTunes Search API, and MusicBrainz with the Cover Art Archive.

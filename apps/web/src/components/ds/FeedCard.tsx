@@ -8,6 +8,7 @@ import { DelayedTag, LiveBadge } from "./Badges";
 import { buttonClasses, IconButton } from "./Button";
 import { Artwork } from "./GenerativeCover";
 import { Lock, Open, Send } from "./icons";
+import { PlatformMark } from "./PlatformMark";
 import { Pulse } from "./Pulse";
 import { PLATFORM_NAMES, type FeedCardData, type FeedRecording, type Platform } from "./types";
 import { cn } from "./utils";
@@ -65,6 +66,8 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
 
   const label = (
     <p id={labelId} className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+      {/* The source app's official mark beside the server's words (D-BRAND-02); the label stays verbatim. */}
+      {card.platform !== "UNKNOWN" && card.platform !== "AMAZON_MUSIC" && <PlatformMark platform={card.platform} size={12} />}
       <span className={cn("font-mono text-xs font-medium", isLive ? "text-live-text" : "text-text-muted")} data-testid="freshness-label">
         {card.freshness_label}
       </span>
@@ -120,6 +123,9 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
   // Destination app shown as text next to the icon: "Apple Music", "Spotify"…; the full
   // sentence ("Search in Apple Music") is the link's accessible name.
   const dest = spotifyData ? "Spotify" : (searchOn ?? (myPlatform && myPlatform !== "UNKNOWN" ? PLATFORM_NAMES[myPlatform] : platformName ?? "my app"));
+  const destPlatform: Platform | null = spotifyData
+    ? "SPOTIFY"
+    : (picked?.searchOn ?? (myPlatform && myPlatform !== "UNKNOWN" ? myPlatform : card.platform !== "UNKNOWN" ? card.platform : null));
   const artColor = rec.artwork_colors?.accent;
 
   return (
@@ -192,13 +198,13 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
             title={openLabel}
             className={buttonClasses("secondary", "md", "min-w-0 flex-1 justify-start gap-1.5 px-3 text-[13px]")}
           >
-            <Open size={15} />
-            <span className="truncate">{dest}</span>
+            {destPlatform && destPlatform !== "UNKNOWN" ? <PlatformMark platform={destPlatform} size={15} /> : <Open size={15} />}
+            {destPlatform !== "AMAZON_MUSIC" && <span className="truncate">{dest}</span>}
           </a>
         ) : (
           <span aria-disabled="true" aria-label={openLabel} className={buttonClasses("secondary", "md", "min-w-0 flex-1 justify-start gap-1.5 px-3 text-[13px]")}>
-            <Open size={15} />
-            <span className="truncate">{dest}</span>
+            {destPlatform && destPlatform !== "UNKNOWN" ? <PlatformMark platform={destPlatform} size={15} /> : <Open size={15} />}
+            {destPlatform !== "AMAZON_MUSIC" && <span className="truncate">{dest}</span>}
           </span>
         )}
         <IconButton label={`Send ${rec.title}`} variant="ghost" onClick={() => onSend?.(card)}>
