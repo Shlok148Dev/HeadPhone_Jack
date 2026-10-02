@@ -7,7 +7,8 @@ import { cn } from "./utils";
  * A platform's official mark at text size (D-BRAND-02). Decorative by default: the platform's
  * name is always present as text nearby (or, for Amazon Music's wordmark, as an sr-only label).
  */
-export function PlatformMark({ platform, size = 14, className }: { platform: Platform; size?: number; className?: string }) {
+/** `mono`: currentColor (white on a coloured button), which the brand guidelines allow. */
+export function PlatformMark({ platform, size = 14, className, mono = false }: { platform: Platform; size?: number; className?: string; mono?: boolean }) {
   if (platform === "UNKNOWN") return null;
   if (platform === "AMAZON_MUSIC") {
     const h = size * 0.9;
@@ -20,14 +21,15 @@ export function PlatformMark({ platform, size = 14, className }: { platform: Pla
         focusable="false"
         className={cn("inline-block shrink-0 align-[-0.1em]", className)}
       >
-        <path fill={AMAZON_WORDMARK.hex} fillRule="evenodd" d={AMAZON_WORDMARK.d} />
+        <path fill={mono ? "currentColor" : AMAZON_WORDMARK.hex} fillRule="evenodd" d={AMAZON_WORDMARK.d} />
       </svg>
     );
   }
-  const m = MARKS[platform];
+  const m = (MARKS as Record<string, { hex: string; d: string } | undefined>)[platform];
+  if (!m) return null; // a platform without an official mark here renders nothing (its name still shows)
   return (
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" className={cn("inline-block shrink-0 align-[-0.125em]", className)}>
-      <path fill={m.hex} d={m.d} />
+      <path fill={mono ? "currentColor" : m.hex} d={m.d} />
     </svg>
   );
 }

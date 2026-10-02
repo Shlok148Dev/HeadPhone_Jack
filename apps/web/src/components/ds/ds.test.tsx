@@ -61,19 +61,19 @@ describe("FeedCard", () => {
     unmount();
     render(<FeedCard card={card("RECENT")} />);
     expect(screen.queryByText("Data from Spotify")).toBeNull();
-    expect(screen.getByRole("link", { name: /Open in my app/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Play in Spotify/ })).toBeTruthy();
   });
 
   it("unresolved recordings offer a platform search", () => {
     const c = card("RECENT");
     render(<FeedCard card={{ ...c, recording: { ...c.recording!, id: null } }} />);
-    expect(screen.getByRole("link", { name: /Search in Spotify/ })).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Find in Spotify/ })).toBeTruthy();
   });
 
-  it("has Open in my app and Send actions and no route words", () => {
+  it("has Play in (Tune in) and Send actions and no route words", () => {
     const onSend = vi.fn();
     const { container } = render(<FeedCard card={card("LIVE")} onSend={onSend} />);
-    expect(screen.getByRole("link", { name: /Open in my app/ }).getAttribute("href")).toBe("https://open.spotify.com/x");
+    expect(screen.getByRole("link", { name: /Play in Spotify/ }).getAttribute("href")).toBe("https://open.spotify.com/x");
     fireEvent.click(screen.getByRole("button", { name: /Send/ }));
     expect(onSend).toHaveBeenCalledOnce();
     expect(container.textContent).not.toMatch(ROUTE_WORDS);

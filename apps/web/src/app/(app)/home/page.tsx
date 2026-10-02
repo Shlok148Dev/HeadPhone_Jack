@@ -15,6 +15,7 @@ import {
   Skeleton,
   type Platform,
 } from "@/components/ds";
+import { NowStage } from "@/components/app/NowStage";
 import { useAuth } from "@/lib/auth";
 import { songFromCard, useOpenSend } from "@/lib/send";
 import { useCircles } from "@/lib/circles";
@@ -23,6 +24,7 @@ import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
 
 // Below the fold: loads after first paint so Home stays inside its JS budget (R-D).
+const DailyDrop = lazy(() => import("@/components/app/DailyDrop").then((m) => ({ default: m.DailyDrop })));
 const HomeHero = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeHero })));
 const HomeShelves = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeShelves })));
 const SuggestionsShelf = lazy(() => import("@/components/app/Suggestions").then((m) => ({ default: m.SuggestionsShelf })));
@@ -89,6 +91,11 @@ export default function HomePage() {
         {greeting()}
         {firstName(me?.display_name || me?.username) ? `, ${firstName(me?.display_name || me?.username)}` : ""}
       </h1>
+      {/* D-HOME-01: the stage (what a friend is playing, Tune in), then today's Drop, then rituals. */}
+      <NowStage cards={cards} now={now} myPlatform={myPlatform} onSend={(c) => openSend({ song: songFromCard(c) })} />
+      <Suspense fallback={<div className="min-h-[280px] rounded-[24px] bg-surface-1" aria-hidden />}>
+        <DailyDrop myPlatform={myPlatform} />
+      </Suspense>
       <Suspense fallback={<div className="min-h-[220px] rounded-[20px] bg-surface-1" aria-hidden />}>
         <HomeHero />
       </Suspense>

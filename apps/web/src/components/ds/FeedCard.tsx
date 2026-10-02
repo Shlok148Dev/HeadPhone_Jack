@@ -111,13 +111,14 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
   const link = spotifyData ? (rec.links?.SPOTIFY ?? picked?.url ?? null) : (picked?.url ?? null);
   const platformName = card.platform === "UNKNOWN" ? null : PLATFORM_NAMES[card.platform];
   const searchOn = !spotifyData && picked?.searchOn && picked.searchOn !== "UNKNOWN" ? PLATFORM_NAMES[picked.searchOn] : null;
+  // Tune in wording (D-TUNE-01): "Play in X" only for an exact link, "Find in X" for a search.
   const openLabel = spotifyData
     ? "Open Spotify"
     : searchOn
-      ? `Search in ${searchOn}`
+      ? `Find in ${searchOn}`
       : unresolved && platformName
-        ? `Search in ${platformName}`
-        : "Open in my app";
+        ? `Find in ${platformName}`
+        : `Play in ${myPlatform && myPlatform !== "UNKNOWN" ? PLATFORM_NAMES[myPlatform] : (platformName ?? "your app")}`;
   const tops = isTop ? [rec, ...(topRecordings ?? [])].slice(0, 4) : [];
 
   // Destination app shown as text next to the icon: "Apple Music", "Spotify"…; the full
@@ -202,7 +203,7 @@ export function FeedCard({ card, myPlatform, onSend, topRecordings, index = 0, s
             {destPlatform !== "AMAZON_MUSIC" && <span className="truncate">{dest}</span>}
           </a>
         ) : (
-          <span aria-disabled="true" aria-label={openLabel} className={buttonClasses("secondary", "md", "min-w-0 flex-1 justify-start gap-1.5 px-3 text-[13px]")}>
+          <span role="link" aria-disabled="true" aria-label={openLabel} className={buttonClasses("secondary", "md", "min-w-0 flex-1 justify-start gap-1.5 px-3 text-[13px]")}>
             {destPlatform && destPlatform !== "UNKNOWN" ? <PlatformMark platform={destPlatform} size={15} /> : <Open size={15} />}
             {destPlatform !== "AMAZON_MUSIC" && <span className="truncate">{dest}</span>}
           </span>

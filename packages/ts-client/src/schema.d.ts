@@ -53,6 +53,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/artwork": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["artwork_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/artwork/wall": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Real covers for the logged-out homepage (public; covers only, no people). */
+        get: operations["artwork_wall_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/google": {
         parameters: {
             query?: never;
@@ -577,6 +610,39 @@ export interface paths {
         post?: never;
         /** @description JNG-01-09: disconnect one music app without affecting the others. */
         delete: operations["connections_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/drops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["drops_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/drops/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description JNG-14-01: today's drop, your streak, and friends' drops (revealed once you've dropped). */
+        get: operations["drops_today_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1665,6 +1731,20 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        ArtworkResult: {
+            found: boolean;
+            url: string | null;
+            url_small: string | null;
+            colors: {
+                [key: string]: unknown;
+            };
+            source: string | null;
+        };
+        ArtworkWall: {
+            covers: {
+                [key: string]: unknown;
+            }[];
+        };
         /**
          * @description * `SPOTIFY` - SPOTIFY
          * @enum {string}
@@ -1725,6 +1805,7 @@ export interface components {
             /** Format: date-time */
             generated_at: string | null;
             track_count: number;
+            covers: string[];
             tracks?: components["schemas"]["BlendTrack"][];
             save: {
                 [key: string]: unknown;
@@ -1785,6 +1866,7 @@ export interface components {
                 [key: string]: unknown;
             };
             members?: components["schemas"]["Member"][];
+            covers?: string[];
         };
         CircleInviteItem: {
             /** Format: uuid */
@@ -1823,6 +1905,12 @@ export interface components {
             notes: string[];
             shared_artists: string[];
             shared_genres: string[];
+            shared_artist_art: {
+                [key: string]: unknown;
+            }[];
+            constellation: {
+                [key: string]: unknown;
+            } | null;
             audio_features_available: boolean;
         };
         ConnectPlan: {
@@ -1894,6 +1982,34 @@ export interface components {
          * @enum {string}
          */
         DirectionEnum: "incoming" | "outgoing";
+        Drop: {
+            /** Format: uuid */
+            id: string;
+            user: components["schemas"]["Person"];
+            title: string;
+            artist: string;
+            note: string;
+            /** Format: date-time */
+            created_at: string;
+            links: {
+                [key: string]: unknown;
+            };
+            search_links: {
+                [key: string]: unknown;
+            };
+            artwork_url: string | null;
+            artwork_small: string | null;
+            artwork_colors: {
+                [key: string]: unknown;
+            } | null;
+        };
+        DropCreateRequest: {
+            title: string;
+            artist: string;
+            note?: string;
+            /** Format: uuid */
+            recording_id?: string | null;
+        };
         Entry: {
             /** Format: uuid */
             id: string;
@@ -2529,6 +2645,15 @@ export interface components {
             artists: string[];
             genres: string[];
         };
+        Today: {
+            /** Format: date */
+            day: string;
+            mine: components["schemas"]["Drop"] | null;
+            streak: number;
+            locked: boolean;
+            friends: components["schemas"]["Drop"][];
+            dropped: components["schemas"]["Person"][];
+        };
         TransferRequest: {
             /** Format: uuid */
             user_id: string;
@@ -2696,6 +2821,47 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    artwork_retrieve: {
+        parameters: {
+            query: {
+                artist: string;
+                title?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtworkResult"];
+                };
+            };
+        };
+    };
+    artwork_wall_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtworkWall"];
                 };
             };
         };
@@ -3914,6 +4080,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    drops_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DropCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DropCreateRequest"];
+                "multipart/form-data": components["schemas"]["DropCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Drop"];
+                };
+            };
+            /** @description VALIDATION_ERROR */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description ALREADY_DROPPED */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    drops_today_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Today"];
                 };
             };
         };

@@ -116,6 +116,10 @@ class Command(BaseCommand):
         from artwork.management.commands.resolve_artwork import queue_demo_catalogue
 
         queue_demo_catalogue()
+        # Personas' Daily Drops for today so far (JNG-14-01); the beat task adds the rest.
+        from drops.tasks import demo_drops
+
+        demo_drops()
         # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
         from jingle_ml.tasks import schedule_all_later
 

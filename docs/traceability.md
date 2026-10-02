@@ -76,6 +76,8 @@ Status: ✅ automated and passing · 🟡 partial · ⬜ not started. Updated at
 | JNG-13-06 | Contract tests for every adapter | ingest-ml fixture contract tests (S2) | `services/ingest_ml/tests` | ✅ |
 | JNG-13-07 | Screen reader and keyboard | E2E `a11y.spec.ts` (every route, both themes, axe WCAG 2.2 AA; skip link, focus visible) | all routes | ✅ |
 | JNG-13-08 | Status page | `/healthz` per service | — | 🟡 not built (Should) |
+| JNG-14-01 | Daily Drop: one song a day, friends' drops sealed until you drop, streaks (founder request, 2026-10-02) | `tests/drops/test_drops.py` (locked→revealed, one a day, 409, validation, streak, blocks, timezone day, demo personas); E2E `ep14/JNG-14.spec.ts` | `drops/`, `components/app/DailyDrop.tsx`, `lib/drops.ts` | ✅ |
+| JNG-14-02 | Tune in: play a friend's song in *your* app; exact links say "Play", searches say "Find" | `ds.test.tsx` FeedCard wording; `tests/artwork` (Apple link from strict iTunes match); E2E `ep14` | `lib/tunein.ts`, `artwork/services.enrich`, `NowStage.tsx`, `FeedCard.tsx` | ✅ |
 | JNG-05-04 | Open in my own app (search fallback) | `test_JNG_05_04_search_links_for_open_in_my_app` | `feed/resolver._search_links`, `FeedCard.pickLink` | ✅ |
 | JNG-05-07 | Source down → cached card, honest time, delayed | `test_JNG_05_07_needs_reconnect_marks_recent_as_delayed` | `feed/resolver._source_delayed`, Home degraded line | ✅ |
 | JNG-05-08 | Empty state for no friends | `apps/web/e2e/screens.spec.ts` (screenshot) | `apps/web/src/app/(app)/home/page.tsx` | ✅ |

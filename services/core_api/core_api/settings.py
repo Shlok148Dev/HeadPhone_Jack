@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "rituals",
     "moderation",
     "artwork",
+    "drops",
     "feed",
 ]
 
@@ -198,6 +199,8 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(day_of_month=1, hour=5, minute=0),
     },
     "artwork-drain": {"task": "artwork.tasks.drain", "schedule": 60.0},
+    # Demo only (no-op otherwise): personas post their Daily Drop over the day (JNG-14-01).
+    "drops-demo": {"task": "drops.tasks.demo_drops", "schedule": 900.0},
     "sessions-sweep": {"task": "listening.tasks.sweep", "schedule": 30.0},
     "sends-played": {"task": "sends.tasks.check_played", "schedule": 60.0},
     "sends-credits-daily": {

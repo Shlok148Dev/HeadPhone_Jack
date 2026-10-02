@@ -109,6 +109,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: NOT_FOUND
+  /api/v1/artwork:
+    get:
+      operationId: artwork_retrieve
+      parameters:
+      - in: query
+        name: artist
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: title
+        schema:
+          type: string
+      tags:
+      - artwork
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtworkResult'
+          description: ''
+  /api/v1/artwork/wall:
+    get:
+      operationId: artwork_wall_retrieve
+      description: Real covers for the logged-out homepage (public; covers only, no
+        people).
+      tags:
+      - artwork
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtworkWall'
+          description: ''
   /api/v1/auth/google:
     post:
       operationId: auth_google_create
@@ -1245,6 +1285,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorEnvelope'
           description: NOT_FOUND
+  /api/v1/drops:
+    post:
+      operationId: drops_create
+      tags:
+      - drops
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DropCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DropCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DropCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Drop'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: VALIDATION_ERROR
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+          description: ALREADY_DROPPED
+  /api/v1/drops/today:
+    get:
+      operationId: drops_today_retrieve
+      description: 'JNG-14-01: today''s drop, your streak, and friends'' drops (revealed
+        once you''ve dropped).'
+      tags:
+      - drops
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Today'
+          description: ''
   /api/v1/feed:
     get:
       operationId: feed_list
@@ -3178,6 +3272,42 @@ components:
             additionalProperties: {}
       required:
       - results
+    ArtworkResult:
+      type: object
+      properties:
+        found:
+          type: boolean
+        url:
+          type:
+          - string
+          - 'null'
+        url_small:
+          type:
+          - string
+          - 'null'
+        colors:
+          type: object
+          additionalProperties: {}
+        source:
+          type:
+          - string
+          - 'null'
+      required:
+      - colors
+      - found
+      - source
+      - url
+      - url_small
+    ArtworkWall:
+      type: object
+      properties:
+        covers:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - covers
     AttributionEnum:
       enum:
       - SPOTIFY
@@ -3302,6 +3432,10 @@ components:
           format: date-time
         track_count:
           type: integer
+        covers:
+          type: array
+          items:
+            type: string
         tracks:
           type: array
           items:
@@ -3311,6 +3445,7 @@ components:
           additionalProperties: {}
       required:
       - circle
+      - covers
       - generated_at
       - id
       - left_out
@@ -3447,6 +3582,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Member'
+        covers:
+          type: array
+          items:
+            type: string
       required:
       - battle_schedule
       - id
@@ -3539,15 +3678,27 @@ components:
           type: array
           items:
             type: string
+        shared_artist_art:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        constellation:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
         audio_features_available:
           type: boolean
       required:
       - audio_features_available
       - breakdown
       - calibrated
+      - constellation
       - notes
       - ready
       - score
+      - shared_artist_art
       - shared_artists
       - shared_genres
     ConnectPlan:
@@ -3733,6 +3884,76 @@ components:
       description: |-
         * `incoming` - incoming
         * `outgoing` - outgoing
+    Drop:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user:
+          $ref: '#/components/schemas/Person'
+        title:
+          type: string
+        artist:
+          type: string
+        note:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        links:
+          type: object
+          additionalProperties: {}
+        search_links:
+          type: object
+          additionalProperties: {}
+        artwork_url:
+          type:
+          - string
+          - 'null'
+        artwork_small:
+          type:
+          - string
+          - 'null'
+        artwork_colors:
+          type:
+          - object
+          - 'null'
+          additionalProperties: {}
+      required:
+      - artist
+      - artwork_colors
+      - artwork_small
+      - artwork_url
+      - created_at
+      - id
+      - links
+      - note
+      - search_links
+      - title
+      - user
+    DropCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 500
+        artist:
+          type: string
+          minLength: 1
+          maxLength: 500
+        note:
+          type: string
+          maxLength: 140
+        recording_id:
+          type:
+          - string
+          - 'null'
+          format: uuid
+      required:
+      - artist
+      - title
     Entry:
       type: object
       properties:
@@ -5229,6 +5450,35 @@ components:
       required:
       - artists
       - genres
+    Today:
+      type: object
+      properties:
+        day:
+          type: string
+          format: date
+        mine:
+          oneOf:
+          - $ref: '#/components/schemas/Drop'
+          - type: 'null'
+        streak:
+          type: integer
+        locked:
+          type: boolean
+        friends:
+          type: array
+          items:
+            $ref: '#/components/schemas/Drop'
+        dropped:
+          type: array
+          items:
+            $ref: '#/components/schemas/Person'
+      required:
+      - day
+      - dropped
+      - friends
+      - locked
+      - mine
+      - streak
     TransferRequest:
       type: object
       properties:

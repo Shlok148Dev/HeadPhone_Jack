@@ -101,7 +101,7 @@ export function HomeHero() {
             <p className="text-sm text-text-muted">{s.body}</p>
             <Link
               href={s.href}
-              className="bg-gradient-brand mt-2 inline-flex min-h-11 w-fit items-center rounded-pill px-5 text-sm font-semibold text-[var(--on-brand)] transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
+              className="mt-2 inline-flex min-h-11 w-fit items-center rounded-pill bg-text px-5 text-sm font-semibold text-bg transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--focus-ring)]"
             >
               {s.cta}
             </Link>

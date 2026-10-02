@@ -54,7 +54,14 @@ def artist_key(name: str) -> str:
 def _payload(a: Artwork | None) -> dict | None:
     if a is None or a.status != "found":
         return None
-    return {"url": a.url, "url_small": a.url_small, "colors": a.colors, "source": a.source}
+    apple = a.source_id if (a.source == "itunes" and a.kind == Kind.TRACK and a.source_id) else None
+    return {
+        "url": a.url,
+        "url_small": a.url_small,
+        "colors": a.colors,
+        "source": a.source,
+        "apple_id": apple,
+    }
 
 
 # ---- read side (fast, no network) ---------------------------------------------------------
@@ -399,6 +406,11 @@ def enrich(items: list[dict], title: str = "title", artist: str = "artist") -> l
         i.setdefault("artwork_url", None)
         i["artwork_small"] = p["url_small"] if p else None
         i["artwork_colors"] = p["colors"] if p else None
+        # Tune in (D-TUNE-01): the strict artist+title iTunes match is the Apple Music catalogue
+        # song, so it is an exact link, not a search. Only fills a gap; verified links win.
+        links = i.get("links")
+        if p and p.get("apple_id") and isinstance(links, dict) and not links.get("APPLE_MUSIC"):
+            links["APPLE_MUSIC"] = f"https://music.apple.com/song/{p['apple_id']}"
     return items
 
 

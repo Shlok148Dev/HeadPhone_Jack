@@ -53,3 +53,11 @@ One line of reasoning each. Priority when sources conflict: SRS business rules â
   - **Sources:** official marks from Simple Icons for Spotify, Apple Music and YouTube Music (CC0 paths), and a public-domain Wikimedia Commons file for the Amazon Music wordmark.
   - **Placement:** unmodified, in brand colour, at text size, beside the platform name on badges, feed labels, the open-in-app action, friend activity and friend rows.
   - **Trademarks** remain with their owners; the guideline check is HA-UX-1.
+- **D-HOME-01** Home opens on the **Now stage**: one song a friend is playing, in its own colour (ambient), with a big cover, the friend's Pulse and **Tune in** as the one primary action. Live friends come first (server state only); otherwise the freshest recent plays. It rotates every 9 s, pauses on hover or focus, and stays still under reduced motion. Then **Today's Drop**, then rituals and shelves.
+- **D-TUNE-01** Tune in: open the song in *your* app, whatever app your friend used.
+  - Order: your app's exact link, then a search in your app, then the friend's app, then any exact link.
+  - Wording is honest: "Play in X" only for an exact link, "Find in X" for a search.
+  - Apple Music exact links come from the strict iTunes match (the catalogue song id).
+  - Exact Spotify, YouTube Music and Amazon Music links would need those platforms' catalogue APIs (or a cross-platform matcher such as Odesli), which is not adopted without a terms review.
+- **D-DROP-01** Daily Drop (JNG-14-01). One song per person per local day, final once posted. Friends' drops stay **sealed** until you drop: you see who dropped, never what. That trade is the daily habit loop. A streak counts consecutive days. Demo personas drop between 06:00 and 13:00; the demo login never drops automatically.
+- **D-DS-09** Buttons add `inline-flex` only when the caller doesn't hide them (`hidden lg:inline-flex`). The base class used to win, so the Friend activity toggle appeared on phones (same family as D-DS-06).
