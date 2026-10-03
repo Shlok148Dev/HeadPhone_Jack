@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ArtworkColors, Platform } from "@/components/ds";
 import { api } from "@/lib/api";
 import type { Person } from "@/lib/social";
@@ -18,6 +18,9 @@ interface Playable {
 
 export interface ChartSong extends Playable {
   rank: number;
+  key: string;
+  /** Consecutive weeks in the top 5, this week included. */
+  weeks?: number;
   title: string;
   artist: string;
   listeners: number;
@@ -30,6 +33,8 @@ export interface ChartSong extends Playable {
 
 export interface ChartArtist {
   rank: number;
+  key: string;
+  weeks?: number;
   name: string;
   listeners: number;
   plays: number;
@@ -51,8 +56,25 @@ export interface WeeklyCharts {
   enough: boolean;
   songs: ChartSong[];
   artists: ChartArtist[];
+  /** Last week's frozen chart (Monday 06:00 local) and whether its Home reveal is still to play. */
+  last_final?: {
+    week_start: string;
+    week_end: string;
+    enough: boolean;
+    songs: ChartSong[];
+    artists: ChartArtist[];
+    reveal_pending: boolean;
+  } | null;
 }
 
 /** Song and Artist of the Week among your people (JNG-15-01/02). Server-cached; refreshes hourly. */
 export const useWeeklyCharts = () =>
   useQuery({ queryKey: ["charts", "weekly"], queryFn: () => api<WeeklyCharts>("/charts/weekly"), staleTime: 5 * 60_000 });
+
+/** Mark a frozen week's reveal as shown (once per week, any device). */
+export function useMarkChartSeen() {
+  // No refetch here: the reveal stays on screen until dismissed; the next visit reads fresh state.
+  return useMutation({
+    mutationFn: (week: string) => api<null>(`/charts/weekly/${week}/seen`, { method: "POST" }),
+  });
+}

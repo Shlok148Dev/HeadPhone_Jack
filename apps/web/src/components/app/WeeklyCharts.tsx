@@ -1,9 +1,11 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { ChartReveal } from "./ChartReveal";
+import { shareChartCard } from "@/lib/shareChart";
 import { Artwork, AvatarStack, Icons, PlatformMark, Skeleton, buttonClasses, cn, useToast, type Platform } from "@/components/ds";
 import { ambientStyle } from "@/lib/ambient";
-import { useWeeklyCharts, type ChartArtist, type ChartSong, type Movement } from "@/lib/charts";
+import { useWeeklyCharts, type ChartArtist, type ChartSong, type Movement, type WeeklyCharts as WeeklyChartsData } from "@/lib/charts";
 import { useDropSong, useDropsToday } from "@/lib/drops";
 import { useOpenSend } from "@/lib/send";
 import type { Song } from "@/lib/sends";
@@ -16,6 +18,13 @@ import { tuneIn, type Tunable } from "@/lib/tunein";
  */
 export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
   const q = useWeeklyCharts();
+  // From the "it's in" notification (/home?reveal=1): start the countdown straight away.
+  const [fromNotification] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reveal") === "1");
+  // Once pending this visit, keep the reveal on screen until dismissed (seen state flips mid-reveal).
+  const [held, setHeld] = useState<NonNullable<WeeklyChartsData["last_final"]> | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const pending = q.data?.last_final?.reveal_pending ? q.data.last_final : null;
+  if (pending && !held && !dismissed) setHeld(pending);
   if (q.isLoading)
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
@@ -25,21 +34,31 @@ export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
     );
   const c = q.data;
   if (!c || q.isError) return null;
+  const lf = c.last_final;
+  const reveal =
+    held && !dismissed ? (
+      <ChartReveal final={held} range={weekRange(held.week_start, held.week_end)} autoStart={fromNotification} onDone={() => setDismissed(true)} />
+    ) : null;
   if (!c.enough || !c.songs.length)
     return (
-      <section aria-labelledby="charts-h" className="rounded-[24px] border border-border bg-surface-1 p-6">
-        <p className="font-mono text-xs uppercase tracking-[0.14em] text-text-muted">Song &amp; Artist of the Week</p>
-        <h2 id="charts-h" className="mt-1 font-display text-2xl font-semibold tracking-tight">Your people&rsquo;s chart is warming up</h2>
-        <p className="mt-2 max-w-xl text-sm text-text-muted">
-          Once three or more of your friends have played music this week, the top songs and artists among you show up here, ranked by how
-          many of you are into them, not by who loops hardest.
-        </p>
-      </section>
+      <div className="flex min-w-0 flex-col gap-8">
+        {reveal}
+        <section aria-labelledby="charts-h" className="rounded-[24px] border border-border bg-surface-1 p-6">
+          <p className="font-mono text-xs uppercase tracking-[0.14em] text-text-muted">Song &amp; Artist of the Week</p>
+          <h2 id="charts-h" className="mt-1 font-display text-2xl font-semibold tracking-tight">Your people&rsquo;s chart is warming up</h2>
+          <p className="mt-2 max-w-xl text-sm text-text-muted">
+            Once three or more of your friends have played music this week, the top songs and artists among you show up here, ranked by
+            how many of you are into them, not by who loops hardest.
+          </p>
+        </section>
+      </div>
     );
   const range = weekRange(c.week_start, c.week_end);
+  const lastTop = lf && !reveal ? lf.songs[0] : undefined;
   return (
     <div className="flex min-w-0 flex-col gap-8">
-      <SongOfTheWeek songs={c.songs} range={range} current={c.is_current} updated={c.updated_at} myPlatform={myPlatform} />
+      {reveal}
+      <SongOfTheWeek songs={c.songs} range={range} current={c.is_current} updated={c.updated_at} myPlatform={myPlatform} lastTop={lastTop} />
       {c.artists.length > 0 && <ArtistOfTheWeek artists={c.artists} range={range} myPlatform={myPlatform} />}
     </div>
   );
@@ -47,7 +66,7 @@ export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
 
 // ---- Song of the Week ---------------------------------------------------------------------
 
-function SongOfTheWeek({ songs, range, current, updated, myPlatform }: { songs: ChartSong[]; range: string; current: boolean; updated: string | null; myPlatform?: Platform }) {
+function SongOfTheWeek({ songs, range, current, updated, myPlatform, lastTop }: { songs: ChartSong[]; range: string; current: boolean; updated: string | null; myPlatform?: Platform; lastTop?: ChartSong }) {
   const { theme } = useTheme();
   const top = songs[0]!;
   const rest = songs.slice(1);
@@ -60,7 +79,26 @@ function SongOfTheWeek({ songs, range, current, updated, myPlatform }: { songs: 
 
   return (
     <section aria-labelledby="sotw-h" className="relative min-w-0 overflow-hidden rounded-[28px] border border-border/60" style={ambientStyle(top.artwork_colors, theme)}>
-      <ChartHeader eyebrow="Song of the Week" id="sotw-h" title="What your people played most" meta={`${current ? "So far this week" : "Final"} · ${range}${updated ? ` · updated ${ago(updated)}` : ""}`} />
+      <ChartHeader
+        eyebrow="Song of the Week"
+        id="sotw-h"
+        title="What your people played most"
+        meta={`${current ? "So far this week" : "Final"} · ${range}${updated ? ` · updated ${ago(updated)}` : ""}`}
+        sub={lastTop ? `Last week's #1: ${lastTop.title} · ${lastTop.artist}` : undefined}
+        action={
+          <button
+            type="button"
+            className={buttonClasses("secondary", "md", "min-h-9 gap-2 px-3 text-[13px]")}
+            onClick={async () => {
+              const r = await shareChartCard(songs, range);
+              if (r === "failed") toast.toast({ title: "Couldn't make the image.", tone: "danger" });
+              else if (r === "downloaded") toast.toast({ title: "Chart image saved", tone: "success" });
+            }}
+          >
+            <Icons.Send size={14} /> Share
+          </button>
+        }
+      />
       <div className="grid gap-8 px-5 pb-6 sm:px-8 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] md:pb-8">
         {/* #1 */}
         <div className="flex min-w-0 flex-col gap-5 sm:flex-row md:flex-col lg:flex-row">
@@ -74,6 +112,7 @@ function SongOfTheWeek({ songs, range, current, updated, myPlatform }: { songs: 
             <div className="flex items-center gap-2">
               <span className="font-mono text-4xl font-semibold leading-none tracking-tight">#1</span>
               <MovementBadge m={top.movement} />
+              <Weeks n={top.weeks} />
             </div>
             <div className="min-w-0">
               <p className="line-clamp-2 font-display text-3xl font-semibold leading-[1.02] tracking-tight [text-wrap:balance] md:text-4xl">{top.title}</p>
@@ -134,6 +173,7 @@ function SongOfTheWeek({ songs, range, current, updated, myPlatform }: { songs: 
                     <AvatarStack size={22} max={3} people={s.people.map((p) => ({ id: p.id, name: p.display_name, url: p.avatar_url }))} />
                   </div>
                   <MovementBadge m={s.movement} />
+                  <Weeks n={s.weeks} />
                   {t && <TuneButton tune={t} title={s.title} compact />}
                 </li>
               );
@@ -221,18 +261,28 @@ function ArtistOfTheWeek({ artists, range, myPlatform }: { artists: ChartArtist[
 
 // ---- small parts --------------------------------------------------------------------------
 
-function ChartHeader({ eyebrow, id, title, meta }: { eyebrow: string; id: string; title: string; meta: string }) {
+function ChartHeader({ eyebrow, id, title, meta, sub, action }: { eyebrow: string; id: string; title: string; meta: string; sub?: string; action?: ReactNode }) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-2 px-5 pb-5 pt-6 sm:px-8 md:pt-8">
+    <header className="flex flex-wrap items-end justify-between gap-3 px-5 pb-5 pt-6 sm:px-8 md:pt-8">
       <div className="min-w-0">
         <p className="font-mono text-xs uppercase tracking-[0.14em] text-text-muted">{eyebrow}</p>
         <h2 id={id} className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
           {title}
         </h2>
+        {sub && <p className="mt-1 truncate text-sm text-text-muted">{sub}</p>}
       </div>
-      <p className="font-mono text-xs text-text-muted">{meta}</p>
+      <div className="flex flex-col items-end gap-2">
+        {action}
+        <p className="font-mono text-xs text-text-muted">{meta}</p>
+      </div>
     </header>
   );
+}
+
+/** "3 wks" once an entry has held the top 5 for two weeks or more. */
+function Weeks({ n }: { n?: number }) {
+  if (!n || n < 2) return null;
+  return <span className="shrink-0 font-mono text-[11px] text-text-muted" title={`${n} weeks in the top 5`}>{n} wks</span>;
 }
 
 function People({ people, label }: { people: ChartSong["people"]; label: string }) {

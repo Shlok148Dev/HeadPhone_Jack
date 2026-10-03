@@ -42,3 +42,22 @@ class ArtistFirstPlay(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user_id} {self.artist_key} {self.first_at:%Y-%m-%d}"
+
+
+class WeeklyChartSnapshot(models.Model):
+    """A viewer's final chart for a finished week (D-CHART-05): frozen Monday 06:00 local, never
+    recomputed, so movement and "weeks on chart" have a fixed history and the reveal is stable."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    week_start = models.DateField()
+    payload = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    seen_at = models.DateTimeField(null=True, blank=True)  # the Home reveal was shown
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "week_start"], name="one_snapshot_per_week")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id} {self.week_start}"

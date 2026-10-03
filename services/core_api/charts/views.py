@@ -1,4 +1,4 @@
-"""Weekly charts API (JNG-15-01 Song of the Week, JNG-15-02 Artist of the Week)."""
+"""Weekly charts API (JNG-15-01 songs, JNG-15-02 artists, JNG-15-03 Monday reveal)."""
 
 from __future__ import annotations
 
@@ -14,19 +14,30 @@ from core_api.ratelimit import ratelimit
 from . import services
 
 
+def _week(raw: str) -> date:
+    try:
+        return services.week_start(date.fromisoformat(raw))
+    except ValueError:
+        raise ApiError("VALIDATION_ERROR", "week must be a date (YYYY-MM-DD).", 400) from None
+
+
 class WeeklyChartsView(APIView):
-    """Top 5 songs and artists among your people this week (or ``?week=YYYY-MM-DD`` Monday)."""
+    """This week's top 5 among your people, plus last week's frozen chart and its reveal state.
+    ``?week=YYYY-MM-DD`` returns one specific week instead."""
 
     @extend_schema(tags=["charts"], parameters=[OpenApiParameter("week", str, required=False)])
     @ratelimit(key="user", rate="120/m", scope="charts.weekly")
     def get(self, request):
-        ws = None
         raw = request.query_params.get("week")
         if raw:
-            try:
-                ws = services.week_start(date.fromisoformat(raw))
-            except ValueError:
-                raise ApiError(
-                    "VALIDATION_ERROR", "week must be a date (YYYY-MM-DD).", 400
-                ) from None
-        return Response(services.weekly(request.user, ws))
+            return Response(services.weekly(request.user, _week(raw)))
+        return Response(services.with_last_final(request.user))
+
+
+class ChartSeenView(APIView):
+    """The Home reveal of a frozen week was shown: it plays once per week, on any device."""
+
+    @extend_schema(tags=["charts"], request=None, responses={204: None})
+    def post(self, request, week: str):
+        services.mark_seen(request.user, _week(week))
+        return Response(status=204)

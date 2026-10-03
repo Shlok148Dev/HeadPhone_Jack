@@ -179,3 +179,95 @@ def test_api_shape_auth_and_cache_invalidation(crew, mongo_db):
     assert list(get_redis().scan_iter("charts:v1:*"))
     social.remove_friend(me, pals[0].pk)
     assert not list(get_redis().scan_iter("charts:v1:*"))
+
+
+# ---- Phase 2: Monday freeze, weeks on chart, reveal, notification (JNG-15-03) ---------------
+
+LAST_WS = datetime(2026, 9, 28).date()  # last week (Mon 28 Sep – Sun 4 Oct)
+BEFORE_FREEZE = datetime(2026, 10, 5, 0, 0, tzinfo=UTC)  # Mon 05:30 IST: not frozen yet
+AFTER_FREEZE = datetime(2026, 10, 5, 1, 0, tzinfo=UTC)  # Mon 06:30 IST
+
+
+def _last_week_plays(db, pals, title="A", n_people=3):
+    for p in pals[:n_people]:
+        play(db, p, f"Artist {title}", title, at=LAST_WEEK)
+
+
+def test_final_freezes_monday_morning_and_never_changes(crew, mongo_db):
+    me, pals = crew
+    _last_week_plays(mongo_db, pals)
+    for u in (me, *pals):
+        services.refresh_user(u, now=NOW)
+    assert services.final(me, LAST_WS, BEFORE_FREEZE) is None
+    snap = services.final(me, LAST_WS, AFTER_FREEZE)
+    assert (
+        snap is not None
+        and snap.payload["songs"][0]["title"] == "A"
+        and snap.payload["is_current"] is False
+    )
+    # A late, back-dated import must not rewrite a frozen week.
+    for p in pals:
+        play(mongo_db, p, "Artist Z", "Late", n=3, at=LAST_WEEK)
+        services.refresh_user(p, now=NOW)
+    again = services.final(me, LAST_WS, NOW)
+    assert again.pk == snap.pk and [s["title"] for s in again.payload["songs"]] == ["A"]
+
+
+def test_weeks_on_chart_counts_consecutive_frozen_weeks(crew, mongo_db):
+    from artwork.services import track_key
+    from charts.models import WeeklyChartSnapshot
+
+    me, pals = crew
+    key = track_key("A", "Artist A")
+    for back in (1, 2):  # A was in the top 5 the two weeks before last; a gap before that
+        WeeklyChartSnapshot.objects.create(
+            user=me,
+            week_start=LAST_WS - timedelta(weeks=back),
+            payload={"songs": [{"key": key}], "artists": []},
+        )
+    WeeklyChartSnapshot.objects.create(
+        user=me,
+        week_start=LAST_WS - timedelta(weeks=4),
+        payload={"songs": [{"key": key}], "artists": []},
+    )
+    _last_week_plays(mongo_db, pals)
+    for u in (me, *pals):
+        services.refresh_user(u, now=NOW)
+    snap = services.final(me, LAST_WS, NOW)
+    assert snap.payload["songs"][0]["weeks"] == 3
+
+
+def test_freeze_job_announces_once_and_only_real_charts(crew, mongo_db):
+    from notifications.models import Notification
+
+    me, pals = crew
+    loner = person("loner")  # no friends: nothing worth announcing
+    _last_week_plays(mongo_db, pals)
+    for u in (me, *pals):
+        services.refresh_user(u, now=NOW)
+    assert services.freeze_due(BEFORE_FREEZE) == 0
+    services.freeze_due(AFTER_FREEZE)
+    services.freeze_due(AFTER_FREEZE + timedelta(hours=1))  # next hourly run: nothing new
+    mine = Notification.objects.filter(user=me, type="charts")
+    assert mine.count() == 1 and mine.first().url == "/home?reveal=1"
+    assert not Notification.objects.filter(user=loner, type="charts").exists()
+
+
+def test_reveal_is_pending_until_seen(crew, mongo_db, monkeypatch):
+    me, pals = crew
+    _last_week_plays(mongo_db, pals)
+    for u in (me, *pals):
+        services.refresh_user(u, now=NOW)
+    monkeypatch.setattr(services.timezone, "now", lambda: NOW)
+    c = APIClient()
+    c.credentials(HTTP_AUTHORIZATION=f"Bearer {AccessToken.for_user(me)}")
+    lf = c.get("/api/v1/charts/weekly").json()["last_final"]
+    assert (
+        lf["week_start"] == "2026-09-28"
+        and lf["reveal_pending"] is True
+        and lf["songs"][0]["title"] == "A"
+    )
+    assert c.post("/api/v1/charts/weekly/2026-09-28/seen").status_code == 204
+    services.invalidate()
+    assert c.get("/api/v1/charts/weekly").json()["last_final"]["reveal_pending"] is False
+    assert c.post("/api/v1/charts/weekly/not-a-date/seen").status_code == 400

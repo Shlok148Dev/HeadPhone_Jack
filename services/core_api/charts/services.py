@@ -26,7 +26,7 @@ from datetime import UTC, date, datetime, time, timedelta
 from django.db import transaction
 from django.utils import timezone
 
-from .models import ArtistFirstPlay, DailyPlays
+from .models import ArtistFirstPlay, DailyPlays, WeeklyChartSnapshot
 
 DAILY_CAP = 3
 MIN_PEOPLE = 3
@@ -36,6 +36,8 @@ NEW_ACCOUNT_HOURS = 24
 CACHE_TTL = 15 * 60
 PAST_TTL = 24 * 3600
 WATERMARK = "charts:watermark"
+FREEZE_HOUR = 6  # Monday 06:00 local: late Sunday-night plays have been folded in
+HISTORY_WEEKS = 26
 
 # Only unambiguous separators: "&" is not split, so duos ("Simon & Garfunkel") stay one act.
 _SPLIT = re.compile(r"\s*(?:,|\s+x\s+|\bfeat\.?\s|\bft\.?\s|\bfeaturing\s|\bwith\s)\s*", re.I)
@@ -315,8 +317,114 @@ def weekly(viewer, ws: date | None = None, now: datetime | None = None) -> dict:
     if hit:
         return json.loads(hit)
     data = _build(viewer, ws, now, this_ws)
+    _weeks_on_chart(viewer, ws, data)
     r.setex(key, CACHE_TTL if ws >= this_ws else PAST_TTL, json.dumps(data, default=str))
     return data
+
+
+def with_last_final(viewer, now: datetime | None = None) -> dict:
+    """This week's live chart plus last week's frozen one and whether its reveal is pending."""
+    from drops.services import tz_of
+
+    now = now or timezone.now()
+    data = weekly(viewer, now=now)
+    this_ws = week_start(now.astimezone(tz_of(viewer)).date())
+    snap = final(viewer, this_ws - timedelta(days=7), now)
+    if snap is None:  # before Monday 06:00: the newest frozen week is the one before
+        snap = WeeklyChartSnapshot.objects.filter(user=viewer).order_by("-week_start").first()
+    if snap is not None:
+        p = snap.payload
+        data["last_final"] = {
+            "week_start": snap.week_start.isoformat(),
+            "week_end": (snap.week_start + timedelta(days=6)).isoformat(),
+            "enough": p.get("enough", False),
+            "songs": p.get("songs", []),
+            "artists": p.get("artists", []),
+            "reveal_pending": snap.seen_at is None
+            and bool(p.get("enough"))
+            and bool(p.get("songs")),
+        }
+    else:
+        data["last_final"] = None
+    return data
+
+
+def _freezes_at(ws: date, tz) -> datetime:
+    return datetime.combine(ws + timedelta(days=7), time(FREEZE_HOUR), tzinfo=tz)
+
+
+def final(viewer, ws: date, now: datetime | None = None) -> WeeklyChartSnapshot | None:
+    """The frozen chart for a finished week; created on first need once the week has frozen."""
+    from drops.services import tz_of
+
+    now = now or timezone.now()
+    snap = WeeklyChartSnapshot.objects.filter(user=viewer, week_start=ws).first()
+    if snap is not None or now < _freezes_at(ws, tz_of(viewer)):
+        return snap
+    this_ws = week_start(now.astimezone(tz_of(viewer)).date())
+    payload = _build(viewer, ws, now, this_ws)
+    payload["is_current"] = False
+    _weeks_on_chart(viewer, ws, payload)
+    snap, _ = WeeklyChartSnapshot.objects.get_or_create(
+        user=viewer,
+        week_start=ws,
+        defaults={"payload": json.loads(json.dumps(payload, default=str))},
+    )
+    return snap
+
+
+def _weeks_on_chart(viewer, ws: date, payload: dict) -> None:
+    """Consecutive weeks each entry has been in the viewer's top 5, this week included."""
+    snaps = {
+        s.week_start: s.payload
+        for s in WeeklyChartSnapshot.objects.filter(
+            user=viewer, week_start__lt=ws, week_start__gte=ws - timedelta(weeks=HISTORY_WEEKS)
+        )
+    }
+    for kind in ("songs", "artists"):
+        for e in payload.get(kind, []):
+            n, w = 1, ws - timedelta(days=7)
+            while w in snaps and e["key"] in {x.get("key") for x in snaps[w].get(kind, [])}:
+                n += 1
+                w -= timedelta(days=7)
+            e["weeks"] = n
+
+
+def mark_seen(viewer, ws: date) -> bool:
+    return bool(
+        WeeklyChartSnapshot.objects.filter(user=viewer, week_start=ws, seen_at__isnull=True).update(
+            seen_at=timezone.now()
+        )
+    )
+
+
+def freeze_due(now: datetime | None = None) -> int:
+    """Hourly: freeze last week for everyone whose Monday 06:00 has passed; tell them once."""
+    from accounts.models import User
+    from drops.services import tz_of
+    from notifications.services import notify
+
+    now = now or timezone.now()
+    made = 0
+    for u in User.objects.filter(is_active=True, deleted_at__isnull=True).iterator():
+        tz = tz_of(u)
+        last_ws = week_start(now.astimezone(tz).date()) - timedelta(days=7)
+        if (
+            now < _freezes_at(last_ws, tz)
+            or WeeklyChartSnapshot.objects.filter(user=u, week_start=last_ws).exists()
+        ):
+            continue
+        snap = final(u, last_ws, now)
+        made += 1
+        if snap is not None and snap.payload.get("enough") and snap.payload.get("songs"):
+            notify(
+                u.pk,
+                "charts",
+                "Your people's Song of the Week is in. Who made #1?",
+                url="/home?reveal=1",
+                now=now,
+            )
+    return made
 
 
 def _build(viewer, ws: date, now: datetime, this_ws: date) -> dict:
@@ -352,6 +460,7 @@ def _build(viewer, ws: date, now: datetime, this_ws: date) -> dict:
         songs.append(
             {
                 "rank": i,
+                "key": s["key"],
                 "title": s["title"],
                 "artist": s["artist"],
                 "recording_id": rid,
@@ -400,6 +509,7 @@ def _build(viewer, ws: date, now: datetime, this_ws: date) -> dict:
         artists.append(
             {
                 "rank": i,
+                "key": a["key"],
                 "name": a["name"],
                 "listeners": len(a["listeners"]),
                 "plays": round(a["plays"]),

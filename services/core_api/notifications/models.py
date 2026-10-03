@@ -13,6 +13,7 @@ TYPES = (
     "battle",
     "recap",
     "moderation",
+    "charts",
 )
 LABELS = {
     "friend_request": "Friend requests",
@@ -22,6 +23,7 @@ LABELS = {
     "battle": "Battles",
     "recap": "Monthly recap",
     "moderation": "Account and safety",
+    "charts": "Weekly charts",
 }
 PUSH_CAP_DEFAULT = 5  # JNG-11-07
 PUSH_CAP_MAX = 20

@@ -205,6 +205,8 @@ CELERY_BEAT_SCHEDULE = {
     "drops-demo": {"task": "drops.tasks.demo_drops", "schedule": 900.0},
     # Weekly charts: fold new listens into DailyPlays (D-CHART-03).
     "charts-refresh": {"task": "charts.tasks.refresh", "schedule": 3600.0},
+    # Freeze last week (Monday 06:00 local) and announce it once (D-CHART-05).
+    "charts-freeze": {"task": "charts.tasks.freeze", "schedule": 3600.0},
     "sessions-sweep": {"task": "listening.tasks.sweep", "schedule": 30.0},
     "sends-played": {"task": "sends.tasks.check_played", "schedule": 60.0},
     "sends-credits-daily": {
