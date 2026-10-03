@@ -104,7 +104,13 @@ export function ChartReveal({
             </h2>
           </div>
           {done && onDone && (
-            <Button variant="secondary" onClick={onDone}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                markSeen();
+                onDone();
+              }}
+            >
               Done
             </Button>
           )}

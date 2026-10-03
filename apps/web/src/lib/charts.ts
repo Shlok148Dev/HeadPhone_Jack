@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ArtworkColors, Platform } from "@/components/ds";
 import { api } from "@/lib/api";
 import type { Person } from "@/lib/social";
@@ -73,8 +73,15 @@ export const useWeeklyCharts = () =>
 
 /** Mark a frozen week's reveal as shown (once per week, any device). */
 export function useMarkChartSeen() {
-  // No refetch here: the reveal stays on screen until dismissed; the next visit reads fresh state.
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (week: string) => api<null>(`/charts/weekly/${week}/seen`, { method: "POST" }),
+    // Patch the cached chart in place (no refetch, so the open reveal stays until Done) so that
+    // leaving Home and coming back never shows a reveal that was already seen.
+    onMutate: (week: string) => {
+      qc.setQueryData<WeeklyCharts>(["charts", "weekly"], (d) =>
+        d?.last_final && d.last_final.week_start === week ? { ...d, last_final: { ...d.last_final, reveal_pending: false } } : d,
+      );
+    },
   });
 }

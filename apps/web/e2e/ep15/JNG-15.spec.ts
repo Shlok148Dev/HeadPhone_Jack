@@ -41,6 +41,13 @@ test("Monday reveal: top of Home, counts down when visible, replayable; share ca
   await expect(reveal.getByText("#1", { exact: true })).toBeVisible();
   await reveal.getByRole("button", { name: "Done" }).click();
   await expect(page.getByRole("region", { name: /Your people's Song of the Week/ })).toHaveCount(0);
+  // In-app navigation away and back (no reload, cached data): the reveal must not come back.
+  await page.getByRole("link", { name: "Friends" }).first().click();
+  await page.waitForURL(/\/friends/);
+  await page.getByRole("link", { name: "Home" }).first().click();
+  await page.waitForURL(/\/home/);
+  await page.getByRole("region", { name: "What your people played most" }).waitFor();
+  await expect(page.getByRole("region", { name: /Your people's Song of the Week/ })).toHaveCount(0);
 
   // Seen server-side: on reload no reveal; "Last week's #1 · Replay" instead, and Replay plays it again.
   await page.goto("/home");
