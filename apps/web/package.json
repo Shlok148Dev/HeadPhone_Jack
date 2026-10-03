@@ -15,7 +15,7 @@
     "@jingle/design-tokens": "workspace:*",
     "@jingle/ts-client": "workspace:*",
     "@tanstack/react-query": "^5.104.0",
-    "motion": "^13.4.5",
+    "motion": "^13.4.6",
     "next": "^15.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
