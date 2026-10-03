@@ -326,9 +326,10 @@ async def test_spotify_not_on_allowlist_falls_back(cres: Resources, u: User) -> 
     state = plan.url.split("state=")[1].split("&")[0]
     respx.post(SP_TOKEN).mock(return_value=httpx.Response(200, json=fx("spotify/token.json")))
     respx.get(f"{SP_API}/me").mock(return_value=httpx.Response(403))
-    with pytest.raises(ConnectError) as err:
-        await orch.complete_spotify(state, "auth-code")
-    assert err.value.code == "SPOTIFY_NOT_AVAILABLE"
+    # D-CONNECT-03: Spotify refused the account, so Last.fm's login takes over (no error).
+    user_id, platform, nxt = await orch.complete_spotify(state, "auth-code")
+    assert user_id == u.id and platform is Platform.SPOTIFY
+    assert nxt and nxt.startswith("https://www.last.fm/api/auth/")
     assert await get_source(cres.engine, u.id, SourceKind.SPOTIFY) is None
 
 

@@ -193,18 +193,7 @@ class Orchestrator:
                     "redirect", self.spotify.authorize_url(state, challenge), live_on_phone=True
                 )
             if self.lastfm.configured:
-                state = await self._new_state(
-                    {
-                        "user_id": str(user_id),
-                        "platform": platform.value,
-                        "kind": SourceKind.LASTFM.value,
-                    }
-                )
-                base = self.res.settings.public_base_url
-                cb = f"{base}/api/v1/sources/lastfm/callback?state={state}"
-                return ConnectPlan(
-                    "lastfm_then_spotify", self.lastfm.auth_url(cb), live_on_phone=True
-                )
+                return await self._lastfm_plan(user_id)
         if (
             platform is Platform.APPLE_MUSIC
             and self.adapter(SourceKind.APPLE_MUSIC, flags) is not None
@@ -215,6 +204,18 @@ class Orchestrator:
             # can't see. Without Jingle's keys, say so instead of a dead-end extension prompt.
             return ConnectPlan("unavailable")
         return ConnectPlan("browser")
+
+    async def _lastfm_plan(self, user_id: UUID) -> ConnectPlan:
+        """Spotify through Last.fm: Last.fm's login, then one Connect tap inside Last.fm."""
+        state = await self._new_state(
+            {
+                "user_id": str(user_id),
+                "platform": Platform.SPOTIFY.value,
+                "kind": SourceKind.LASTFM.value,
+            }
+        )
+        cb = f"{self.res.settings.public_base_url}/api/v1/sources/lastfm/callback?state={state}"
+        return ConnectPlan("lastfm_then_spotify", self.lastfm.auth_url(cb), live_on_phone=True)
 
     async def _spotify_slot_free(self, user_id: UUID) -> bool:
         if await get_source(self.res.engine, user_id, SourceKind.SPOTIFY):
@@ -244,7 +245,12 @@ class Orchestrator:
         await self.res.redis.zadd(POLL_ZSET, {str(saved.id): 0})  # poll right away
         return saved
 
-    async def complete_spotify(self, state: str, code: str) -> tuple[UUID, Platform]:
+    async def complete_spotify(
+        self, state: str, code: str
+    ) -> tuple[UUID, Platform, str | None]:
+        """Finish Spotify's login. Returns a Last.fm login URL as the third value when Spotify
+        refused this account (not registered in the app's Development Mode dashboard): the
+        listener continues straight into Last.fm's login instead of seeing an error."""
         data = await self._take_state(state, SourceKind.SPOTIFY)
         user_id = UUID(data["user_id"])
         try:
@@ -252,13 +258,15 @@ class Orchestrator:
                 user_id, LinkCredential(code=code, code_verifier=data["verifier"])
             )
         except ReauthRequired as exc:
-            # 403 = not on the Development Mode allowlist: fall back silently (BR-15).
+            # 403 = not registered in Spotify's Development Mode: Last.fm takes over (D-CONNECT-03).
+            if self.lastfm.configured:
+                return user_id, Platform.SPOTIFY, (await self._lastfm_plan(user_id)).url
             raise ConnectError(
                 "SPOTIFY_NOT_AVAILABLE",
                 "Spotify didn't let Jingle connect directly. Continue in your browser instead.",
             ) from exc
         await self._linked(src, Platform.SPOTIFY)
-        return user_id, Platform.SPOTIFY
+        return user_id, Platform.SPOTIFY, None
 
     async def complete_lastfm(self, state: str, token: str) -> tuple[UUID, Platform]:
         data = await self._take_state(state, SourceKind.LASTFM)

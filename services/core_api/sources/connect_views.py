@@ -144,6 +144,17 @@ class ConnectStartView(APIView):
         return Response(plan)
 
 
+LASTFM_AUTH_PREFIX = "https://www.last.fm/api/auth"
+
+
+def _give_lastfm_consent(user_id) -> None:
+    from accounts.models import User
+
+    user = User.objects.filter(pk=user_id).first() if user_id else None
+    if user and active_consent(user, ConsentPurpose.LASTFM_LINK) is None:
+        give_consent(user, ConsentPurpose.LASTFM_LINK)
+
+
 def _back_to_app(**query: str):
     return redirect(
         f"{settings.PUBLIC_BASE_URL.rstrip('/')}/settings/connections?{urlencode(query)}"
@@ -166,13 +177,19 @@ class SpotifyCallbackView(APIView):
         if request.GET.get("error") or not state or not code:
             return _back_to_app(error="cancelled", platform="SPOTIFY")
         try:
-            _ingest(
+            done = _ingest(
                 "POST",
                 "/internal/connect/spotify/callback",
                 json={"state": state[:200], "code": code[:2000]},
             )
         except ApiError as exc:
             return _back_to_app(error=exc.code.lower(), platform="SPOTIFY")
+        nxt = (done or {}).get("next")
+        if nxt and str(nxt).startswith(LASTFM_AUTH_PREFIX):
+            # D-CONNECT-03: Spotify refused this account (Development Mode). The tap on Spotify
+            # was the consent to connect it; Last.fm's login carries on with no error screen.
+            _give_lastfm_consent((done or {}).get("user_id"))
+            return redirect(nxt)
         return _back_to_app(connected="SPOTIFY")
 
 

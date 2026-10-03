@@ -100,6 +100,27 @@ def test_spotify_callback_fallback_is_quiet(api, ingest):
     ].endswith("error=cancelled&platform=SPOTIFY")
 
 
+def test_spotify_refused_continues_into_lastfm(api, ingest, user):
+    from accounts.services import active_consent
+    url = "https://www.last.fm/api/auth/?api_key=k&cb=x"
+    ingest.post("/internal/connect/spotify/callback").mock(
+        return_value=httpx.Response(
+            200, json={"user_id": str(user.pk), "platform": "SPOTIFY", "next": url}
+        )
+    )
+    r = api.get("/api/v1/sources/spotify/callback", {"state": "s", "code": "c"})
+    assert r.status_code == 302 and r["Location"] == url
+    assert active_consent(user, ConsentPurpose.LASTFM_LINK) is not None
+    # Never an open redirect: anything but Last.fm's auth page goes back to the app.
+    ingest.post("/internal/connect/spotify/callback").mock(
+        return_value=httpx.Response(
+            200, json={"user_id": str(user.pk), "platform": "SPOTIFY", "next": "https://evil.test"}
+        )
+    )
+    r = api.get("/api/v1/sources/spotify/callback", {"state": "s", "code": "c"})
+    assert r["Location"].endswith("connected=SPOTIFY")
+
+
 def test_lastfm_callback(api, ingest):
     ingest.post("/internal/connect/lastfm/callback").mock(
         return_value=httpx.Response(200, json={"user_id": "u", "platform": "SPOTIFY"})

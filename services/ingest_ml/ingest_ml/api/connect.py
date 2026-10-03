@@ -70,10 +70,10 @@ async def spotify_callback(
     body: CallbackRequest, res: Resources = Depends(get_resources)
 ) -> JSONResponse:  # noqa: B008
     try:
-        user_id, platform = await _orch(res).complete_spotify(body.state, body.code or "")
+        user_id, platform, nxt = await _orch(res).complete_spotify(body.state, body.code or "")
     except ConnectError as exc:
         return _err(exc)
-    return JSONResponse({"user_id": str(user_id), "platform": platform.value})
+    return JSONResponse({"user_id": str(user_id), "platform": platform.value, "next": nxt})
 
 
 @router.post("/connect/lastfm/callback")
