@@ -13,7 +13,9 @@ test.describe("JNG-01-01 sign up with email", () => {
     await page.getByLabel(/I agree/).check();
     await page.getByRole("button", { name: "Create account" }).click();
     await page.waitForURL(/\/onboarding\/sources/);
-    await expect(page.getByRole("heading", { name: "Connect your music" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Connect your music" }),
+    ).toBeVisible();
   });
 
   test("Under-18 is refused and no account is created", async ({ page }) => {
@@ -22,14 +24,20 @@ test.describe("JNG-01-01 sign up with email", () => {
     await page.getByLabel("Email").fill(`kid-${id}@jingle.local`);
     await page.getByLabel("Password", { exact: true }).fill("e2e-password-123");
     await page.getByLabel("Username").fill(`kid_${id}`.slice(0, 20));
-    await page.getByLabel("Birth year").selectOption(String(new Date().getFullYear() - 15));
+    await page
+      .getByLabel("Birth year")
+      .selectOption(String(new Date().getFullYear() - 15));
     await page.getByLabel(/I agree/).check();
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByText("Jingle is for people 18 and over for now.")).toBeVisible();
+    await expect(
+      page.getByText("Jingle is for people 18 and over for now."),
+    ).toBeVisible();
     await page.goto("/signin");
     await page.getByLabel("Email").fill(`kid-${id}@jingle.local`);
     await page.getByLabel("Password", { exact: true }).fill("e2e-password-123");
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page.getByText("That email and password don't match.")).toBeVisible();
+    await expect(
+      page.getByText("That email and password don't match."),
+    ).toBeVisible();
   });
 });

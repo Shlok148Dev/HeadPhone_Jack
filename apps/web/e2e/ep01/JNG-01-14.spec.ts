@@ -108,26 +108,23 @@ test.describe("JNG-01-14 one tap per music app (+ JNG-01-09 unlink)", () => {
     await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
   });
 
-  test("Spotify without Jingle's Spotify keys still connects in one tap (BR-15)", async ({
+  test("Spotify without Jingle's keys says so plainly, never an extension detour (D-CONNECT-02)", async ({
     page,
   }) => {
-    await fakeExtension(page, true);
     await signUp(page, "sp");
     await page.getByRole("button", { name: /Spotify/ }).click();
-    // With keys: Spotify's or Last.fm's own login opens. Without (CI): the extension connects it.
+    // With keys: Spotify's or Last.fm's own login opens. Without (CI): an honest one-liner.
     await expect
       .poll(
         async () =>
           /spotify\.com|last\.fm/.test(page.url()) ||
-          /Connected|Play a song/.test(
-            (await page
-              .getByRole("button", { name: /Spotify/ })
-              .textContent()
-              .catch(() => "")) ?? "",
-          ),
+          (await page
+            .getByText(/Spotify sign-in isn.t switched on for Jingle yet/)
+            .count()) > 0,
         { timeout: 20_000 },
       )
       .toBe(true);
+    await expect(page.getByText(/Add Jingle to Chrome/)).toHaveCount(0);
     await expect(page.locator("main").getByRole("alert")).toHaveCount(0);
   });
 

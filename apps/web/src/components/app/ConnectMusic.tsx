@@ -33,7 +33,8 @@ import { PLATFORMS, platformName, type MusicPlatform } from "./Connect";
  */
 const APPS = PLATFORMS.map((id) => ({ id, name: platformName(id) }));
 type Plan = {
-  action: "redirect" | "lastfm_then_spotify" | "browser" | "musickit";
+  action:
+    "redirect" | "lastfm_then_spotify" | "browser" | "musickit" | "unavailable";
   url: string | null;
 };
 type Step =
@@ -43,6 +44,7 @@ type Step =
   | { kind: "get-app"; app: MusicPlatform; androidUrl: string | null }
   | { kind: "iphone"; app: MusicPlatform }
   | { kind: "other-browser"; app: MusicPlatform }
+  | { kind: "unavailable"; app: MusicPlatform }
   | { kind: "error"; app: MusicPlatform; msg: string };
 
 /** Where to land after Spotify's/Last.fm's login (their callbacks go to Settings → Connections). */
@@ -178,6 +180,10 @@ export function ConnectMusic({ compact = false }: { compact?: boolean }) {
         });
         refresh();
         setStep({ kind: "idle" });
+        return;
+      }
+      if (plan.action === "unavailable") {
+        setStep({ kind: "unavailable", app });
         return;
       }
       await viaExtension(app);
@@ -346,11 +352,9 @@ export function ConnectMusic({ compact = false }: { compact?: boolean }) {
             </>
           ) : (
             <p className="text-sm text-text-muted">
-              The Jingle extension isn&rsquo;t on the Chrome Web Store yet.
-              (Developers: load{" "}
-              <code className="font-mono">apps/companion-extension/dist</code>{" "}
-              in <code className="font-mono">chrome://extensions</code>; it
-              connects itself.)
+              Jingle for Chrome isn&rsquo;t in the Chrome Web Store yet, so{" "}
+              {name(step.app)} can&rsquo;t connect from a computer today. It
+              will be one click once it&rsquo;s published.
             </p>
           )}
         </div>
@@ -385,6 +389,15 @@ export function ConnectMusic({ compact = false }: { compact?: boolean }) {
         >
           iPhones don&rsquo;t let any app see what {name(step.app)} is playing.
           Connect it from Chrome on a computer, or with the Jingle Android app.
+        </p>
+      )}
+      {step.kind === "unavailable" && (
+        <p
+          className="rounded-[20px] border border-border bg-surface-1 p-5 text-sm"
+          role="status"
+        >
+          {name(step.app)} sign-in isn&rsquo;t switched on for Jingle yet.
+          It&rsquo;s coming soon; nothing for you to set up.
         </p>
       )}
       {step.kind === "other-browser" && (

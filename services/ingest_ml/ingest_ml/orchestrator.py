@@ -77,7 +77,8 @@ class ConnectPlan:
     ``redirect`` (open the platform's own consent screen at ``url``), ``browser`` (install/pair the
     Companion), ``lastfm_then_spotify`` (Last.fm consent, then one confirm inside Spotify),
     ``musickit`` (Apple's own sign-in in the browser; its Music User Token comes back to
-    ``link_apple``).
+    ``link_apple``), ``unavailable`` (Spotify or Apple Music when this Jingle has no keys for
+    their sign-in: said plainly, never a detour through the extension; D-CONNECT-02).
     """
 
     action: str
@@ -209,6 +210,10 @@ class Orchestrator:
             and self.adapter(SourceKind.APPLE_MUSIC, flags) is not None
         ):
             return ConnectPlan("musickit", live_on_phone=True)  # D-CONNECT-01: just log in
+        if platform in (Platform.SPOTIFY, Platform.APPLE_MUSIC):
+            # D-CONNECT-02: most people play these in the phone/desktop app, which the extension
+            # can't see. Without Jingle's keys, say so instead of a dead-end extension prompt.
+            return ConnectPlan("unavailable")
         return ConnectPlan("browser")
 
     async def _spotify_slot_free(self, user_id: UUID) -> bool:

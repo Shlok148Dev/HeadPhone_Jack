@@ -96,7 +96,7 @@ PlanSerializer = inline_serializer(
     "ConnectPlan",
     {
         "action": serializers.ChoiceField(
-            choices=["redirect", "lastfm_then_spotify", "browser", "musickit"]
+            choices=["redirect", "lastfm_then_spotify", "browser", "musickit", "unavailable"]
         ),
         "url": serializers.URLField(allow_null=True),
         "live_on_phone": serializers.BooleanField(),

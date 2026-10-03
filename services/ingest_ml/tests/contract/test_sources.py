@@ -258,13 +258,17 @@ async def test_JNG_01_04_route_choice(cres: Resources, res: Resources, u: User) 
     assert (
         await Orchestrator(cres).start(u.id, Platform.SPOTIFY, allowlisted=False, flags={})
     ).action == "lastfm_then_spotify"
-    # Nothing configured (no keys): browser only, never an error (BR-15).
+    # Nothing configured (no keys): an honest "not switched on yet", never an error (D-CONNECT-02).
     other = await create_user(res.engine)
     assert (
         await Orchestrator(res).start(other.id, Platform.SPOTIFY, allowlisted=True, flags={})
-    ).action == "browser"
+    ).action == "unavailable"
     assert (
         await Orchestrator(cres).start(u.id, Platform.APPLE_MUSIC, allowlisted=True, flags={})
+    ).action == "unavailable"
+    # Apps whose only desktop route is the browser player keep the extension.
+    assert (
+        await Orchestrator(res).start(other.id, Platform.YOUTUBE_MUSIC, allowlisted=True, flags={})
     ).action == "browser"
 
 
@@ -505,7 +509,7 @@ async def test_connect_api_requires_service_token(client: httpx.AsyncClient, use
     body = {"user_id": str(user.id), "platform": "SPOTIFY"}
     assert (await client.post("/internal/connect/start", json=body)).status_code == 401
     r = await client.post("/internal/connect/start", json=body, headers=SVC)
-    assert r.status_code == 200 and r.json()["action"] == "browser"
+    assert r.status_code == 200 and r.json()["action"] == "unavailable"
     r = await client.post("/internal/poll/due", json={}, headers=SVC)
     assert r.status_code == 200 and r.json()["polled"] == 0
     assert (
@@ -567,10 +571,10 @@ async def test_apple_login_plan_and_link_when_configured(tmp_path: pathlib.Path,
         assert (
             await orch.start(user.id, Platform.APPLE_MUSIC, allowlisted=False, flags=flags)
         ).action == "musickit"
-        # Flag off: the route doesn't exist (BR-11), the extension stays the path.
+        # Flag off: the route doesn't exist (BR-11), said plainly (D-CONNECT-02).
         assert (
             await orch.start(user.id, Platform.APPLE_MUSIC, allowlisted=False, flags={})
-        ).action == "browser"
+        ).action == "unavailable"
         mut = "music-user-token-" + "x" * 40
         await orch.link_apple(user.id, mut, flags)
         [src] = [
