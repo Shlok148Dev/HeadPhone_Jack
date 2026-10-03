@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { FeedCardData } from "@/components/ds";
+import type { ArtworkColors, FeedCardData, Platform } from "@/components/ds";
 import { api, json } from "./api";
 import type { Person } from "./social";
 
@@ -16,6 +16,8 @@ export interface Circle {
   members_can_invite: boolean;
   battle_schedule: Record<string, string | null>;
   members?: { user: Person; role: Role }[];
+  /** Songs in the circle's shared playlist (detail only). */
+  playlist_count?: number;
   /** Real covers of what members played, through the viewer's privacy view (list only). */
   covers?: string[];
 }
@@ -61,5 +63,49 @@ export function useCircleActions() {
       api<Circle>(`/circles/suggested/${b.id}/create`, { method: "POST", ...json({ name: b.name, user_ids: b.userIds }) }),
     ),
     dismissSuggestion: m((id: string) => api(`/circles/suggested/${id}/dismiss`, { method: "POST" })),
+  };
+}
+
+// ---- Shared playlist (JNG-04-08) -------------------------------------------------------------
+
+export interface PlaylistItem {
+  id: string;
+  title: string;
+  artist: string;
+  note: string;
+  added_at: string;
+  /** null when the adder has deleted their account ("Former member"). */
+  added_by: Person | null;
+  can_remove: boolean;
+  recording_id: string | null;
+  links: Partial<Record<Platform, string | null>>;
+  search_links: Partial<Record<Platform, string>>;
+  artwork_url?: string | null;
+  artwork_small?: string | null;
+  artwork_colors?: ArtworkColors | null;
+}
+
+export const useCirclePlaylist = (id: string) =>
+  useQuery({
+    queryKey: ["circles", id, "playlist"],
+    queryFn: () => api<{ circle: { id: string; name: string }; items: PlaylistItem[] }>(`/circles/${id}/playlist`),
+  });
+
+export function usePlaylistActions(id: string) {
+  const qc = useQueryClient();
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: ["circles", id, "playlist"] });
+    void qc.invalidateQueries({ queryKey: ["circles", id] });
+  };
+  return {
+    add: useMutation({
+      mutationFn: (b: { title: string; artist: string; note?: string; recording_id?: string | null }) =>
+        api<PlaylistItem>(`/circles/${id}/playlist`, { method: "POST", ...json(b) }),
+      onSuccess: refresh,
+    }),
+    remove: useMutation({
+      mutationFn: (itemId: string) => api<null>(`/circles/${id}/playlist/${itemId}`, { method: "DELETE" }),
+      onSuccess: refresh,
+    }),
   };
 }

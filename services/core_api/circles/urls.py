@@ -20,6 +20,16 @@ urlpatterns = [
     path("circles/<uuid:circle_id>", views.CircleDetailView.as_view(), name="circle"),
     path("circles/<uuid:circle_id>/feed", views.CircleFeedView.as_view(), name="circle-feed"),
     path(
+        "circles/<uuid:circle_id>/playlist",
+        views.CirclePlaylistView.as_view(),
+        name="circle-playlist",
+    ),
+    path(
+        "circles/<uuid:circle_id>/playlist/<uuid:item_id>",
+        views.CirclePlaylistItemView.as_view(),
+        name="circle-playlist-item",
+    ),
+    path(
         "circles/<uuid:circle_id>/invites", views.CircleInvitesView.as_view(), name="circle-invites"
     ),
     path("circles/<uuid:circle_id>/links", views.CircleLinkView.as_view(), name="circle-links"),

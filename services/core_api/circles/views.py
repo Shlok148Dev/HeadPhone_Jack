@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from django.conf import settings
 from django.utils import timezone
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers
 from rest_framework.permissions import AllowAny
@@ -76,6 +77,7 @@ def circle_payload(c: Circle, viewer, with_members: bool = False) -> dict:
         "battle_schedule": c.battle_schedule,
     }
     if with_members:
+        data["playlist_count"] = c.playlist.count()
         hidden = blocked_ids(viewer.pk)  # BR-07: blocked people vanish from circles too
         rows = c.members.select_related("user").exclude(user_id__in=hidden).order_by("joined_at")
         data["members"] = [
@@ -443,3 +445,89 @@ class SuggestedCircleActionView(APIView):
         s.status = "used"
         s.save(update_fields=["status"])
         return Response(circle_payload(c, request.user, with_members=True), status=201)
+
+
+def _playlist_payload(items, viewer, role) -> list[dict]:
+    from artwork.services import enrich
+    from feed.resolver import _links, _search_links
+
+    from .models import Role
+
+    admin = role in (Role.OWNER, Role.ADMIN)
+    rows = [
+        {
+            "id": i.pk,
+            "title": i.title,
+            "artist": i.artist,
+            "note": i.note,
+            "added_at": i.added_at,
+            "added_by": person(i.added_by, "self" if i.added_by_id == viewer.pk else "friends")
+            if i.added_by
+            else None,
+            "can_remove": admin or i.added_by_id == viewer.pk,
+            "recording_id": str(i.recording_id) if i.recording_id else None,
+            "links": _links(str(i.recording_id) if i.recording_id else None),
+            "search_links": _search_links(i.title, i.artist),
+        }
+        for i in items
+    ]
+    return enrich(rows)
+
+
+class CirclePlaylistView(APIView):
+    """JNG-04-08: the circle's shared playlist. Members read and add; newest first."""
+
+    @extend_schema(tags=["circles"], responses={200: OpenApiTypes.OBJECT, 404: err("NOT_FOUND")})
+    def get(self, request, circle_id):
+        from . import playlist
+
+        c = _circle(circle_id)
+        items = playlist.items(c, request.user)
+        role = services.membership(c, request.user).role
+        return Response(
+            {
+                "circle": {"id": c.pk, "name": c.name},
+                "items": _playlist_payload(items, request.user, role),
+            }
+        )
+
+    @extend_schema(
+        tags=["circles"],
+        request=inline_serializer(
+            "PlaylistAdd",
+            {
+                "title": serializers.CharField(max_length=500),
+                "artist": serializers.CharField(max_length=500),
+                "note": serializers.CharField(max_length=140, required=False, allow_blank=True),
+                "recording_id": serializers.UUIDField(required=False, allow_null=True),
+            },
+        ),
+        responses={201: OpenApiTypes.OBJECT, 409: err("ALREADY_IN_PLAYLIST"), 403: err("MUTED")},
+    )
+    @ratelimit(key="user", rate="60/h", scope="circles.playlist.add")
+    def post(self, request, circle_id):
+        from . import playlist
+
+        c = _circle(circle_id)
+        d = request.data
+        item = playlist.add(
+            c,
+            request.user,
+            title=str(d.get("title") or ""),
+            artist=str(d.get("artist") or ""),
+            note=str(d.get("note") or ""),
+            recording_id=d.get("recording_id") or None,
+        )
+        role = services.membership(c, request.user).role
+        return Response(_playlist_payload([item], request.user, role)[0], status=201)
+
+
+class CirclePlaylistItemView(APIView):
+    @extend_schema(
+        tags=["circles"], responses={204: None, 403: err("FORBIDDEN"), 404: err("NOT_FOUND")}
+    )
+    def delete(self, request, circle_id, item_id):
+        from . import playlist
+
+        playlist.remove(_circle(circle_id), request.user, item_id)
+        return Response(status=204)

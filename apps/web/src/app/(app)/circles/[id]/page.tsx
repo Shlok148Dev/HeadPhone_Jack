@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -13,6 +14,7 @@ import {
   Skeleton,
   seedGradient,
   useToast,
+  buttonClasses,
 } from "@/components/ds";
 import { PersonRow } from "@/components/app/PersonRow";
 import { useAuth } from "@/lib/auth";
@@ -263,6 +265,10 @@ export default function CirclePage() {
             >
               Listen together
             </Button>
+            {/* JNG-04-08: the circle's shared playlist. */}
+            <Link href={`/circles/${c.id}/playlist`} className={buttonClasses("secondary", "md", "gap-2")}>
+              Playlist{c.playlist_count ? ` · ${c.playlist_count}` : ""}
+            </Link>
             {isAdmin && <Button variant="secondary" onClick={() => setDialog("settings")}>Settings</Button>}
             <Button variant="secondary" onClick={() => setDialog("leave")}>Leave</Button>
           </div>

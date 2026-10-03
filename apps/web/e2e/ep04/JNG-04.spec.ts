@@ -77,3 +77,24 @@ test.describe("EP-04 circles", () => {
     await expect(page.getByRole("article", { name: /Zoya/ })).toHaveCount(0); // Zoya isn't in this circle
   });
 });
+
+test("JNG-04-08 circle playlist: add a song credited to you, then remove it", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/circles");
+  await page.getByRole("link", { name: /KJ Somaiya crew/ }).first().click();
+  await page.getByRole("link", { name: /^Playlist/ }).click();
+  await page.waitForURL(/\/playlist$/);
+  await expect(page.getByRole("heading", { name: "Circle playlist" })).toBeVisible();
+  const list = page.getByRole("list", { name: "Songs in the playlist" });
+  // Every song shows who added it.
+  await expect(list.getByRole("listitem").first()).toHaveAttribute("aria-label", /, added by .+ ago|just now/);
+  await page.getByLabel("Search a song or artist").fill("Blinding Lights");
+  await page.getByRole("list", { name: "Search results", exact: true }).getByRole("button").first().click();
+  await page.getByLabel("A line about it (optional)").fill("e2e pick");
+  await page.getByRole("button", { name: "Add to playlist" }).click();
+  const mine = list.getByRole("listitem", { name: /Blinding Lights by .+, added by you/ });
+  await expect(mine).toBeVisible();
+  await expect(mine).toContainText("e2e pick");
+  await mine.getByRole("button", { name: /Remove Blinding Lights/ }).click();
+  await expect(list.getByRole("listitem", { name: /Blinding Lights by .+, added by you/ })).toHaveCount(0);
+});

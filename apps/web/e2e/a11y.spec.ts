@@ -60,6 +60,10 @@ for (const theme of ["dark", "light"] as const) {
     await page.getByRole("link", { name: /KJ Somaiya crew/ }).click();
     await page.waitForLoadState("networkidle");
     await expectNoA11yViolations(page);
+    await page.getByRole("link", { name: /^Playlist/ }).click(); // JNG-04-08 shared playlist
+    await page.waitForURL(/\/playlist$/);
+    await page.waitForLoadState("networkidle");
+    await expectNoA11yViolations(page);
     await settle(page, "/blends");
     await page.getByRole("link", { name: /Demo \+ Aanya \+ Kabir/ }).click();
     await page.waitForLoadState("networkidle");

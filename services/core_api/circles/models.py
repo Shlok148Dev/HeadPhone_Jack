@@ -116,3 +116,37 @@ class SuggestedCircle(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+
+class CirclePlaylistItem(models.Model):
+    """A song in a circle's shared playlist (JNG-04-08), credited to the member who added it."""
+
+    MAX_ITEMS = 500
+    NOTE_MAX = 140
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    circle = models.ForeignKey(Circle, on_delete=models.CASCADE, related_name="playlist")
+    # Kept when the adder leaves or deletes their account (shown as "Former member").
+    added_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    recording = models.ForeignKey(
+        "sources.Recording", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    track_key = models.CharField(max_length=600)  # artwork.services.track_key: one entry per song
+    title = models.CharField(max_length=500)
+    artist = models.CharField(max_length=500)
+    note = models.CharField(max_length=NOTE_MAX, blank=True)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "circle_playlist_items"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["circle", "track_key"], name="one_song_per_circle_playlist"
+            )
+        ]
+        indexes = [models.Index(fields=["circle", "-added_at"])]
+
+    def __str__(self) -> str:
+        return f"{self.circle_id}: {self.title}"

@@ -6,6 +6,7 @@ simulator can derive them without a shared file.
 """
 
 import hashlib
+import logging
 import os
 
 from django.conf import settings
@@ -18,6 +19,8 @@ from accounts.models import ConsentPurpose, User
 from accounts.services import active_consent, create_account, give_consent
 from social.models import Friendship, FriendshipStatus
 from sources.models import ScrobbleToken
+
+log = logging.getLogger(__name__)
 
 # Demo friendships (Sprint 3): the demo login knows most personas; one request waits for it.
 FRIENDS_OF_DEMO = (
@@ -120,6 +123,8 @@ class Command(BaseCommand):
         from drops.tasks import demo_drops
 
         demo_drops()
+        # Shared circle playlists (JNG-04-08): a few songs each, added by members, if empty.
+        _seed_circle_playlists()
         # Weekly charts from the demo listening history (backfills first plays on the first run).
         from charts.services import refresh_active
 
@@ -327,3 +332,37 @@ class Command(BaseCommand):
             CircleMember.objects.create(circle=c, user=users[owner], role=Role.OWNER)
             for m in members:
                 CircleMember.objects.create(circle=c, user=users[m], role=Role.MEMBER)
+
+
+def _seed_circle_playlists() -> None:
+    from jingle_common.demo import CATALOG, PERSONAS
+
+    from circles import playlist
+    from circles.models import Circle, CircleMember
+
+    notes = [
+        "for the late drive",
+        "trust me on this one",
+        "",
+        "the chorus!!",
+        "",
+        "our fest anthem",
+    ]
+    favs = {p.username: p.favourites for p in PERSONAS}
+    for c in Circle.objects.all():
+        if c.playlist.exists():
+            continue
+        members = [m.user for m in CircleMember.objects.filter(circle=c).select_related("user")]
+        added = 0
+        for i, u in enumerate(m for m in members if m.username in favs):
+            for j in range(2):
+                if added >= 6:
+                    break
+                t = CATALOG[favs[u.username][(i * 2 + j) % len(favs[u.username])]]
+                try:
+                    playlist.add(
+                        c, u, title=t.title, artist=t.artist, note=notes[added % len(notes)]
+                    )
+                    added += 1
+                except Exception:  # noqa: BLE001 - duplicates or limits just skip
+                    log.info("demo playlist song skipped")
