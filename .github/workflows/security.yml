@@ -24,6 +24,9 @@ jobs:
 
   codeql:
     name: CodeQL (${{ matrix.language }})
+    # Code scanning is free on public repositories only; private ones need GitHub Advanced
+    # Security. Set the repository variable CODEQL_ENABLED=true once either applies.
+    if: ${{ vars.CODEQL_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

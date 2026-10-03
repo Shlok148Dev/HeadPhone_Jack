@@ -1,6 +1,8 @@
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# The local stand-in key-encryption key from .env.example; never valid outside local/test.
+_DEV_KEK_B64 = "ZGV2LW9ubHktMzItYnl0ZS1rZXktZm9yLWxvY2FsISE="  # noqa: S105
 # Known non-secret service tokens (code default, .env.example); refused outside local/test.
 _KNOWN_SERVICE_TOKENS = frozenset(
     {"test-service-token", "dev-only-change-me-service-token-0000000000000"}
@@ -63,6 +65,11 @@ class Settings(BaseSettings):
             raise ValueError(
                 "SERVICE_TOKEN must be set to a random value of at least 32 characters "
                 f"when JINGLE_ENV={self.jingle_env!r}"
+            )
+        if self.token_kek_b64 == _DEV_KEK_B64:
+            raise ValueError(
+                "TOKEN_KEK_B64 is the documented development key; generate a new one "
+                f"(infra/deploy/bootstrap.sh) when JINGLE_ENV={self.jingle_env!r}"
             )
         return self
 
