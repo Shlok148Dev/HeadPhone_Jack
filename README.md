@@ -50,6 +50,8 @@ Then in Chrome or Edge: `chrome://extensions` → **Developer mode** → **Load 
 
 ## Run it for real (pilot server)
 
+Live deployment that updates on every push to `main`: [`docs/runbooks/deploy-live.md`](docs/runbooks/deploy-live.md).
+
 One small server, HTTPS, no demo world: [`docs/runbooks/deploy-pilot.md`](docs/runbooks/deploy-pilot.md). Backups and the weekly tested restore: [`docs/runbooks/backup-restore.md`](docs/runbooks/backup-restore.md). Everything else is in [`docs/runbooks/`](docs/runbooks/README.md).
 
 ## What only the founder can do
@@ -88,3 +90,9 @@ Platform names are trademarks of their owners. Jingle is not affiliated with Spo
 
 - Platform marks: [Simple Icons](https://simpleicons.org) (CC0 path data) for Spotify, Apple Music and YouTube Music, and Wikimedia Commons "Amazon Music (Logo).svg" (public domain). All marks are trademarks of their owners and are used only to name the platform. See `docs/ux/HUMAN_ACTIONS.md` HA-UX-1.
 - Cover art: Apple iTunes Search API, and MusicBrainz with the Cover Art Archive.
+
+## Security, contributing and licence
+
+- Report vulnerabilities privately: [SECURITY.md](SECURITY.md).
+- How we work: [CONTRIBUTING.md](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md).
+- Proprietary. © 2026 Shlok Tiwari. All rights reserved. See [LICENSE](LICENSE).

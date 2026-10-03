@@ -1,0 +1,23 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: pip
+    directories: [/services/core_api, /services/ingest_ml, /packages/py-common]
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch: { update-types: [minor, patch] }
+  - package-ecosystem: docker
+    directories: [/services/core_api, /services/ingest_ml, /apps/web, /apps/realtime]
+    schedule: { interval: monthly }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+  - package-ecosystem: gradle
+    directory: /apps/android
+    schedule: { interval: monthly }

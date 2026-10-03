@@ -1,0 +1,60 @@
+name: deploy
+
+# Every push to main that passes CI redeploys the live site (docs/ops/DEPLOY.md).
+# Stays switched off until the server exists: set the repository variable DEPLOY_ENABLED=true.
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ vars.DEPLOY_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PUBLIC_URL }}
+    timeout-minutes: 30
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Pull and restart on the server
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          ssh -i ~/.ssh/deploy -o IdentitiesOnly=yes "$USER@$HOST" "bash -s" -- "$SHA" <<'REMOTE'
+          set -euo pipefail
+          cd ~/jingle
+          git fetch --quiet origin main
+          git checkout --quiet --detach "$1"
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --remove-orphans
+          docker image prune -f >/dev/null
+          REMOTE
+
+      - name: Health check
+        env:
+          URL: ${{ vars.PUBLIC_URL }}
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null "$URL"; then echo "Live: $URL"; exit 0; fi
+            sleep 10
+          done
+          echo "Site did not come up at $URL" && exit 1
