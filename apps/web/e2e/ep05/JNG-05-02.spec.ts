@@ -31,7 +31,7 @@ test("JNG-05-02 a friend's Live card appears without refreshing", async ({ page,
   await page.getByLabel("Password", { exact: true }).fill("e2e-password-123");
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/home/);
-  await expect(page.getByText(/No(body| one).s playing right now/)).toBeVisible();
+  await expect(page.getByRole("region", { name: "Playing now" }).getByText(/No(body| one).s playing right now/)).toBeVisible();
 
   // B starts playing on YouTube Music in the browser; A's page updates live.
   const sent = await request.post("/ingest/1/submit-listens", {
