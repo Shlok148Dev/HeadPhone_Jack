@@ -120,6 +120,10 @@ class Command(BaseCommand):
         from drops.tasks import demo_drops
 
         demo_drops()
+        # Weekly charts from the demo listening history (backfills first plays on the first run).
+        from charts.services import refresh_active
+
+        refresh_active()
         # Suggestions once the simulator has backfilled listening history (ADR-0010, Sprint 5).
         from jingle_ml.tasks import schedule_all_later
 

@@ -3,7 +3,9 @@
 import { forwardRef, type AnchorHTMLAttributes, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { cn } from "./utils";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+/** "inverse": solid text-colour button (white on dark, black on light) for strong actions that are
+ * not the screen's one brand-gradient moment. */
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "inverse";
 export type ButtonSize = "md" | "lg";
 
 /** `relative` unless the caller positions the button itself (absolute/fixed/sticky would lose to it). */
@@ -21,6 +23,7 @@ const variants: Record<ButtonVariant, string> = {
   secondary: "bg-surface-2 text-text border border-border hover:bg-surface-3 hover:border-border-strong",
   ghost: "bg-transparent text-text hover:bg-surface-2",
   danger: "bg-danger-bg text-on-danger hover:brightness-110",
+  inverse: "bg-text text-bg hover:opacity-90 disabled:bg-surface-3 disabled:text-text-muted disabled:opacity-100",
 };
 
 const sizes: Record<ButtonSize, string> = {

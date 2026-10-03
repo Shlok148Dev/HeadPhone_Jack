@@ -68,3 +68,14 @@ One line of reasoning each. Priority when sources conflict: SRS business rules �
   - **Source:** redrawn as vector from the founder's AI-generated concept; the masters are in `components/app/LogoMark.tsx` and `app/icon.svg`.
   - **Generated icons:** `app/apple-icon.png` (180 px) and the extension icons (16/32/48/128) are rendered from the vector.
   - **Before launch:** run a trademark and reverse-image check on the concept (HUMAN_ACTIONS).
+- **D-CHART-01** Song of the Week and Artist of the Week (JNG-15-01/02) replace the old feed shelves on Home, after Today's Drop.
+  - **Whose listening:** the top 5 among *your people*, meaning you plus everyone whose activity you may see (friends, circle-mates; blocks, visibility and Private mode apply).
+  - **The week:** Monday–Sunday in your timezone, "so far this week", updated hourly.
+  - **Movement:** ▲/▼/NEW against last week, plus "found it first", "You helped make this #1" and "new fans this week".
+- **D-CHART-02** Breadth over loops: score = Σ over listeners √(plays, capped at 3 a day). Featured artists get half credit. Ties go to more listeners, then the earlier listener. Excluded: Spotify Web API data (`analytics_allowed`), accounts younger than 24 h, now-playing pings (only finished plays are stored). Artist credits split only on unambiguous separators ("feat.", "ft.", "with", ",", " x "), never "&", so duos stay one act.
+- **D-CHART-03** Performance:
+  - An hourly Celery job folds new listens into `DailyPlays` (listener × local day × song) and `ArtistFirstPlay`.
+  - A chart is one indexed query over the viewer's people, cached 15 min in Redis (past weeks 24 h) and cleared on new plays or friendship changes.
+  - Measured: 288 ms uncached, ~25 ms cached; payload 20 KB raw (gzip at the edge). Demo backfill took 2.5 s for 15 users.
+  - The sections are lazy-loaded, so Home stays at 161 kB.
+- **D-CHART-04** Artist images are album covers (real artwork), so they stay rounded squares: a circle would crop the cover. A new `inverse` button variant (solid text colour) for strong non-gradient actions fixed an invisible-label bug (secondary's text colour beat the override).

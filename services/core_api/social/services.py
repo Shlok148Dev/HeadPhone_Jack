@@ -41,6 +41,9 @@ def friend_ids(user_id) -> list:
 
 
 def _changed(a_id, b_id, kind: str) -> None:
+    from charts.services import invalidate
+
+    invalidate()  # whose listening counts in "your people" just changed
     events.publish_domain(
         "friendship.changed", {"user_ids": [str(a_id), str(b_id)], "change": kind}
     )

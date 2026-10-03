@@ -168,7 +168,7 @@ function DropPicker({ dropped }: { dropped: Person[] }) {
         <button
           type="submit"
           disabled={!picked || drop.isPending}
-          className={buttonClasses("secondary", "lg", "border-transparent bg-text text-bg hover:bg-text hover:opacity-90 disabled:bg-surface-3 disabled:text-text-muted disabled:opacity-100")}
+          className={buttonClasses("inverse", "lg")}
         >
           {drop.isPending ? "Dropping…" : "Drop it"}
         </button>

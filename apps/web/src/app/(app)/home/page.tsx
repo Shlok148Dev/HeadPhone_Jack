@@ -19,6 +19,7 @@ import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
 
 // Below the fold: loads after first paint so Home stays inside its JS budget (R-D).
+const WeeklyCharts = lazy(() => import("@/components/app/WeeklyCharts").then((m) => ({ default: m.WeeklyCharts })));
 const DailyDrop = lazy(() => import("@/components/app/DailyDrop").then((m) => ({ default: m.DailyDrop })));
 const HomeHero = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeHero })));
 const HomeShelves = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeShelves })));
@@ -97,6 +98,10 @@ export default function HomePage() {
       )}
       <Suspense fallback={<div className="min-h-[280px] rounded-[24px] bg-surface-1" aria-hidden />}>
         <DailyDrop myPlatform={myPlatform} />
+      </Suspense>
+      {/* D-CHART-01: Song and Artist of the Week among your people (replaces the old feed shelves). */}
+      <Suspense fallback={<div className="min-h-[420px] rounded-[28px] bg-surface-1" aria-hidden />}>
+        <WeeklyCharts myPlatform={myPlatform} />
       </Suspense>
       <Suspense fallback={<div className="min-h-[220px] rounded-[20px] bg-surface-1" aria-hidden />}>
         <HomeHero />
