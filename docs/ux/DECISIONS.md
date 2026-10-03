@@ -89,3 +89,10 @@ One line of reasoning each. Priority when sources conflict: SRS business rules â
   - **Restrictions:** muted accounts can't add; songs added by someone you blocked are hidden from you (BR-07).
   - **Account deletion:** songs stay, credited to "Former member".
   - **Header:** a cover mosaic from the songs and the faces of everyone who contributed.
+- **D-EXPORT-01** (founder request) "Play in order in your app" (JNG-04-09). No music app accepts an ordered list of songs from a website, so Jingle creates (or updates) a copy of the circle playlist **in the listener's own account**, in exactly the circle's order, which is now oldest first with new songs at the end.
+  - **Login and tokens:** the login happens in that app's own window, and the token stays in the browser; Jingle never receives or stores Spotify, Google or Apple user tokens.
+  - **Spotify:** Web API with PKCE (no client secret); a private playlist, replaced on update; limited to 25 named users until Spotify grants quota.
+  - **YouTube Music:** YouTube Data API; matches are computed **server-side** with Jingle's API key (preferring official "Topic" audio) and cached per song, so clients can't poison the shared cache; the browser creates a private playlist and appends while the order still holds, otherwise rebuilds.
+  - **Apple Music:** MusicKit JS with a server-signed ES256 developer token; exact Apple ids from Jingle's matching, otherwise a storefront search; Apple's API can't remove or reorder, so updates append and report removed songs.
+  - **Amazon Music:** no API exists for this.
+  - **Common to all:** Jingle remembers only where each copy lives (`PlaylistExport`), never what else is in the user's library; exported playlist URLs must be on the app's own domain.

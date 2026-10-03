@@ -50,10 +50,10 @@ def test_members_add_songs_credited_to_whoever_added_them(crew):
     )
     client(kabir).post(url(circle), {"title": "Husn", "artist": "Anuv Jain"}, format="json")
     body = client(owner).get(url(circle)).json()
-    assert [i["title"] for i in body["items"]] == ["Husn", "Kasoor"]  # newest first
+    assert [i["title"] for i in body["items"]] == ["Kasoor", "Husn"]  # oldest first: the export order
     assert (
-        body["items"][1]["added_by"]["username"] == "aanya"
-        and "SPOTIFY" in body["items"][1]["search_links"]
+        body["items"][0]["added_by"]["username"] == "aanya"
+        and "SPOTIFY" in body["items"][0]["search_links"]
     )
     assert client(owner).get(f"/api/v1/circles/{circle.pk}").json()["playlist_count"] == 2
 

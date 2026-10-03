@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Artwork, AvatarStack, Avatar, Button, EmptyState, ErrorState, IconButton, Icons, PlatformMark, Skeleton, buttonClasses, useToast } from "@/components/ds";
 import { CoverMosaic } from "@/components/app/CoverMosaic";
+import { PlayInOrder } from "@/components/app/PlayInOrder";
 import { ApiError } from "@/lib/api";
 import { useCirclePlaylist, usePlaylistActions, type PlaylistItem } from "@/lib/circles";
 import { useMyPlatform } from "@/lib/send";
@@ -13,7 +14,7 @@ import { tuneIn } from "@/lib/tunein";
 
 /**
  * A circle's shared playlist (JNG-04-08): any member adds songs they like; every song shows who
- * added it, when, and their note; one tap plays it in your own app. Newest first.
+ * added it, when, and their note; one tap plays it in your own app. Oldest first: new songs join the end, the order exported.
  */
 export default function CirclePlaylistPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +33,8 @@ export default function CirclePlaylistPage() {
   return (
     <div className="flex min-w-0 flex-col gap-8">
       <Header circleId={circle.id} name={circle.name} items={items} />
+      {/* JNG-04-09: play the whole playlist, in this order, in your own app. */}
+      <PlayInOrder circleId={circle.id} circleName={circle.name} items={items} myPlatform={myPlatform} />
       <AddSong circleId={circle.id} />
       {items.length ? (
         <ol className="flex flex-col gap-1" aria-label="Songs in the playlist">

@@ -98,3 +98,21 @@ test("JNG-04-08 circle playlist: add a song credited to you, then remove it", as
   await mine.getByRole("button", { name: /Remove Blinding Lights/ }).click();
   await expect(list.getByRole("listitem", { name: /Blinding Lights by .+, added by you/ })).toHaveCount(0);
 });
+
+test("JNG-04-09 play the playlist in order: your app first, honest when an app isn't set up", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/circles");
+  await page.getByRole("link", { name: /KJ Somaiya crew/ }).first().click();
+  await page.getByRole("link", { name: /^Playlist$/ }).click(); // no song count on the button
+  await page.waitForURL(/\/playlist$/);
+  const play = page.getByRole("button", { name: /^(Play|Update & play) in (Spotify|Apple Music|YouTube Music|Amazon Music)$/ });
+  await expect(play).toBeVisible();
+  await page.getByRole("button", { name: "Other apps" }).click();
+  await page.getByRole("menuitem", { name: /in Amazon Music$/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Not available in Amazon Music yet" });
+  await expect(dialog).toContainText("doesn't let other apps create playlists");
+  await dialog.getByRole("button", { name: "Got it" }).click();
+  // Without keys in .env the primary app explains instead of failing.
+  await play.click();
+  await expect(page.getByRole("dialog", { name: /Not available in .+ yet/ })).toContainText("isn't switched on for this Jingle yet");
+});

@@ -35,6 +35,7 @@ urlpatterns = [
     path("api/v1/", include("insights.urls")),
     path("api/v1/", include("drops.urls")),
     path("api/v1/", include("charts.urls")),
+    path("api/v1/", include("exports.urls")),
     # Service-to-service only (X-Service-Token); never routed by the edge.
     path("internal/", include("core_api.internal")),
 ]

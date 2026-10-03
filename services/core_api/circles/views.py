@@ -457,6 +457,7 @@ def _playlist_payload(items, viewer, role) -> list[dict]:
     rows = [
         {
             "id": i.pk,
+            "key": i.track_key,
             "title": i.title,
             "artist": i.artist,
             "note": i.note,

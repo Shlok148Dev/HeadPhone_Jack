@@ -70,6 +70,8 @@ export function useCircleActions() {
 
 export interface PlaylistItem {
   id: string;
+  /** Jingle's song key (same song across apps); used to keep exported copies in sync. */
+  key: string;
   title: string;
   artist: string;
   note: string;

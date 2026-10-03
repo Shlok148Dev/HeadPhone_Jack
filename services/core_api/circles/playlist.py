@@ -23,7 +23,7 @@ def items(circle: Circle, viewer) -> list[CirclePlaylistItem]:
     return list(
         circle.playlist.select_related("added_by")
         .exclude(added_by_id__in=hidden)
-        .order_by("-added_at")
+        .order_by("added_at")  # oldest first: the order you see is the order exported
     )
 
 

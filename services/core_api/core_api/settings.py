@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "artwork",
     "drops",
     "charts",
+    "exports",
     "feed",
 ]
 
@@ -224,6 +225,13 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
+# Play a circle playlist in order in your own app (D-EXPORT-01). Client ids are public (PKCE/GIS);
+# YOUTUBE_API_KEY is used only server-side for song matching; Apple's key signs MusicKit tokens.
+SPOTIFY_CLIENT_ID = env("SPOTIFY_CLIENT_ID", default="")
+YOUTUBE_API_KEY = env("YOUTUBE_API_KEY", default="")
+APPLE_MUSIC_TEAM_ID = env("APPLE_MUSIC_TEAM_ID", default="")
+APPLE_MUSIC_KEY_ID = env("APPLE_MUSIC_KEY_ID", default="")
+APPLE_MUSIC_PRIVATE_KEY_PATH = env("APPLE_MUSIC_PRIVATE_KEY_PATH", default="")
 # Jingle account emails of the ≤ 5 direct-Spotify testers (ADR-0013).
 SPOTIFY_ALLOWLIST = env("SPOTIFY_ALLOWLIST", default="")
 # Sign-ups per IP (NFR-SEC-04). Keep 5/m in production; .env.example loosens it for local E2E.
