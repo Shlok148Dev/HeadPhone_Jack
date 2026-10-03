@@ -205,7 +205,7 @@ async def drain_identity_queue(
 
 
 @router.get("/budgets")
-async def budgets(res: Resources = Depends(get_resources)) -> dict:  # noqa: B008
+async def budgets(res: Resources = Depends(get_resources)) -> dict[str, Any]:  # noqa: B008
     """Per-source rate budgets and live usage for the admin console (JNG-12-04)."""
     import time
 

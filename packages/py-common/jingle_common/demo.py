@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from .enums import Platform
 
 DEMO_EMAIL = "demo@jingle.local"
-DEMO_PASSWORD_DEFAULT = "jingle-demo-2026"  # noqa: S105 - demo-only, documented in README
+DEMO_PASSWORD_DEFAULT = "jingle-demo-2026"  # demo-only, documented in README
 
 
 @dataclass(frozen=True)
