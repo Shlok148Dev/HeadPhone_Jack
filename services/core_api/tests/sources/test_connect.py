@@ -204,3 +204,50 @@ def test_poll_task_sends_flags(ingest, settings):
     assert drain_identity_queue() == {"processed": 0}
     ingest.post("/internal/poll/due").mock(side_effect=httpx.ConnectError("down"))
     assert poll_sources() == {}
+
+
+# ---- One-click connect (D-CONNECT-01): pressing Connect is the consent --------------------------
+
+
+def test_one_click_connect_records_consent_and_lastfm_route(auth_api, user, ingest):
+    from accounts.services import active_consent
+
+    ingest.post("/internal/connect/start").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "action": "lastfm_then_spotify",
+                "url": "https://www.last.fm/api/auth/?x",
+                "live_on_phone": True,
+            },
+        )
+    )
+    # Without the button's consent it still refuses (nothing is shared silently)…
+    assert auth_api.post("/api/v1/sources/spotify/connect").status_code == 409
+    # …with it, both purposes are recorded itemised and the Last.fm plan comes straight back.
+    r = auth_api.post("/api/v1/sources/spotify/connect", {"consent": True}, format="json")
+    assert r.status_code == 200 and r.json()["action"] == "lastfm_then_spotify"
+    assert active_consent(user, ConsentPurpose.ACTIVITY_SHARING) is not None
+    assert active_consent(user, ConsentPurpose.LASTFM_LINK) is not None
+
+
+def test_apple_login_link_forwards_token_never_echoes(auth_api, user, ingest, sharing):
+    route = ingest.post("/internal/connect/apple").mock(
+        return_value=httpx.Response(201, json={"linked": True})
+    )
+    mut = "mut-" + "z" * 60
+    r = auth_api.post("/api/v1/sources/apple/link", {"music_user_token": mut}, format="json")
+    assert r.status_code == 201 and mut not in r.content.decode()
+    sent = json.loads(route.calls.last.request.content)
+    assert sent["music_user_token"] == mut and sent["user_id"] == str(user.pk)
+    assert (
+        auth_api.post(
+            "/api/v1/sources/apple/link", {"music_user_token": "short"}, format="json"
+        ).status_code
+        == 400
+    )
+
+
+def test_apple_link_needs_sharing_consent(auth_api, ingest):
+    r = auth_api.post("/api/v1/sources/apple/link", {"music_user_token": "m" * 40}, format="json")
+    assert r.status_code == 409 and r.json()["error"]["code"] == "CONSENT_REQUIRED"

@@ -75,7 +75,9 @@ class ConnectPlan:
     """What the Connect sheet should do next. ``action`` is one of:
 
     ``redirect`` (open the platform's own consent screen at ``url``), ``browser`` (install/pair the
-    Companion), ``lastfm_then_spotify`` (Last.fm consent, then one confirm inside Spotify).
+    Companion), ``lastfm_then_spotify`` (Last.fm consent, then one confirm inside Spotify),
+    ``musickit`` (Apple's own sign-in in the browser; its Music User Token comes back to
+    ``link_apple``).
     """
 
     action: str
@@ -202,6 +204,11 @@ class Orchestrator:
                 return ConnectPlan(
                     "lastfm_then_spotify", self.lastfm.auth_url(cb), live_on_phone=True
                 )
+        if (
+            platform is Platform.APPLE_MUSIC
+            and self.adapter(SourceKind.APPLE_MUSIC, flags) is not None
+        ):
+            return ConnectPlan("musickit", live_on_phone=True)  # D-CONNECT-01: just log in
         return ConnectPlan("browser")
 
     async def _spotify_slot_free(self, user_id: UUID) -> bool:
@@ -279,6 +286,22 @@ class Orchestrator:
             )
             raise ConnectError("LASTFM_FAILED", msg) from exc
         await self._linked(src, platform)
+
+    async def link_apple(
+        self, user_id: UUID, music_user_token: str, flags: Mapping[str, bool]
+    ) -> None:
+        """Apple Music: the browser's MusicKit sign-in returns a Music User Token; it's sealed
+        (AES-256-GCM) like every other credential and polled for recent plays."""
+        adapter = self.adapter(SourceKind.APPLE_MUSIC, flags)
+        if adapter is None:
+            raise ConnectError("NOT_CONFIGURED", "Apple Music isn't set up on this Jingle yet.")
+        try:
+            src = await adapter.link(user_id, LinkCredential(token=music_user_token.strip()))
+        except ReauthRequired as exc:
+            raise ConnectError(
+                "APPLE_FAILED", "Apple Music sign-in didn't finish. Try again."
+            ) from exc
+        await self._linked(src, Platform.APPLE_MUSIC)
 
     # ---- unlink ---------------------------------------------------------------------------
     async def unlink(self, user_id: UUID, platform: Platform) -> None:

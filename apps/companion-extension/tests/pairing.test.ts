@@ -90,3 +90,24 @@ describe("pairing content script", () => {
     expect(isPlausibleToken("x".repeat(600))).toBe(false);
   });
 });
+
+describe("zero-setup pairing (D-EXT-02)", () => {
+  it("READY tells the page whether this extension is already connected", async () => {
+    const { win, dispatch } = fakeWindow();
+    const status = vi.fn(async () => ({ paired: false }));
+    installPairingListener({ win: win as unknown as Window, pair: vi.fn(), version: "0.1.0", status });
+    await flush();
+    expect(win.postMessage).toHaveBeenCalledWith({ type: MSG.ready, version: "0.1.0", paired: false }, ORIGIN);
+    status.mockResolvedValueOnce({ paired: true });
+    dispatch({ type: MSG.ping });
+    await flush();
+    expect(win.postMessage).toHaveBeenLastCalledWith({ type: MSG.ready, version: "0.1.0", paired: true }, ORIGIN);
+  });
+
+  it("still answers READY if the status check fails", async () => {
+    const { win } = fakeWindow();
+    installPairingListener({ win: win as unknown as Window, pair: vi.fn(), version: "0.1.0", status: async () => Promise.reject(new Error("x")) });
+    await flush();
+    expect(win.postMessage).toHaveBeenCalledWith({ type: MSG.ready, version: "0.1.0" }, ORIGIN);
+  });
+});

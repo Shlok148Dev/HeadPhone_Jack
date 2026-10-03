@@ -48,6 +48,12 @@ export class Companion {
     return mergeSettings(await this.deps.local.get<Partial<Settings>>(STORAGE_KEYS.settings));
   }
 
+  /** Connected to exactly this Jingle origin? (zero-setup pairing, D-EXT-02) */
+  async pairedTo(origin: string): Promise<boolean> {
+    const [auth, s] = await Promise.all([this.auth(), this.settings()]);
+    return !!auth && normaliseOrigin(s.origin) === origin;
+  }
+
   private async auth(): Promise<Auth | undefined> {
     return this.deps.local.get<Auth>(STORAGE_KEYS.auth);
   }

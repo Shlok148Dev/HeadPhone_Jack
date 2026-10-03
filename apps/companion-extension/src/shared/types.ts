@@ -44,7 +44,9 @@ export interface TrackState {
 /** Content script → service worker. */
 export type ContentMessage =
   | { type: "jingle:track"; state: TrackState | null }
-  | { type: "jingle:pair"; token: string };
+  | { type: "jingle:pair"; token: string }
+  /** Jingle page → extension (via the pairing content script): already connected to this origin? */
+  | { type: "jingle:status" };
 
 /** Popup → service worker. */
 export type PopupMessage =

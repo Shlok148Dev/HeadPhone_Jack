@@ -26,8 +26,11 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'"
   },
-  "permissions": ["storage", "alarms"],
-  "optional_permissions": ["scripting"],
+  "permissions": [
+    "alarms",
+    "scripting",
+    "storage"
+  ],
   "host_permissions": [
     "https://music.youtube.com/*",
     "https://open.spotify.com/*",
@@ -47,21 +50,35 @@
     "http://localhost:8080/*",
     "http://127.0.0.1:8080/*"
   ],
-  "optional_host_permissions": ["https://*/*"],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://music.youtube.com/*"],
-      "js": ["content/youtube-music.js"],
+      "matches": [
+        "https://music.youtube.com/*"
+      ],
+      "js": [
+        "content/youtube-music.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://open.spotify.com/*"],
-      "js": ["content/spotify.js"],
+      "matches": [
+        "https://open.spotify.com/*"
+      ],
+      "js": [
+        "content/spotify.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://music.apple.com/*"],
-      "js": ["content/apple-music.js"],
+      "matches": [
+        "https://music.apple.com/*"
+      ],
+      "js": [
+        "content/apple-music.js"
+      ],
       "run_at": "document_idle"
     },
     {
@@ -79,12 +96,19 @@
         "https://music.amazon.com.br/*",
         "https://music.amazon.com.mx/*"
       ],
-      "js": ["content/amazon-music.js"],
+      "js": [
+        "content/amazon-music.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["http://localhost:8080/connect/companion*", "http://127.0.0.1:8080/connect/companion*"],
-      "js": ["content/pairing.js"],
+      "matches": [
+        "http://localhost:8080/*",
+        "http://127.0.0.1:8080/*"
+      ],
+      "js": [
+        "content/pairing.js"
+      ],
       "run_at": "document_idle"
     }
   ]

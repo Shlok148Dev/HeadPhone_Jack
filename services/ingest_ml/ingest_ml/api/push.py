@@ -94,15 +94,14 @@ async def _read_json(request: Request) -> Any:
         raise _Rejected(lb_error(400, "Cannot parse JSON document.")) from None
 
 
-async def _submit(res: Resources, principal: TokenPrincipal, bucket: BucketResult,
-                  data: Any) -> JSONResponse:
+async def _submit(
+    res: Resources, principal: TokenPrincipal, bucket: BucketResult, data: Any
+) -> JSONResponse:
     try:
         sub = Submission.model_validate(data)
     except ValidationError as exc:
         return lb_error(400, _validation_message(exc), bucket.headers())
-    listens = await res.listen_bucket.take(
-        f"rl:listens:user:{principal.user_id}", len(sub.payload)
-    )
+    listens = await res.listen_bucket.take(f"rl:listens:user:{principal.user_id}", len(sub.payload))
     if not listens.allowed:
         headers = bucket.headers() | {"Retry-After": str(max(1, round(listens.retry_after)))}
         return lb_error(429, "Listen budget exceeded.", headers)
@@ -142,7 +141,9 @@ async def playing_now(
     if isinstance(data, dict) and "track_metadata" in data:
         data = data["track_metadata"]
     return await _submit(
-        res, principal, bucket,
+        res,
+        principal,
+        bucket,
         {"listen_type": "playing_now", "payload": [{"track_metadata": data}]},
     )
 

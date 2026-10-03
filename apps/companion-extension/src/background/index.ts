@@ -1,4 +1,4 @@
-import { chromeKV, isBuiltinOrigin, type Settings } from "../shared/settings";
+import { chromeKV, isBuiltinOrigin, normaliseOrigin, type Settings } from "../shared/settings";
 import type { ContentMessage, PopupMessage } from "../shared/types";
 import { Companion } from "./service";
 
@@ -30,7 +30,7 @@ async function syncPairingScript(): Promise<void> {
   const granted = await chrome.permissions.contains({ origins: [`${origin}/*`] });
   if (!granted) return;
   await chrome.scripting.registerContentScripts([
-    { id: PAIRING_SCRIPT_ID, matches: [`${origin}/connect/companion*`], js: ["content/pairing.js"], runAt: "document_idle" },
+    { id: PAIRING_SCRIPT_ID, matches: [`${origin}/*`], js: ["content/pairing.js"], runAt: "document_idle" },
   ]);
 }
 
@@ -49,7 +49,27 @@ async function revokeOldOrigin(oldOrigin: string, newOrigin: string): Promise<vo
   }
 }
 
-chrome.runtime.onInstalled.addListener(() => void ensureAlarm().then(syncPairingScript));
+/**
+ * Zero-setup pairing (D-EXT-02): right after install, run the pairing listener in Jingle tabs that
+ * are already open (content scripts only reach new page loads by themselves), so the signed-in
+ * Jingle page that offered the extension connects it within a second, with no reload or clicks.
+ */
+async function wakeOpenJingleTabs(): Promise<void> {
+  if (!chrome.scripting) return;
+  const { origin } = await companion.settings();
+  const tabs = await chrome.tabs.query({ url: [`${normaliseOrigin(origin) ?? "http://127.0.0.1:8080"}/*`, "http://localhost:8080/*", "http://127.0.0.1:8080/*"] });
+  await Promise.all(
+    tabs
+      .filter((t) => t.id !== undefined)
+      .map((t) => chrome.scripting.executeScript({ target: { tabId: t.id! }, files: ["content/pairing.js"] }).catch(() => undefined)),
+  );
+}
+
+chrome.runtime.onInstalled.addListener((d) =>
+  void ensureAlarm()
+    .then(syncPairingScript)
+    .then(() => (d.reason === "install" ? wakeOpenJingleTabs() : undefined)),
+);
 chrome.runtime.onStartup.addListener(() => void ensureAlarm());
 void ensureAlarm();
 
@@ -83,6 +103,13 @@ chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
       const origin = senderOrigin(sender);
       if (!fromTab || origin === null) return false;
       void companion.pair(msg.token, origin).then(sendResponse);
+      return true;
+    }
+    case "jingle:status": {
+      // Connected = we hold a token for exactly this Jingle origin (D-EXT-02 zero-setup pairing).
+      const origin = senderOrigin(sender);
+      if (!fromTab || origin === null) return false;
+      void companion.pairedTo(origin).then((paired) => sendResponse({ paired }));
       return true;
     }
     default:

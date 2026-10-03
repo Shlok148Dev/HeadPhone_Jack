@@ -48,12 +48,19 @@ def create_app(resources: Resources | None = None, app_settings: Settings | None
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
         if request.url.path.startswith("/ingest/1/"):
-            return JSONResponse({"code": exc.status_code, "error": str(exc.detail)},
-                                status_code=exc.status_code)
+            return JSONResponse(
+                {"code": exc.status_code, "error": str(exc.detail)}, status_code=exc.status_code
+            )
         code = exc.detail if isinstance(exc.detail, str) and exc.detail.isupper() else "HTTP_ERROR"
         return JSONResponse(
-            {"error": {"code": code, "message": str(exc.detail), "details": {},
-                       "request_id": request_id_var.get()}},
+            {
+                "error": {
+                    "code": code,
+                    "message": str(exc.detail),
+                    "details": {},
+                    "request_id": request_id_var.get(),
+                }
+            },
             status_code=exc.status_code,
         )
 

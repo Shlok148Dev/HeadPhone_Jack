@@ -534,3 +534,58 @@ async def test_adaptive_polling_skips_live_when_nobody_watches(cres: Resources) 
         POLL_ZSET, {str((await get_source(cres.engine, idle.id, SourceKind.LISTENBRAINZ)).id): 0}
     )  # type: ignore[union-attr]
     assert (await poll_due(orch, {}))["live"] == 1
+
+
+# ---- Apple Music: just log in (D-CONNECT-01) -------------------------------------------------
+
+
+async def test_apple_login_plan_and_link_when_configured(tmp_path: pathlib.Path, u: User) -> None:
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    key = ec.generate_private_key(ec.SECP256R1())
+    (tmp_path / "AuthKey.p8").write_bytes(
+        key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    )
+    r = await make_resources(
+        Settings(
+            jingle_env="test",
+            service_token=SERVICE_TOKEN,
+            apple_music_team_id="TEAM",
+            apple_music_key_id="KEY",
+            apple_music_private_key_path=str(tmp_path / "AuthKey.p8"),
+        )
+    )
+    try:
+        user = await create_user(r.engine)
+        flags = {"apple_music_enabled": True}
+        orch = Orchestrator(r)
+        assert (
+            await orch.start(user.id, Platform.APPLE_MUSIC, allowlisted=False, flags=flags)
+        ).action == "musickit"
+        # Flag off: the route doesn't exist (BR-11), the extension stays the path.
+        assert (
+            await orch.start(user.id, Platform.APPLE_MUSIC, allowlisted=False, flags={})
+        ).action == "browser"
+        mut = "music-user-token-" + "x" * 40
+        await orch.link_apple(user.id, mut, flags)
+        [src] = [
+            s
+            for s in await list_sources(r.engine, [SourceKind.APPLE_MUSIC])
+            if s.user_id == user.id
+        ]
+        assert src.token_ciphertext and mut not in src.token_ciphertext  # sealed, never plain
+    finally:
+        await r.http.aclose()
+        await r.engine.dispose()
+
+
+async def test_apple_link_without_keys_is_a_clear_error(res: Resources) -> None:
+    user = await create_user(res.engine)
+    with pytest.raises(ConnectError) as e:
+        await Orchestrator(res).link_apple(user.id, "t" * 40, {"apple_music_enabled": True})
+    assert e.value.code == "NOT_CONFIGURED"

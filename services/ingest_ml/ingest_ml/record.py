@@ -107,9 +107,14 @@ async def _upsert_sources(
                 continue
             t = platform_connections
             stmt = dialect_insert(conn, t).values(
-                id=uuid4(), user_id=user_id, platform=platform.value,
-                status=SourceStatus.CONNECTED.value, first_play_at=played,
-                last_signal_at=ts, created_at=ts, updated_at=ts,
+                id=uuid4(),
+                user_id=user_id,
+                platform=platform.value,
+                status=SourceStatus.CONNECTED.value,
+                first_play_at=played,
+                last_signal_at=ts,
+                created_at=ts,
+                updated_at=ts,
             )
             stmt = stmt.on_conflict_do_update(
                 index_elements=["user_id", "platform"],
@@ -128,15 +133,28 @@ async def _upsert_sources(
         ls = linked_sources
         if source_kind is SourceKind.COMPANION:
             stmt = dialect_insert(conn, ls).values(
-                id=uuid4(), user_id=user_id, kind=SourceKind.COMPANION.value,
-                external_user_id="", token_ciphertext="", token_key_id="",
-                status=SourceStatus.CONNECTED.value, last_ok_at=ts, meta={},
-                created_at=ts, updated_at=ts,
+                id=uuid4(),
+                user_id=user_id,
+                kind=SourceKind.COMPANION.value,
+                external_user_id="",
+                token_ciphertext="",
+                token_key_id="",
+                status=SourceStatus.CONNECTED.value,
+                last_ok_at=ts,
+                meta={},
+                created_at=ts,
+                updated_at=ts,
             )
-            await conn.execute(stmt.on_conflict_do_update(
-                index_elements=["user_id", "kind"],
-                set_={"status": SourceStatus.CONNECTED.value, "last_ok_at": ts, "updated_at": ts},
-            ))
+            await conn.execute(
+                stmt.on_conflict_do_update(
+                    index_elements=["user_id", "kind"],
+                    set_={
+                        "status": SourceStatus.CONNECTED.value,
+                        "last_ok_at": ts,
+                        "updated_at": ts,
+                    },
+                )
+            )
         else:
             await conn.execute(
                 update(ls)
@@ -145,8 +163,9 @@ async def _upsert_sources(
             )
 
 
-async def _update_last_if_newer(res: Resources, user_id: UUID, event: ListenEvent,
-                                observed_epoch: float) -> bool:
+async def _update_last_if_newer(
+    res: Resources, user_id: UUID, event: ListenEvent, observed_epoch: float
+) -> bool:
     key = last_key(user_id)
     current = await res.redis.hget(key, "event")
     if current:
@@ -224,9 +243,13 @@ async def record_plays(
     for p in plays:
         resolved = await resolver.resolve(
             TrackInput(
-                artist=p.track.artist, title=p.track.title, album=p.track.album,
-                duration_ms=p.track.duration_ms, isrc=p.isrc,
-                recording_mbid=p.recording_mbid, release_mbid=p.release_mbid,
+                artist=p.track.artist,
+                title=p.track.title,
+                album=p.track.album,
+                duration_ms=p.track.duration_ms,
+                isrc=p.isrc,
+                recording_mbid=p.recording_mbid,
+                release_mbid=p.release_mbid,
             ),
             allow_remote=allow_remote,
         )
@@ -240,10 +263,15 @@ async def record_plays(
         events.append(
             ListenEvent(
                 event_id=_event_id(user_id, kind, p.played_at, p.track),
-                user_id=user_id, recording_id=resolved.recording_id, raw=p.track,
+                user_id=user_id,
+                recording_id=resolved.recording_id,
+                raw=p.track,
                 artwork_url=p.artwork_url or resolved.artwork_url,
-                platform=p.platform, via=via, kind=kind,
-                played_at=p.played_at, observed_at=received_at,
+                platform=p.platform,
+                via=via,
+                kind=kind,
+                played_at=p.played_at,
+                observed_at=received_at,
                 trainable=default_trainable(via, p.platform),
                 analytics_allowed=default_analytics_allowed(via, p.platform),
                 played_at_estimated=p.played_at_estimated,

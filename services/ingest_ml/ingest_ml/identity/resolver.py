@@ -325,8 +325,12 @@ class IdentityResolver:
             await self._redis.srem(PENDING_IDS, str(rid))
             log.warning("resolve:pending is full; recording left unresolved")
             return
-        job = {"recording_id": str(rid), "artist": t.artist, "title": t.title,
-               "duration_ms": t.duration_ms}
+        job = {
+            "recording_id": str(rid),
+            "artist": t.artist,
+            "title": t.title,
+            "duration_ms": t.duration_ms,
+        }
         await self._redis.rpush(PENDING_KEY, json.dumps(job))
 
     async def drain_pending(self, limit: int = 20) -> dict[str, int]:
@@ -378,7 +382,9 @@ class IdentityResolver:
                 isrc = None
             artist_id = await self._upsert_artist(conn, m.artist, m.artist_mbid)
             values: dict[str, Any] = {
-                "mbid": m.mbid, "resolution": "fuzzy", "artist_id": artist_id,
+                "mbid": m.mbid,
+                "resolution": "fuzzy",
+                "artist_id": artist_id,
                 "updated_at": now(),
             }
             if isrc:

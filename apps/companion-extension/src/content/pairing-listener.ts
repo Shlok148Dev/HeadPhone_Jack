@@ -19,6 +19,8 @@ export function isPlausibleToken(t: unknown): t is string {
 
 export interface PairingDeps {
   win: Window;
+  /** Whether this extension is already connected to this Jingle origin. */
+  status?: () => Promise<{ paired: boolean }>;
   /** Forwards the token to the service worker, which validates it with the Jingle server. */
   pair: (token: string) => Promise<PairResult>;
   version: string;
@@ -29,9 +31,15 @@ export interface PairingDeps {
  * with exactly `{type: "JINGLE_COMPANION_TOKEN", token: string}`. Everything else is ignored.
  * The token is never logged.
  */
-export function installPairingListener({ win, pair, version }: PairingDeps): () => void {
+export function installPairingListener({ win, pair, version, status }: PairingDeps): () => void {
   const origin = win.location.origin;
   const reply = (data: Record<string, unknown>): void => win.postMessage(data, origin);
+  const ready = (): void => {
+    if (!status) return reply({ type: MSG.ready, version });
+    status()
+      .then((s) => reply({ type: MSG.ready, version, paired: s.paired }))
+      .catch(() => reply({ type: MSG.ready, version }));
+  };
   let busy = false;
 
   const onMessage = (ev: MessageEvent): void => {
@@ -40,7 +48,7 @@ export function installPairingListener({ win, pair, version }: PairingDeps): () 
     if (typeof data !== "object" || data === null) return;
     const type = (data as { type?: unknown }).type;
     if (type === MSG.ping) {
-      reply({ type: MSG.ready, version });
+      ready();
       return;
     }
     if (type !== MSG.token) return;
@@ -60,6 +68,6 @@ export function installPairingListener({ win, pair, version }: PairingDeps): () 
   };
 
   win.addEventListener("message", onMessage);
-  reply({ type: MSG.ready, version });
+  ready();
   return () => win.removeEventListener("message", onMessage);
 }

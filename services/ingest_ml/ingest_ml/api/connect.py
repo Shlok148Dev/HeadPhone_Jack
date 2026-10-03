@@ -105,6 +105,23 @@ async def link_listenbrainz(
     return JSONResponse({"linked": True}, status_code=201)
 
 
+class AppleLinkRequest(BaseModel):
+    user_id: UUID
+    music_user_token: str = Field(min_length=20, max_length=4096)
+    flags: dict[str, bool] = Field(default_factory=dict)
+
+
+@router.post("/connect/apple")
+async def link_apple(
+    body: AppleLinkRequest, res: Resources = Depends(get_resources)
+) -> JSONResponse:  # noqa: B008
+    try:
+        await _orch(res).link_apple(body.user_id, body.music_user_token, body.flags)
+    except ConnectError as exc:
+        return _err(exc)
+    return JSONResponse({"linked": True}, status_code=201)
+
+
 @router.post("/connect/lastfm/username")
 async def link_lastfm_username(
     body: LinkRequest, res: Resources = Depends(get_resources)

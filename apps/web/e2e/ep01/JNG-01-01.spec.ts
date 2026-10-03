@@ -13,7 +13,7 @@ test.describe("JNG-01-01 sign up with email", () => {
     await page.getByLabel(/I agree/).check();
     await page.getByRole("button", { name: "Create account" }).click();
     await page.waitForURL(/\/onboarding\/sources/);
-    await expect(page.getByRole("heading", { name: "Which app do you use most?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Connect your music" })).toBeVisible();
   });
 
   test("Under-18 is refused and no account is created", async ({ page }) => {

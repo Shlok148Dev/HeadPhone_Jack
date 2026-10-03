@@ -96,3 +96,14 @@ One line of reasoning each. Priority when sources conflict: SRS business rules â
   - **Apple Music:** MusicKit JS with a server-signed ES256 developer token; exact Apple ids from Jingle's matching, otherwise a storefront search; Apple's API can't remove or reorder, so updates append and report removed songs.
   - **Amazon Music:** no API exists for this.
   - **Common to all:** Jingle remembers only where each copy lives (`PlaylistExport`), never what else is in the user's library; exported playlist URLs must be on the app's own domain.
+- **D-CONNECT-01** (founder request) One-tap Connect. Onboarding and Settings â†’ Connections show the same four tiles: Spotify, Apple Music, YouTube Music and Amazon Music. Pressing a tile is the whole setup. The one-line notice under the tiles makes the press the "share what I play" consent; it is recorded server-side, itemised and withdrawable (DPDP). The server picks the route; the listener only sees their app's own login.
+  - **Spotify:** Spotify's login for the 25 allowlisted users; everyone else gets Last.fm's login plus one **Connect** tap inside Last.fm (no waitlist), and the tile flips on the first song.
+  - **Apple Music:** Apple's MusicKit sign-in when Jingle has Apple keys; otherwise the extension path.
+  - **YouTube Music / Amazon Music:** on desktop, "Add Jingle to Chrome" (the extension then connects itself); in the Jingle Android app, one Android notification-access toggle. On iPhone, an honest one-liner: iOS doesn't let any app see another app's playback.
+  - **Inside the Android app:** every platform uses the phone's media sessions (live, no other login).
+  - The username form, Takeout upload and ListenBrainz form are gone from the main path (backend endpoints kept).
+  - After Spotify's or Last.fm's login, people land back where they started (onboarding or Settings).
+- **D-EXT-02** (founder request) Zero-setup extension. The pairing script runs on every Jingle page, and on install the extension wakes open Jingle tabs. A signed-in page sees `READY {paired:false}` and pairs automatically. The only possible prompt is a one-tap **Allow**, shown when sharing consent was never given.
+  - Permissions: `alarms`, `scripting` and `storage`, no `tabs`, no optional permissions.
+  - `/connect/companion` (opened from the extension popup) now just connects, with that one Allow.
+- **D-CHART-08** Opening the reveal notification link (`/home?reveal=1`) always plays last week's reveal, even if it was already seen. Plain Home still shows it only while it's waiting.

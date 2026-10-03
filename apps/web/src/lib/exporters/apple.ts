@@ -101,3 +101,10 @@ export async function exportToApple(
   const id = r.data.data[0]!.id;
   return { externalId: id, url: `https://music.apple.com/library/playlist/${id}`, placedKeys: ids.map((x) => x.key), missing };
 }
+
+/** Connect (D-CONNECT-01): Apple's own sign-in; returns the Music User Token for Jingle to keep. */
+export async function appleMusicUserToken(): Promise<string> {
+  const [{ token }, MK] = await Promise.all([api<{ token: string }>("/exports/apple/token"), loadMusicKit()]);
+  const music = await MK.configure({ developerToken: token, app: { name: "Jingle", build: "1" } });
+  return music.authorize();
+}

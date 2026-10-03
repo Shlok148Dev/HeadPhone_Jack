@@ -393,7 +393,8 @@ export function PendingReveal() {
   const [fromNotification] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reveal") === "1");
   const [held, setHeld] = useState<NonNullable<WeeklyChartsData["last_final"]> | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const pending = q.data?.last_final?.reveal_pending ? q.data.last_final : null;
+  // The notification link always plays it (again, if already seen); otherwise only while waiting.
+  const pending = q.data?.last_final && (q.data.last_final.reveal_pending || fromNotification) ? q.data.last_final : null;
   if (pending && !held && !dismissed) setHeld(pending);
   if (!held || dismissed) return null;
   return <ChartReveal final={held} range={weekRange(held.week_start, held.week_end)} autoStart={fromNotification} onDone={() => setDismissed(true)} />;

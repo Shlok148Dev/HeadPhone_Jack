@@ -27,8 +27,15 @@ from .platform import infer_platform, safe_platform_url, spotify_url
 from .schemas import Listen, Submission
 
 __all__ = [
-    "DEDUPE_TTL_SECONDS", "MAX_FUTURE", "NP_TTL_SECONDS", "STREAM", "STREAM_RETENTION",
-    "PushRejected", "ingest_submission", "last_key", "np_key",
+    "DEDUPE_TTL_SECONDS",
+    "MAX_FUTURE",
+    "NP_TTL_SECONDS",
+    "STREAM",
+    "STREAM_RETENTION",
+    "PushRejected",
+    "ingest_submission",
+    "last_key",
+    "np_key",
 ]
 
 MAX_FUTURE = timedelta(minutes=5)
@@ -67,7 +74,9 @@ def to_plays(sub: Submission, received_at: datetime) -> list[Play]:
         plays.append(
             Play(
                 track=RawTrack(
-                    artist=tm.artist_name, title=tm.track_name, album=tm.release_name,
+                    artist=tm.artist_name,
+                    title=tm.track_name,
+                    album=tm.release_name,
                     duration_ms=ai.effective_duration_ms,
                 ),
                 played_at=played_at,
@@ -88,7 +97,12 @@ async def ingest_submission(
     plays = to_plays(sub, received_at)
     kind = EventKind.NOW_PLAYING if sub.listen_type == "playing_now" else EventKind.LISTEN
     return await record_plays(
-        res, user_id, plays,
-        kind=kind, route=COMPANION_ROUTE, via=COMPANION_ROUTE.via, received_at=received_at,
+        res,
+        user_id,
+        plays,
+        kind=kind,
+        route=COMPANION_ROUTE,
+        via=COMPANION_ROUTE.via,
+        received_at=received_at,
         allow_remote=sub.listen_type != "import",
     )

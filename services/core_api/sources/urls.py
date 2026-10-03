@@ -10,6 +10,10 @@ urlpatterns = [
         name="link-listenbrainz",
     ),
     path("sources/lastfm/username", connect_views.LastfmUsernameView.as_view(), name="link-lastfm"),
+    path("sources/apple/link", connect_views.AppleLinkView.as_view(), name="link-apple"),
+    path(
+        "sources/connect-config", connect_views.ConnectConfigView.as_view(), name="connect-config"
+    ),
     path(
         "sources/spotify/callback",
         connect_views.SpotifyCallbackView.as_view(),

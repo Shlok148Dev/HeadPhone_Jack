@@ -45,8 +45,12 @@ def _metadata(persona: Persona, track: Track, on_web: bool) -> dict[str, Any]:
         info["music_service"] = WEB_PLAYER_HOSTS[persona.platform]
     elif persona.platform is Platform.SPOTIFY:
         info["music_service_name"] = "Spotify"
-    return {"artist_name": track.artist, "track_name": track.title, "release_name": track.album,
-            "additional_info": info}
+    return {
+        "artist_name": track.artist,
+        "track_name": track.title,
+        "release_name": track.album,
+        "additional_info": info,
+    }
 
 
 def pick_track(persona: Persona, rng: random.Random) -> Track:
@@ -77,15 +81,27 @@ class PersonaSim:
                 return out
         if now - s.started >= s.track.duration_s:
             if s.on_web or self.phone_capturable():
-                out.append({"listen_type": "single", "payload": [{
-                    "listened_at": int(s.started),
-                    "track_metadata": _metadata(self.persona, s.track, s.on_web)}]})
+                out.append(
+                    {
+                        "listen_type": "single",
+                        "payload": [
+                            {
+                                "listened_at": int(s.started),
+                                "track_metadata": _metadata(self.persona, s.track, s.on_web),
+                            }
+                        ],
+                    }
+                )
             self.session = None
             return out
         if s.on_web and now - s.last_heartbeat >= HEARTBEAT_S:
             s.last_heartbeat = now
-            out.append({"listen_type": "playing_now", "payload": [{
-                "track_metadata": _metadata(self.persona, s.track, True)}]})
+            out.append(
+                {
+                    "listen_type": "playing_now",
+                    "payload": [{"track_metadata": _metadata(self.persona, s.track, True)}],
+                }
+            )
         return out
 
 
@@ -102,8 +118,9 @@ def backfill(persona: Persona, rng: random.Random, now: float) -> dict[str, Any]
 
 
 async def _post(client: httpx.AsyncClient, token: str, body: dict[str, Any]) -> int:
-    r = await client.post("/ingest/1/submit-listens", json=body,
-                          headers={"Authorization": f"Token {token}"})
+    r = await client.post(
+        "/ingest/1/submit-listens", json=body, headers={"Authorization": f"Token {token}"}
+    )
     return r.status_code
 
 
@@ -115,8 +132,9 @@ async def run(base_url: str, service_token: str, seed: int | None = None) -> Non
         # Wait until core-api has seeded the demo tokens.
         while True:
             try:
-                r = await client.get("/ingest/1/validate-token",
-                                     headers={"Authorization": f"Token {tokens['demo']}"})
+                r = await client.get(
+                    "/ingest/1/validate-token", headers={"Authorization": f"Token {tokens['demo']}"}
+                )
                 if r.status_code == 200 and r.json().get("valid"):
                     break
             except httpx.HTTPError:
@@ -150,8 +168,11 @@ def main() -> None:
         log.info("JINGLE_DEMO is not 1; simulator idle")
         while True:
             time.sleep(3600)
-    asyncio.run(run(os.environ.get("SIMULATOR_TARGET", "http://ingest-ml:8001"),
-                    os.environ["SERVICE_TOKEN"]))
+    asyncio.run(
+        run(
+            os.environ.get("SIMULATOR_TARGET", "http://ingest-ml:8001"), os.environ["SERVICE_TOKEN"]
+        )
+    )
 
 
 if __name__ == "__main__":

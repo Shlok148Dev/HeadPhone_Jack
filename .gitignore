@@ -52,3 +52,8 @@ services/core_api/artifacts/
 
 # local backups
 /backups/
+
+# Android build outputs
+apps/android/**/build/
+apps/android/.gradle/
+apps/android/local.properties

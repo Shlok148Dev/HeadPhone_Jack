@@ -81,11 +81,15 @@ describe("ListenBrainz payload", () => {
     const m = JSON.parse(readFileSync(resolve(__dirname, "../public/manifest.json"), "utf8")) as {
       content_security_policy: { extension_pages: string };
       permissions: string[];
-      optional_permissions: string[];
+      optional_permissions?: string[];
     };
     expect(m.content_security_policy.extension_pages).toContain("script-src 'self'");
     expect(m.content_security_policy.extension_pages).toContain("object-src 'none'");
-    expect(m.permissions).toEqual(["storage", "alarms"]);
-    expect(m.optional_permissions).toEqual(["scripting"]);
+    // D-EXT-02: `scripting` is required (wake already-open Jingle tabs right after install, so the
+    // extension connects itself). It adds no install warning; nothing that does (tabs, history,
+    // <all_urls>) is allowed.
+    expect([...m.permissions].sort()).toEqual(["alarms", "scripting", "storage"]);
+    expect(m.permissions).not.toContain("tabs");
+    expect(m.optional_permissions ?? []).toEqual([]);
   });
 });

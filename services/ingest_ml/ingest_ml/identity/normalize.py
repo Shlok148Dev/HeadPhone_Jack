@@ -25,10 +25,13 @@ _TITLE_NOISE = [
     # (From "Brahmastra") / (From “Brahmastra”) — common on Indian film soundtracks
     re.compile(r"\s*[\(\[]\s*from\s+[\"“'‘].*?[\"”'’]\s*[\)\]]", re.IGNORECASE),
     # - Remastered 2011 / - 2011 Remaster / (Remastered 2009) / [Remastered]
-    re.compile(r"\s*[-–—]\s*(?:\d{4}\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?\s*$",
-               re.IGNORECASE),
-    re.compile(r"\s*[\(\[]\s*(?:\d{4}\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?\s*[\)\]]",
-               re.IGNORECASE),
+    re.compile(
+        r"\s*[-–—]\s*(?:\d{4}\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?\s*$", re.IGNORECASE
+    ),
+    re.compile(
+        r"\s*[\(\[]\s*(?:\d{4}\s+)?remaster(?:ed)?(?:\s+\d{4})?(?:\s+version)?\s*[\)\]]",
+        re.IGNORECASE,
+    ),
     # any remaining [...] block
     re.compile(r"\s*\[[^\]]*\]"),
 ]

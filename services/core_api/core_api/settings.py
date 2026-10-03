@@ -229,6 +229,9 @@ GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
 # YOUTUBE_API_KEY is used only server-side for song matching; Apple's key signs MusicKit tokens.
 SPOTIFY_CLIENT_ID = env("SPOTIFY_CLIENT_ID", default="")
 YOUTUBE_API_KEY = env("YOUTUBE_API_KEY", default="")
+# Where "Add Jingle to Chrome" and "Get the Jingle app" point (D-CONNECT-01). Empty until published.
+EXTENSION_STORE_URL = env("EXTENSION_STORE_URL", default="")
+ANDROID_APP_URL = env("ANDROID_APP_URL", default="")
 APPLE_MUSIC_TEAM_ID = env("APPLE_MUSIC_TEAM_ID", default="")
 APPLE_MUSIC_KEY_ID = env("APPLE_MUSIC_KEY_ID", default="")
 APPLE_MUSIC_PRIVATE_KEY_PATH = env("APPLE_MUSIC_PRIVATE_KEY_PATH", default="")

@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 import httpx
 from django.conf import settings
 from django.shortcuts import redirect
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.parsers import MultiPartParser
@@ -17,7 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.models import ConsentPurpose
-from accounts.services import active_consent
+from accounts.services import active_consent, give_consent
 from core_api import flags
 from core_api.errors import ApiError
 from core_api.ratelimit import ratelimit
@@ -94,7 +95,9 @@ SHARING_MSG = "Allow Jingle to share what you play with your friends to connect 
 PlanSerializer = inline_serializer(
     "ConnectPlan",
     {
-        "action": serializers.ChoiceField(choices=["redirect", "lastfm_then_spotify", "browser"]),
+        "action": serializers.ChoiceField(
+            choices=["redirect", "lastfm_then_spotify", "browser", "musickit"]
+        ),
         "url": serializers.URLField(allow_null=True),
         "live_on_phone": serializers.BooleanField(),
     },
@@ -112,6 +115,12 @@ class ConnectStartView(APIView):
     @ratelimit(key="user", rate="30/h", scope="sources.connect")
     def post(self, request, platform: str):
         platform = _platform(platform)
+        # D-CONNECT-01: the Connect button carries its own one-line notice ("Jingle shows your
+        # friends what you play"), so pressing it IS the consent: recorded here, itemised and
+        # withdrawable in Settings → Privacy (DPDP / NFR-PRIV-01). No separate consent screen.
+        agreed = bool((request.data or {}).get("consent"))
+        if agreed and active_consent(request.user, ConsentPurpose.ACTIVITY_SHARING) is None:
+            give_consent(request.user, ConsentPurpose.ACTIVITY_SHARING)
         _require(request.user, ConsentPurpose.ACTIVITY_SHARING, SHARING_MSG)
         plan = _ingest(
             "POST",
@@ -124,6 +133,8 @@ class ConnectStartView(APIView):
             },
         )
         if plan.get("action") == "lastfm_then_spotify":
+            if agreed and active_consent(request.user, ConsentPurpose.LASTFM_LINK) is None:
+                give_consent(request.user, ConsentPurpose.LASTFM_LINK)
             _require(
                 request.user,
                 ConsentPurpose.LASTFM_LINK,
@@ -191,6 +202,35 @@ class LastfmCallbackView(APIView):
         return _back_to_app(
             connected=str(data.get("platform", "SPOTIFY")), then="link_spotify_lastfm"
         )
+
+
+class AppleLinkView(APIView):
+    """Apple Music: the browser's MusicKit sign-in hands its Music User Token here (D-CONNECT-01).
+    Forwarded to ingest-ml, which seals it; it is never logged or returned."""
+
+    @extend_schema(
+        tags=["sources"],
+        request=inline_serializer(
+            "AppleLink", {"music_user_token": serializers.CharField(max_length=4096)}
+        ),
+        responses={201: None, 400: err("APPLE_FAILED"), 409: err("CONSENT_REQUIRED")},
+    )
+    @ratelimit(key="user", rate="20/h", scope="sources.apple")
+    def post(self, request):
+        _require(request.user, ConsentPurpose.ACTIVITY_SHARING, SHARING_MSG)
+        token = str((request.data or {}).get("music_user_token") or "")
+        if not 20 <= len(token) <= 4096:
+            raise ApiError("VALIDATION_ERROR", "Apple Music sign-in didn't finish. Try again.", 400)
+        _ingest(
+            "POST",
+            "/internal/connect/apple",
+            json={
+                "user_id": str(request.user.pk),
+                "music_user_token": token,
+                "flags": _flag_values(),
+            },
+        )
+        return Response(status=201)
 
 
 class ListenBrainzLinkView(APIView):
@@ -331,4 +371,17 @@ class ImportStatusView(APIView):
             _ingest(
                 "GET", f"/internal/imports/{job_id[:64]}", params={"user_id": str(request.user.pk)}
             )
+        )
+
+
+class ConnectConfigView(APIView):
+    """Where the extension and the Android app live, for the one-tap Connect screen."""
+
+    @extend_schema(tags=["sources"], responses={200: OpenApiTypes.OBJECT})
+    def get(self, request):
+        return Response(
+            {
+                "extension_url": settings.EXTENSION_STORE_URL or None,
+                "android_url": settings.ANDROID_APP_URL or None,
+            }
         )

@@ -30,8 +30,15 @@ class AdditionalInfo(BaseModel):
     spotify_id: str | None = None
 
     @field_validator(
-        "isrc", "recording_mbid", "release_mbid", "music_service", "music_service_name",
-        "media_player", "submission_client", "origin_url", "spotify_id",
+        "isrc",
+        "recording_mbid",
+        "release_mbid",
+        "music_service",
+        "music_service_name",
+        "media_player",
+        "submission_client",
+        "origin_url",
+        "spotify_id",
         mode="before",
     )
     @classmethod

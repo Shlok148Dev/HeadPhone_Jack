@@ -12,6 +12,7 @@ import {
   ThemeToggle,
   cn,
 } from "@/components/ds";
+import { CompanionAutoPair } from "@/components/app/CompanionAutoPair";
 import { useAuth } from "@/lib/auth";
 import { toNowPlaying, useMyCard } from "@/lib/queries";
 import { RealtimeProvider, useRealtimeStatus } from "@/lib/realtime";
@@ -104,6 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <RealtimeProvider userId={me.id}>
       <SendProvider>
+        <CompanionAutoPair />
       <div className="min-h-dvh bg-bg text-text">
         <a
           href="#main"

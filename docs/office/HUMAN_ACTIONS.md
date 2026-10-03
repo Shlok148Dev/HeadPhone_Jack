@@ -109,3 +109,38 @@ Verify: open `https://<your-domain>`, sign up, connect a source, and see your ca
 
 Concerts are not built in the pilot. EP-10 is all Should/Could except "attendance private by default", which has nothing to protect until concerts exist. To build them later, get a free key at <https://developer.ticketmaster.com> (Discovery API) and set `TICKETMASTER_API_KEY` in `.env`.
 
+
+## HA-CONNECT-1 Last.fm keys (so Spotify works for everyone beyond the 25 testers)
+1. Go to https://www.last.fm/api/account/create and sign in.
+2. Create an API account:
+   - Application name: **Jingle**
+   - Callback URL: `<your Jingle address>/api/v1/sources/lastfm/callback`
+3. Put the key and the shared secret in `.env` as `LASTFM_API_KEY` and `LASTFM_SHARED_SECRET`. Never paste them in chat.
+4. Run `docker compose up -d`.
+
+## HA-CONNECT-2 Spotify allowlist (up to 25 people get Spotify's own login)
+1. In the Spotify Developer Dashboard, open the app → **User Management**.
+2. Add each tester's **Spotify account email**.
+3. Put the same emails in `.env` as `SPOTIFY_ALLOWLIST`, comma-separated.
+
+Everyone else connects Spotify through Last.fm automatically.
+
+## HA-CONNECT-3 Publish the Chrome extension (desktop YouTube Music / Amazon Music)
+1. Register at https://chrome.google.com/webstore/devconsole (one-time US$5).
+2. Zip the contents of `apps/companion-extension/dist` (run `npm run build` there first).
+3. Upload the zip and fill in the privacy fields: it reads only the four music sites and sends plays to Jingle.
+4. Once it's approved, set `EXTENSION_STORE_URL` in `.env` to the store link.
+
+The Connect screen then shows **Add Jingle to Chrome**, and the extension connects itself after install.
+
+## HA-CONNECT-4 Build and publish the Android app (phone listening)
+1. Install Android Studio (it brings the Android SDK and JDK 17) and open `apps/android`.
+2. Build with `./gradlew assembleRelease -PjingleUrl=https://<your Jingle address>`.
+3. Register at https://play.google.com/console (one-time US$25) and upload the build.
+   - Declare notification-listener use as **"show friends what music you play"**.
+4. Set `ANDROID_APP_URL` in `.env` to the Play link.
+
+## HA-CONNECT-5 Apple Music sign-in
+This uses the same keys as HA-UX-5: an Apple Developer membership (US$99 a year) and a MusicKit key. Put them in `APPLE_MUSIC_TEAM_ID`, `APPLE_MUSIC_KEY_ID` and `APPLE_MUSIC_PRIVATE_KEY_PATH`.
+
+Once they're set, the Apple Music tile opens Apple's own sign-in.

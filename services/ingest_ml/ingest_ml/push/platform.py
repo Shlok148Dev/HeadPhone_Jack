@@ -11,7 +11,18 @@ from urllib.parse import parse_qs, urlsplit
 from jingle_common.enums import Platform
 
 _AMAZON_TLDS = (
-    "com", "in", "co.uk", "de", "fr", "it", "es", "ca", "com.au", "co.jp", "com.br", "com.mx",
+    "com",
+    "in",
+    "co.uk",
+    "de",
+    "fr",
+    "it",
+    "es",
+    "ca",
+    "com.au",
+    "co.jp",
+    "com.br",
+    "com.mx",
 )
 AMAZON_MUSIC_HOSTS = frozenset(f"music.amazon.{tld}" for tld in _AMAZON_TLDS)
 
