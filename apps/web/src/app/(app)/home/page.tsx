@@ -19,6 +19,7 @@ import { useConnections, useMyCard } from "@/lib/queries";
 import { useRealtimeStatus } from "@/lib/realtime";
 
 // Below the fold: loads after first paint so Home stays inside its JS budget (R-D).
+const PendingReveal = lazy(() => import("@/components/app/WeeklyCharts").then((m) => ({ default: m.PendingReveal })));
 const WeeklyCharts = lazy(() => import("@/components/app/WeeklyCharts").then((m) => ({ default: m.WeeklyCharts })));
 const DailyDrop = lazy(() => import("@/components/app/DailyDrop").then((m) => ({ default: m.DailyDrop })));
 const HomeHero = lazy(() => import("@/components/app/HomeExtras").then((m) => ({ default: m.HomeHero })));
@@ -80,6 +81,10 @@ export default function HomePage() {
         {firstName(me?.display_name || me?.username) ? `, ${firstName(me?.display_name || me?.username)}` : ""}
       </h1>
       {/* D-HOME-01: the stage (what a friend is playing, Tune in), then today's Drop, then rituals. */}
+      {/* D-CHART-06: last week's chart reveal goes first while it's waiting. */}
+      <Suspense fallback={null}>
+        <PendingReveal />
+      </Suspense>
       {feed.isLoading ? (
         <Skeleton className="h-[340px]" rounded="lg" />
       ) : feed.isError ? (

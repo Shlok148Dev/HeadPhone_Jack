@@ -19,12 +19,7 @@ import { tuneIn, type Tunable } from "@/lib/tunein";
 export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
   const q = useWeeklyCharts();
   // From the "it's in" notification (/home?reveal=1): start the countdown straight away.
-  const [fromNotification] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reveal") === "1");
-  // Once pending this visit, keep the reveal on screen until dismissed (seen state flips mid-reveal).
-  const [held, setHeld] = useState<NonNullable<WeeklyChartsData["last_final"]> | null>(null);
-  const [dismissed, setDismissed] = useState(false);
-  const pending = q.data?.last_final?.reveal_pending ? q.data.last_final : null;
-  if (pending && !held && !dismissed) setHeld(pending);
+  const [replaying, setReplaying] = useState(false);
   if (q.isLoading)
     return (
       <div className="flex flex-col gap-8" aria-busy="true">
@@ -35,10 +30,9 @@ export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
   const c = q.data;
   if (!c || q.isError) return null;
   const lf = c.last_final;
+  // Replay last week's frozen chart inline, any time (never marks anything).
   const reveal =
-    held && !dismissed ? (
-      <ChartReveal final={held} range={weekRange(held.week_start, held.week_end)} autoStart={fromNotification} onDone={() => setDismissed(true)} />
-    ) : null;
+    replaying && lf ? <ChartReveal final={lf} range={weekRange(lf.week_start, lf.week_end)} replay onDone={() => setReplaying(false)} /> : null;
   if (!c.enough || !c.songs.length)
     return (
       <div className="flex min-w-0 flex-col gap-8">
@@ -54,11 +48,19 @@ export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
       </div>
     );
   const range = weekRange(c.week_start, c.week_end);
-  const lastTop = lf && !reveal ? lf.songs[0] : undefined;
+  const lastTop = lf && !lf.reveal_pending && !replaying ? lf.songs[0] : undefined;
   return (
     <div className="flex min-w-0 flex-col gap-8">
       {reveal}
-      <SongOfTheWeek songs={c.songs} range={range} current={c.is_current} updated={c.updated_at} myPlatform={myPlatform} lastTop={lastTop} />
+      <SongOfTheWeek
+        songs={c.songs}
+        range={range}
+        current={c.is_current}
+        updated={c.updated_at}
+        myPlatform={myPlatform}
+        lastTop={lastTop}
+        onReplay={() => setReplaying(true)}
+      />
       {c.artists.length > 0 && <ArtistOfTheWeek artists={c.artists} range={range} myPlatform={myPlatform} />}
     </div>
   );
@@ -66,7 +68,7 @@ export function WeeklyCharts({ myPlatform }: { myPlatform?: Platform }) {
 
 // ---- Song of the Week ---------------------------------------------------------------------
 
-function SongOfTheWeek({ songs, range, current, updated, myPlatform, lastTop }: { songs: ChartSong[]; range: string; current: boolean; updated: string | null; myPlatform?: Platform; lastTop?: ChartSong }) {
+function SongOfTheWeek({ songs, range, current, updated, myPlatform, lastTop, onReplay }: { songs: ChartSong[]; range: string; current: boolean; updated: string | null; myPlatform?: Platform; lastTop?: ChartSong; onReplay?: () => void }) {
   const { theme } = useTheme();
   const top = songs[0]!;
   const rest = songs.slice(1);
@@ -84,7 +86,20 @@ function SongOfTheWeek({ songs, range, current, updated, myPlatform, lastTop }: 
         id="sotw-h"
         title="What your people played most"
         meta={`${current ? "So far this week" : "Final"} · ${range}${updated ? ` · updated ${ago(updated)}` : ""}`}
-        sub={lastTop ? `Last week's #1: ${lastTop.title} · ${lastTop.artist}` : undefined}
+        sub={
+          lastTop ? (
+            <button
+              type="button"
+              onClick={onReplay}
+              className="inline-flex max-w-full items-center gap-1.5 rounded-md text-left underline-offset-4 hover:text-text hover:underline focus-visible:outline-2 focus-visible:outline-[var(--focus-ring)]"
+            >
+              <span className="truncate">
+                Last week&rsquo;s #1: {lastTop.title} · {lastTop.artist}
+              </span>
+              <span className="shrink-0 font-medium text-text">· Replay</span>
+            </button>
+          ) : undefined
+        }
         action={
           <button
             type="button"
@@ -261,7 +276,7 @@ function ArtistOfTheWeek({ artists, range, myPlatform }: { artists: ChartArtist[
 
 // ---- small parts --------------------------------------------------------------------------
 
-function ChartHeader({ eyebrow, id, title, meta, sub, action }: { eyebrow: string; id: string; title: string; meta: string; sub?: string; action?: ReactNode }) {
+function ChartHeader({ eyebrow, id, title, meta, sub, action }: { eyebrow: string; id: string; title: string; meta: string; sub?: ReactNode; action?: ReactNode }) {
   return (
     <header className="flex flex-wrap items-end justify-between gap-3 px-5 pb-5 pt-6 sm:px-8 md:pt-8">
       <div className="min-w-0">
@@ -269,7 +284,7 @@ function ChartHeader({ eyebrow, id, title, meta, sub, action }: { eyebrow: strin
         <h2 id={id} className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
           {title}
         </h2>
-        {sub && <p className="mt-1 truncate text-sm text-text-muted">{sub}</p>}
+        {sub && <div className="mt-1 min-w-0 text-sm text-text-muted">{sub}</div>}
       </div>
       <div className="flex flex-col items-end gap-2">
         {action}
@@ -366,4 +381,20 @@ function songFromChart(s: ChartSong): Song {
     artwork_small: s.artwork_small ?? null,
     artwork_colors: s.artwork_colors ?? null,
   };
+}
+
+/**
+ * Last week's reveal while it's waiting (D-CHART-06): shown at the top of Home so it can't be missed.
+ * Kept on screen for this visit once it appears (seen flips server-side mid-reveal) until Done.
+ * Shares the charts query (no extra request).
+ */
+export function PendingReveal() {
+  const q = useWeeklyCharts();
+  const [fromNotification] = useState(() => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("reveal") === "1");
+  const [held, setHeld] = useState<NonNullable<WeeklyChartsData["last_final"]> | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const pending = q.data?.last_final?.reveal_pending ? q.data.last_final : null;
+  if (pending && !held && !dismissed) setHeld(pending);
+  if (!held || dismissed) return null;
+  return <ChartReveal final={held} range={weekRange(held.week_start, held.week_end)} autoStart={fromNotification} onDone={() => setDismissed(true)} />;
 }

@@ -12,11 +12,26 @@ type Final = NonNullable<WeeklyCharts["last_final"]>;
 const STEP_MS = 750;
 
 /**
- * The Monday reveal (JNG-15-03, D-CHART-05): last week's frozen top 5 counts down #5 → #1 the first
- * time you open Home after it freezes (or from the "it's in" notification). Plays once per week on
- * any device (server-side "seen"); static under reduced motion. Artwork stays whole and uncovered.
+ * The Monday reveal (JNG-15-03, D-CHART-06): last week's frozen top 5 counts down #5 → #1.
+ * - Starts from its button, or (notification link / Replay) automatically, but only once the card is
+ *   actually on screen, so the countdown is never spent off-screen.
+ * - Reduced motion keeps the step-by-step countdown, just without movement.
+ * - Marked seen (once per week, any device) only after #1 has been shown; Replay never marks.
+ * Artwork stays whole and uncovered.
  */
-export function ChartReveal({ final, range, autoStart = false, onDone }: { final: Final; range: string; autoStart?: boolean; onDone?: () => void }) {
+export function ChartReveal({
+  final,
+  range,
+  autoStart = false,
+  replay = false,
+  onDone,
+}: {
+  final: Final;
+  range: string;
+  autoStart?: boolean;
+  replay?: boolean;
+  onDone?: () => void;
+}) {
   const { theme } = useTheme();
   const m = useMotionSafe();
   const seen = useMarkChartSeen();
@@ -26,31 +41,44 @@ export function ChartReveal({ final, range, autoStart = false, onDone }: { final
   const [shown, setShown] = useState(0);
   const [started, setStarted] = useState(false);
   const marked = useRef(false);
+  const root = useRef<HTMLElement>(null);
 
   const markSeen = () => {
-    if (marked.current) return;
+    if (marked.current || replay) return;
     marked.current = true;
     seen.mutate(final.week_start);
   };
 
-  const start = () => {
-    setStarted(true);
-    if (m.reduced) {
-      setShown(songs.length);
-      markSeen();
+  const start = () => setStarted(true);
+
+  // Auto-start (notification link, Replay): bring the card into view, then start once 60% visible.
+  useEffect(() => {
+    if (!(autoStart || replay) || started || !root.current) return;
+    const el = root.current;
+    el.scrollIntoView({ block: "center", behavior: m.reduced ? "auto" : "smooth" });
+    if (typeof IntersectionObserver === "undefined") {
+      setStarted(true);
+      return;
     }
-  };
-
-  useEffect(() => {
-    if (autoStart) start();
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e?.isIntersecting) {
+          io.disconnect();
+          setStarted(true);
+        }
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoStart]);
+  }, [autoStart, replay]);
 
   useEffect(() => {
-    if (!started || m.reduced || shown >= songs.length) return;
-    const t = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 250 : STEP_MS);
+    if (!started || shown >= songs.length) return;
+    const t = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 300 : STEP_MS);
     return () => window.clearTimeout(t);
-  }, [started, shown, songs.length, m.reduced]);
+  }, [started, shown, songs.length]);
 
   useEffect(() => {
     if (shown >= songs.length && started) markSeen();
@@ -62,6 +90,7 @@ export function ChartReveal({ final, range, autoStart = false, onDone }: { final
 
   return (
     <section
+      ref={root}
       aria-labelledby="reveal-h"
       className="relative min-w-0 overflow-hidden rounded-[28px] border border-border/60"
       style={done ? ambientStyle(top.artwork_colors, theme) : { background: "var(--surface-1)" }}
@@ -71,7 +100,7 @@ export function ChartReveal({ final, range, autoStart = false, onDone }: { final
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.14em] text-text-muted">Last week&rsquo;s final chart · {range}</p>
             <h2 id="reveal-h" className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-              {done ? "Your people's Song of the Week" : "Your people's Song of the Week is in"}
+              {replay || done ? "Your people's Song of the Week" : "Your people's Song of the Week is in"}
             </h2>
           </div>
           {done && onDone && (
