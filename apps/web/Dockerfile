@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # Build context: repository root.
-FROM node:22-slim AS build
+FROM node:26-slim AS build
 RUN corepack enable
 WORKDIR /repo
 ENV NEXT_TELEMETRY_DISABLED=1 NEXT_OUTPUT=standalone
@@ -14,7 +14,7 @@ COPY packages/ts-client packages/ts-client
 COPY apps/web apps/web
 RUN pnpm --filter @jingle/web build
 
-FROM node:22-slim
+FROM node:26-slim
 WORKDIR /app
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 COPY --from=build /repo/apps/web/.next/standalone ./
