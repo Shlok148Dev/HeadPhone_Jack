@@ -187,13 +187,20 @@ async def test_token_bucket_refills() -> None:
 
 def test_settings_musicbrainz_switch() -> None:
     tok = "s" * 40
+    prod_kek = "cHJvZC1rZWstMzItYnl0ZS1mb3ItdGVzdGluZyE="
     assert not Settings(jingle_env="test").musicbrainz_active
-    assert not Settings(jingle_env="prod", service_token=tok).musicbrainz_active  # no contact → off
+    assert not Settings(
+        jingle_env="prod", service_token=tok, token_kek_b64=prod_kek
+    ).musicbrainz_active  # no contact → off
     assert Settings(
-        jingle_env="prod", service_token=tok, musicbrainz_contact="a@b.c"
+        jingle_env="prod", service_token=tok, musicbrainz_contact="a@b.c", token_kek_b64=prod_kek
     ).musicbrainz_active
     assert not Settings(
-        jingle_env="prod", service_token=tok, jingle_demo=True, musicbrainz_contact="a@b.c"
+        jingle_env="prod",
+        service_token=tok,
+        jingle_demo=True,
+        musicbrainz_contact="a@b.c",
+        token_kek_b64=prod_kek,
     ).musicbrainz_active
     assert Settings(
         jingle_env="test", musicbrainz_contact="a@b.c", musicbrainz_enabled=True
@@ -227,6 +234,7 @@ def test_empty_env_values_use_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_settings_refuse_weak_service_token_outside_dev() -> None:
+    prod_kek = "cHJvZC1rZWstMzItYnl0ZS1mb3ItdGVzdGluZyE="
     for bad in (
         "",
         "test-service-token",
@@ -234,9 +242,26 @@ def test_settings_refuse_weak_service_token_outside_dev() -> None:
         "short",
     ):
         with pytest.raises(ValueError):
-            Settings(jingle_env="prod", service_token=bad or "test-service-token")
-    assert Settings(jingle_env="prod", service_token="s" * 40).service_token == "s" * 40
+            Settings(
+                jingle_env="prod",
+                service_token=bad or "test-service-token",
+                token_kek_b64=prod_kek,
+            )
+    assert (
+        Settings(
+            jingle_env="prod", service_token="s" * 40, token_kek_b64=prod_kek
+        ).service_token
+        == "s" * 40
+    )
     assert Settings(jingle_env="local").service_token == "test-service-token"
+
+    # Dev KEK refused outside local/test
+    with pytest.raises(ValueError, match="TOKEN_KEK_B64 is the documented development key"):
+        Settings(
+            jingle_env="prod",
+            service_token="s" * 40,
+            token_kek_b64="ZGV2LW9ubHktMzItYnl0ZS1rZXktZm9yLWxvY2FsISE=",
+        )
 
 
 async def test_mint_caps_active_tokens_at_five(

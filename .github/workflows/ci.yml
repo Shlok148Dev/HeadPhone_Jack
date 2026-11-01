@@ -26,6 +26,7 @@ jobs:
         image: redis:7-alpine
         ports: ["6379:6379"]
     env:
+      JINGLE_ENV: test
       DATABASE_URL: postgres://jingle:jingle-local@localhost:5432/jingle
       REDIS_URL: redis://localhost:6379/0
       TOKEN_KEK_B64: ZGV2LW9ubHktMzItYnl0ZS1rZXktZm9yLWxvY2FsISE=
@@ -36,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
         with: { python-version: "3.12" }
-      - run: uv sync --frozen || uv sync
+      - run: uv sync --all-extras --frozen || uv sync --all-extras
       - run: uv run ruff check .
       - run: uv run mypy jingle_common
         if: matrix.project == 'packages/py-common'
