@@ -8,7 +8,7 @@ COPY packages/py-common /repo/packages/py-common
 COPY services/core_api/pyproject.toml services/core_api/uv.lock ./
 
 FROM base AS api
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --frozen --no-dev --no-install-project --extra ml
 COPY services/core_api ./
 RUN chmod +x docker-entrypoint.sh && useradd -r -m -u 10001 jingle && chown -R jingle /repo     && mkdir -p /var/jingle/media && chown jingle /var/jingle/media
 USER jingle
