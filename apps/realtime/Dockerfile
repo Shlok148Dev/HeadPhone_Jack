@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # Build context: repository root.
-FROM node:22-slim AS build
+FROM node:26-slim AS build
 RUN corepack enable
 WORKDIR /repo
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc tsconfig.base.json ./
@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --froze
 COPY apps/realtime apps/realtime
 RUN pnpm --filter @jingle/realtime build && pnpm --filter @jingle/realtime deploy --prod --legacy /out
 
-FROM node:22-slim
+FROM node:26-slim
 WORKDIR /app
 COPY --from=build /out ./
 USER node
